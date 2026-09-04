@@ -32,7 +32,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
-  it('muestra la pantalla de grupos cuando se visita la raiz con sesion activa', () => {
+  it('muestra la pantalla de crear grupo cuando se visita la raiz con sesion activa', () => {
     mockedUseAuth.mockReturnValue({
       session: { access_token: 't' } as never,
       user: { id: 'user-1' } as never,
@@ -41,7 +41,7 @@ describe('App', () => {
 
     renderAppAt('/')
 
-    expect(screen.getByText('Grupos')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Crear grupo' })).toBeInTheDocument()
   })
 
   it('muestra el formulario de registro en /register', () => {
