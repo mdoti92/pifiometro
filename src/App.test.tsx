@@ -52,4 +52,12 @@ describe('App', () => {
 
     expect(screen.getByRole('button', { name: 'Registrarme' })).toBeInTheDocument()
   })
+
+  it('redirige a login al visitar /groups/:groupId/members sin sesion activa', () => {
+    mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+
+    renderAppAt('/groups/group-1/members')
+
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
 })

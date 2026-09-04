@@ -3,6 +3,7 @@ import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
 import { GroupsHome } from './groups/GroupsHome'
+import { MembersPage } from './groups/MembersPage'
 
 function App() {
   return (
@@ -14,6 +15,14 @@ function App() {
         element={
           <RequireAuth>
             <GroupsHome />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/groups/:groupId/members"
+        element={
+          <RequireAuth>
+            <MembersPage />
           </RequireAuth>
         }
       />
