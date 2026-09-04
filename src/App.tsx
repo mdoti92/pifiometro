@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
-import { CreateGroupForm } from './groups/CreateGroupForm'
+import { GroupsHome } from './groups/GroupsHome'
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
         path="/"
         element={
           <RequireAuth>
-            <CreateGroupForm />
+            <GroupsHome />
           </RequireAuth>
         }
       />

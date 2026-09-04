@@ -42,6 +42,7 @@ describe('App', () => {
     renderAppAt('/')
 
     expect(screen.getByRole('heading', { name: 'Crear grupo' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Unirme a un grupo' })).toBeInTheDocument()
   })
 
   it('muestra el formulario de registro en /register', () => {
