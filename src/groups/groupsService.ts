@@ -40,3 +40,13 @@ export async function createGroup(name: string, createdBy: string): Promise<Grou
     createdAt: data.created_at,
   }
 }
+
+export async function joinGroup(inviteCode: string): Promise<string> {
+  const { data, error } = await supabase.rpc('join_group', { p_invite_code: inviteCode.trim() })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as string
+}

@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '../lib/supabase'
-import { createGroup, GroupNameRequiredError } from './groupsService'
+import { createGroup, GroupNameRequiredError, joinGroup } from './groupsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
+    rpc: vi.fn(),
   },
 }))
 
 const mockedFrom = vi.mocked(supabase.from)
+const mockedRpc = vi.mocked(supabase.rpc)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -78,5 +80,31 @@ describe('createGroup', () => {
     mockedFrom.mockReturnValue({ insert } as never)
 
     await expect(createGroup('Los pibes', 'user-1')).rejects.toThrow('permission denied')
+  })
+})
+
+describe('joinGroup', () => {
+  it('llama a la RPC join_group con el codigo ingresado y devuelve el id del grupo', async () => {
+    mockedRpc.mockResolvedValue({ data: 'group-1', error: null } as never)
+
+    const groupId = await joinGroup('AB12CD')
+
+    expect(mockedRpc).toHaveBeenCalledWith('join_group', { p_invite_code: 'AB12CD' })
+    expect(groupId).toBe('group-1')
+  })
+
+  it('propaga el error de la RPC cuando el codigo es invalido', async () => {
+    mockedRpc.mockResolvedValue({
+      data: null,
+      error: { message: 'Codigo de invitacion invalido' },
+    } as never)
+
+    await expect(joinGroup('NOEXISTE')).rejects.toThrow('Codigo de invitacion invalido')
+  })
+
+  it('no falla al reingresar un codigo de un grupo del que ya soy miembro', async () => {
+    mockedRpc.mockResolvedValue({ data: 'group-1', error: null } as never)
+
+    await expect(joinGroup('AB12CD')).resolves.toBe('group-1')
   })
 })
