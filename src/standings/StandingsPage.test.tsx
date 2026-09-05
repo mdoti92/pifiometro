@@ -1,8 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as AuthContextModule from '../auth/AuthContext'
 import { StandingsPage } from './StandingsPage'
 import * as standingsService from './standingsService'
+
+vi.mock('../auth/AuthContext', async () => {
+  const actual = await vi.importActual<typeof import('../auth/AuthContext')>('../auth/AuthContext')
+  return { ...actual, useAuth: vi.fn() }
+})
 
 vi.mock('./standingsService', async () => {
   const actual =
@@ -10,10 +16,16 @@ vi.mock('./standingsService', async () => {
   return { ...actual, getGroupTournamentStandings: vi.fn() }
 })
 
+const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedGetStandings = vi.mocked(standingsService.getGroupTournamentStandings)
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockedUseAuth.mockReturnValue({
+    session: { access_token: 't' } as never,
+    user: { id: 'user-1' } as never,
+    loading: false,
+  })
 })
 
 function renderPage() {

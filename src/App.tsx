@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
@@ -5,15 +6,25 @@ import { RequireAuth } from './auth/RequireAuth'
 import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
+import { AppShell } from './nav/AppShell'
 import { NotificationPreferencesPage } from './notifications/NotificationPreferencesPage'
 import { HistoryPage } from './predictions/HistoryPage'
 import { MyPredictionsPage } from './predictions/MyPredictionsPage'
 import { PredictionForm } from './predictions/PredictionForm'
+import { ProfilePage } from './profile/ProfilePage'
 import { MatchdaySummaryPage } from './standings/MatchdaySummaryPage'
 import { StageStandingsPage } from './standings/StageStandingsPage'
 import { StandingsPage } from './standings/StandingsPage'
 import { MatchesAdminPage } from './tournaments/MatchesAdminPage'
 import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
+
+function Authenticated({ children }: { children: ReactNode }) {
+  return (
+    <RequireAuth>
+      <AppShell>{children}</AppShell>
+    </RequireAuth>
+  )
+}
 
 function App() {
   return (
@@ -23,97 +34,105 @@ function App() {
       <Route
         path="/"
         element={
-          <RequireAuth>
+          <Authenticated>
             <GroupsHome />
-          </RequireAuth>
+          </Authenticated>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <Authenticated>
+            <ProfilePage />
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/members"
         element={
-          <RequireAuth>
+          <Authenticated>
             <MembersPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/tournaments"
         element={
-          <RequireAuth>
+          <Authenticated>
             <GroupTournamentsPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/admin/tournaments"
         element={
-          <RequireAuth>
+          <Authenticated>
             <TournamentAdminPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/preferences/notifications"
         element={
-          <RequireAuth>
+          <Authenticated>
             <NotificationPreferencesPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/admin/tournaments/:tournamentId/matches"
         element={
-          <RequireAuth>
+          <Authenticated>
             <MatchesAdminPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/matches/:matchId/predict"
         element={
-          <RequireAuth>
+          <Authenticated>
             <PredictionForm />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/stages/:stageId/predictions"
         element={
-          <RequireAuth>
+          <Authenticated>
             <MyPredictionsPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/tournaments/:tournamentId/standings"
         element={
-          <RequireAuth>
+          <Authenticated>
             <StandingsPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/stages/:stageId/standings"
         element={
-          <RequireAuth>
+          <Authenticated>
             <StageStandingsPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/tournaments/:tournamentId/history"
         element={
-          <RequireAuth>
+          <Authenticated>
             <HistoryPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
       <Route
         path="/groups/:groupId/tournaments/:tournamentId/matchday-summary"
         element={
-          <RequireAuth>
+          <Authenticated>
             <MatchdaySummaryPage />
-          </RequireAuth>
+          </Authenticated>
         }
       />
     </Routes>

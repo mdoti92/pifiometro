@@ -53,6 +53,12 @@ export async function listGroupTournaments(groupId: string): Promise<GroupTourna
   }))
 }
 
+export function pickSoleActiveTournament(groupTournaments: GroupTournament[]): GroupTournament | null {
+  const activeTournaments = groupTournaments.filter((tournament) => tournament.active)
+
+  return activeTournaments.length === 1 ? activeTournaments[0] : null
+}
+
 export async function activateTournament(groupId: string, tournamentId: string): Promise<void> {
   const { error } = await supabase
     .from('group_tournaments')

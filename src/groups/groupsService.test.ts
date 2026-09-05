@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '../lib/supabase'
-import { createGroup, GroupNameRequiredError, joinGroup } from './groupsService'
+import { createGroup, GroupNameRequiredError, joinGroup, listMyGroups } from './groupsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -111,5 +111,36 @@ describe('joinGroup', () => {
     mockedRpc.mockResolvedValue({ data: 'group-1', error: null } as never)
 
     await expect(joinGroup('AB12CD')).resolves.toBe('group-1')
+  })
+})
+
+describe('listMyGroups', () => {
+  it('devuelve los grupos de los que el usuario es miembro', async () => {
+    const eq = vi.fn().mockResolvedValue({
+      data: [
+        { group_id: 'group-1', groups: { id: 'group-1', name: 'Los pibes' } },
+        { group_id: 'group-2', groups: { id: 'group-2', name: 'La barra' } },
+      ],
+      error: null,
+    })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const groups = await listMyGroups('user-1')
+
+    expect(mockedFrom).toHaveBeenCalledWith('group_members')
+    expect(eq).toHaveBeenCalledWith('user_id', 'user-1')
+    expect(groups).toEqual([
+      { id: 'group-1', name: 'Los pibes' },
+      { id: 'group-2', name: 'La barra' },
+    ])
+  })
+
+  it('propaga el error de supabase', async () => {
+    const eq = vi.fn().mockResolvedValue({ data: null, error: { message: 'no autenticado' } })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(listMyGroups('user-1')).rejects.toThrow('no autenticado')
   })
 })
