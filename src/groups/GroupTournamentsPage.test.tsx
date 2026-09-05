@@ -91,6 +91,23 @@ describe('GroupTournamentsPage', () => {
     )
   })
 
+  it('muestra links a Tabla e Historial solo para los torneos activos', async () => {
+    mockedIsGroupAdmin.mockResolvedValue(false)
+    renderPage()
+
+    await screen.findByText('Liga AUF 2026')
+
+    expect(screen.getByRole('link', { name: 'Ver tabla de Liga AUF 2026' })).toHaveAttribute(
+      'href',
+      '/groups/group-1/tournaments/tournament-1/standings',
+    )
+    expect(screen.getByRole('link', { name: 'Ver historial de Liga AUF 2026' })).toHaveAttribute(
+      'href',
+      '/groups/group-1/tournaments/tournament-1/history',
+    )
+    expect(screen.queryByRole('link', { name: 'Ver tabla de Copa AUF' })).not.toBeInTheDocument()
+  })
+
   it('muestra un error cuando falla la activacion', async () => {
     mockedIsGroupAdmin.mockResolvedValue(true)
     mockedActivateTournament.mockRejectedValue(new Error('permission denied'))

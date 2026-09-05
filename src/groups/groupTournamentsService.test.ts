@@ -5,6 +5,7 @@ import {
   deactivateTournament,
   listAvailableTournaments,
   listGroupTournaments,
+  pickSoleActiveTournament,
 } from './groupTournamentsService'
 
 vi.mock('../lib/supabase', () => ({
@@ -114,5 +115,27 @@ describe('deactivateTournament', () => {
     await expect(deactivateTournament('group-1', 'tournament-1')).rejects.toThrow(
       'permission denied',
     )
+  })
+})
+
+describe('pickSoleActiveTournament', () => {
+  it('devuelve el torneo activo cuando hay exactamente uno', () => {
+    const active = { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true }
+    const inactive = { tournamentId: 'tournament-2', name: 'Copa AUF', season: '2026', active: false }
+
+    expect(pickSoleActiveTournament([active, inactive])).toEqual(active)
+  })
+
+  it('devuelve null cuando no hay ningun torneo activo', () => {
+    const inactive = { tournamentId: 'tournament-2', name: 'Copa AUF', season: '2026', active: false }
+
+    expect(pickSoleActiveTournament([inactive])).toBeNull()
+  })
+
+  it('devuelve null cuando hay mas de un torneo activo, para no elegir arbitrariamente', () => {
+    const active1 = { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true }
+    const active2 = { tournamentId: 'tournament-2', name: 'Copa AUF', season: '2026', active: true }
+
+    expect(pickSoleActiveTournament([active1, active2])).toBeNull()
   })
 })

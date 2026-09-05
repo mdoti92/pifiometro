@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { isGroupAdmin } from './groupMembersService'
 import {
   activateTournament,
@@ -65,6 +65,17 @@ export function GroupTournamentsPage() {
         {rows.map((row) => (
           <li key={row.id}>
             <span>{row.name}</span> {row.active ? '(activo)' : '(inactivo)'}
+            {row.active && (
+              <>
+                {' '}
+                <Link to={`/groups/${groupId}/tournaments/${row.id}/standings`}>
+                  Ver tabla de {row.name}
+                </Link>{' '}
+                <Link to={`/groups/${groupId}/tournaments/${row.id}/history`}>
+                  Ver historial de {row.name}
+                </Link>
+              </>
+            )}
             {admin && (
               <button type="button" onClick={() => handleToggle(row.id, row.active)}>
                 {row.active ? `Desactivar ${row.name}` : `Activar ${row.name}`}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { getPredictionStatusColor } from '../design/predictionStatusColor'
 import { getMatchHistory, type HistoryStatus, type MatchHistoryRow } from './historyService'
 
 const STATUS_LABEL: Record<HistoryStatus, string> = {
@@ -35,7 +36,10 @@ export function HistoryPage() {
           <li key={row.matchId}>
             {row.homeTeam} vs {row.awayTeam} — Mi pronóstico:{' '}
             {formatScore(row.predictedHomeGoals, row.predictedAwayGoals)} — Resultado:{' '}
-            {formatScore(row.actualHomeGoals, row.actualAwayGoals)} — {STATUS_LABEL[row.status]}
+            {formatScore(row.actualHomeGoals, row.actualAwayGoals)} —{' '}
+            <span style={{ color: getPredictionStatusColor(row.status) }}>
+              {STATUS_LABEL[row.status]}
+            </span>
           </li>
         ))}
       </ul>
