@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { StandingsList } from './StandingsList'
 import { getGroupTournamentStandings, type StandingRow } from './standingsService'
 
 export function StandingsPage() {
@@ -15,14 +16,7 @@ export function StandingsPage() {
   return (
     <div>
       <h1>Tabla general</h1>
-
-      <ul>
-        {standings.map((row) => (
-          <li key={row.userId}>
-            {row.rank}° — {row.displayName ?? row.userId} — {row.totalPoints} pts
-          </li>
-        ))}
-      </ul>
+      <StandingsList standings={standings} />
     </div>
   )
 }

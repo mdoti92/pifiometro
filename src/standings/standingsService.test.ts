@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as groupMembersService from '../groups/groupMembersService'
 import { supabase } from '../lib/supabase'
-import { getGroupTournamentStandings } from './standingsService'
+import { getGroupStageStandings, getGroupTournamentStandings } from './standingsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -102,5 +102,38 @@ describe('getGroupTournamentStandings', () => {
     await expect(getGroupTournamentStandings('group-1', 'tournament-1')).rejects.toThrow(
       'permission denied',
     )
+  })
+})
+
+describe('getGroupStageStandings', () => {
+  it('limita la tabla a los partidos de la etapa seleccionada', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+      { userId: 'user-2', displayName: 'Aldo', role: 'member', joinedAt: '2026-01-01' },
+    ])
+    const { eq1, eq2 } = mockPredictionsQuery([
+      { user_id: 'user-1', points: 3 },
+      { user_id: 'user-2', points: 1 },
+    ])
+
+    const standings = await getGroupStageStandings('group-1', 'stage-1')
+
+    expect(eq1).toHaveBeenCalledWith('group_id', 'group-1')
+    expect(eq2).toHaveBeenCalledWith('matches.stage_id', 'stage-1')
+    expect(standings).toEqual([
+      { userId: 'user-1', displayName: 'Doti', totalPoints: 3, rank: 1 },
+      { userId: 'user-2', displayName: 'Aldo', totalPoints: 1, rank: 2 },
+    ])
+  })
+
+  it('muestra la tabla vacia (todos en 0) sin error cuando la etapa no tiene partidos jugados', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+    ])
+    mockPredictionsQuery([])
+
+    const standings = await getGroupStageStandings('group-1', 'stage-1')
+
+    expect(standings).toEqual([{ userId: 'user-1', displayName: 'Doti', totalPoints: 0, rank: 1 }])
   })
 })
