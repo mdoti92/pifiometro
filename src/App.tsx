@@ -3,6 +3,7 @@ import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
 import { GroupsHome } from './groups/GroupsHome'
+import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
 import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 
@@ -24,6 +25,14 @@ function App() {
         element={
           <RequireAuth>
             <MembersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/groups/:groupId/tournaments"
+        element={
+          <RequireAuth>
+            <GroupTournamentsPage />
           </RequireAuth>
         }
       />
