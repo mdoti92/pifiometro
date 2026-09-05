@@ -7,6 +7,12 @@ export interface Match {
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
+  homeGoals?: number | null
+  awayGoals?: number | null
+  status?: 'scheduled' | 'finished' | 'postponed'
+  wentToPenalties?: boolean
+  homeGoalsPenalties?: number | null
+  awayGoalsPenalties?: number | null
 }
 
 export interface NewMatchInput {
@@ -24,6 +30,12 @@ export interface EditMatchInput {
   awayTeam?: string
   kickoffAt?: string
   isElimination?: boolean
+  homeGoals?: number
+  awayGoals?: number
+  status?: 'scheduled' | 'finished' | 'postponed'
+  wentToPenalties?: boolean
+  homeGoalsPenalties?: number
+  awayGoalsPenalties?: number
 }
 
 export interface MatchesAdminClient {

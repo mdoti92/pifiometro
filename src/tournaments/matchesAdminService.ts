@@ -10,6 +10,12 @@ export interface Match {
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
+  homeGoals?: number | null
+  awayGoals?: number | null
+  status?: 'scheduled' | 'finished' | 'postponed'
+  wentToPenalties?: boolean
+  homeGoalsPenalties?: number | null
+  awayGoalsPenalties?: number | null
 }
 
 export interface NewMatchInput {
@@ -27,6 +33,12 @@ export interface EditMatchInput {
   awayTeam?: string
   kickoffAt?: string
   isElimination?: boolean
+  homeGoals?: number
+  awayGoals?: number
+  status?: 'scheduled' | 'finished' | 'postponed'
+  wentToPenalties?: boolean
+  homeGoalsPenalties?: number
+  awayGoalsPenalties?: number
 }
 
 async function unwrap<T>(result: { data: T | null; error: Error | null }): Promise<T> {
@@ -63,7 +75,9 @@ export async function editMatch(matchId: string, input: EditMatchInput): Promise
 export async function listMatches(tournamentId: string): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
-    .select('id, tournament_id, stage_id, home_team, away_team, kickoff_at, is_elimination, source')
+    .select(
+      'id, tournament_id, stage_id, home_team, away_team, kickoff_at, is_elimination, source, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties',
+    )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
 
@@ -80,5 +94,11 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
     kickoffAt: row.kickoff_at,
     isElimination: row.is_elimination,
     source: row.source,
+    homeGoals: row.home_goals,
+    awayGoals: row.away_goals,
+    status: row.status,
+    wentToPenalties: row.went_to_penalties,
+    homeGoalsPenalties: row.home_goals_penalties,
+    awayGoalsPenalties: row.away_goals_penalties,
   }))
 }

@@ -30,6 +30,12 @@ function toRow(input: Record<string, any>) {
   if ('kickoffAt' in input) row.kickoff_at = input.kickoffAt
   if ('isElimination' in input) row.is_elimination = input.isElimination
   if ('source' in input) row.source = input.source
+  if ('homeGoals' in input) row.home_goals = input.homeGoals
+  if ('awayGoals' in input) row.away_goals = input.awayGoals
+  if ('status' in input) row.status = input.status
+  if ('wentToPenalties' in input) row.went_to_penalties = input.wentToPenalties
+  if ('homeGoalsPenalties' in input) row.home_goals_penalties = input.homeGoalsPenalties
+  if ('awayGoalsPenalties' in input) row.away_goals_penalties = input.awayGoalsPenalties
   return row
 }
 
@@ -44,6 +50,12 @@ function fromRow(row: any) {
     kickoffAt: row.kickoff_at,
     isElimination: row.is_elimination,
     source: row.source,
+    homeGoals: row.home_goals,
+    awayGoals: row.away_goals,
+    status: row.status,
+    wentToPenalties: row.went_to_penalties,
+    homeGoalsPenalties: row.home_goals_penalties,
+    awayGoalsPenalties: row.away_goals_penalties,
   }
 }
 

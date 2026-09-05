@@ -86,4 +86,62 @@ describe('editMatch', () => {
     expect(client.updateMatch).toHaveBeenCalledWith('match-1', { ...changes, source: 'manual' })
     expect(result.source).toBe('manual')
   })
+
+  it('carga un resultado marcando el partido como finished, source=manual', async () => {
+    const resultInput = { homeGoals: 2, awayGoals: 1, status: 'finished' as const }
+    const updatedMatch = {
+      id: 'match-1',
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00:00Z',
+      isElimination: false,
+      source: 'manual' as const,
+      homeGoals: 2,
+      awayGoals: 1,
+      status: 'finished' as const,
+    }
+    const client = createFakeClient({ updateMatch: vi.fn().mockResolvedValue(updatedMatch) })
+
+    const result = await editMatch(client, 'user-1', 'match-1', resultInput)
+
+    expect(client.updateMatch).toHaveBeenCalledWith('match-1', { ...resultInput, source: 'manual' })
+    expect(result.status).toBe('finished')
+  })
+
+  it('carga un resultado de partido eliminatorio definido por penales sin que afecten los goles reglamentarios', async () => {
+    const resultInput = {
+      homeGoals: 1,
+      awayGoals: 1,
+      status: 'finished' as const,
+      wentToPenalties: true,
+      homeGoalsPenalties: 5,
+      awayGoalsPenalties: 4,
+    }
+    const updatedMatch = {
+      id: 'match-1',
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00:00Z',
+      isElimination: true,
+      source: 'manual' as const,
+      homeGoals: 1,
+      awayGoals: 1,
+      status: 'finished' as const,
+      wentToPenalties: true,
+      homeGoalsPenalties: 5,
+      awayGoalsPenalties: 4,
+    }
+    const client = createFakeClient({ updateMatch: vi.fn().mockResolvedValue(updatedMatch) })
+
+    const result = await editMatch(client, 'user-1', 'match-1', resultInput)
+
+    expect(client.updateMatch).toHaveBeenCalledWith('match-1', { ...resultInput, source: 'manual' })
+    expect(result.homeGoals).toBe(1)
+    expect(result.awayGoals).toBe(1)
+    expect(result.homeGoalsPenalties).toBe(5)
+  })
 })
