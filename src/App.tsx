@@ -4,6 +4,7 @@ import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
 import { GroupsHome } from './groups/GroupsHome'
 import { MembersPage } from './groups/MembersPage'
+import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
         element={
           <RequireAuth>
             <MembersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/tournaments"
+        element={
+          <RequireAuth>
+            <TournamentAdminPage />
           </RequireAuth>
         }
       />
