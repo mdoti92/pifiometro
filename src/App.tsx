@@ -6,6 +6,7 @@ import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
 import { NotificationPreferencesPage } from './notifications/NotificationPreferencesPage'
+import { MatchesAdminPage } from './tournaments/MatchesAdminPage'
 import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 
 function App() {
@@ -50,6 +51,14 @@ function App() {
         element={
           <RequireAuth>
             <NotificationPreferencesPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/tournaments/:tournamentId/matches"
+        element={
+          <RequireAuth>
+            <MatchesAdminPage />
           </RequireAuth>
         }
       />
