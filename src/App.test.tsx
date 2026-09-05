@@ -84,4 +84,12 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
+
+  it('redirige a login al visitar /admin/tournaments/:tournamentId/matches sin sesion activa', () => {
+    mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+
+    renderAppAt('/admin/tournaments/tournament-1/matches')
+
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
 })
