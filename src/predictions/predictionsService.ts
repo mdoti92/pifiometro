@@ -5,6 +5,13 @@ export interface Prediction {
   awayGoals: number
 }
 
+export interface MatchInfo {
+  id: string
+  homeTeam: string
+  awayTeam: string
+  kickoffAt: string
+}
+
 export interface SavePredictionInput {
   matchId: string
   groupId: string
@@ -63,4 +70,27 @@ export async function savePrediction(input: SavePredictionInput): Promise<void> 
   if (error) {
     throw new Error(error.message)
   }
+}
+
+export async function getMatch(matchId: string): Promise<MatchInfo> {
+  const { data, error } = await supabase
+    .from('matches')
+    .select('id, home_team, away_team, kickoff_at')
+    .eq('id', matchId)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return {
+    id: data.id,
+    homeTeam: data.home_team,
+    awayTeam: data.away_team,
+    kickoffAt: data.kickoff_at,
+  }
+}
+
+export function hasKickedOff(kickoffAt: string): boolean {
+  return new Date(kickoffAt).getTime() <= Date.now()
 }
