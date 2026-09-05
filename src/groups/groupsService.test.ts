@@ -22,6 +22,9 @@ describe('createGroup', () => {
     expect(mockedFrom).not.toHaveBeenCalled()
   })
 
+  // El enforcement real de created_by = auth.uid() es responsabilidad de RLS en
+  // Postgres (ver supabase/migrations/20260905000002_*.sql); este test solo
+  // verifica el contrato del payload que arma el cliente.
   it('crea el grupo con el creador indicado y devuelve el grupo generado, incluido el invite_code', async () => {
     const single = vi.fn().mockResolvedValue({
       data: {
@@ -70,16 +73,18 @@ describe('createGroup', () => {
     expect(insert).toHaveBeenCalledWith({ name: 'Los pibes', created_by: 'user-1' })
   })
 
-  it('propaga el error de supabase cuando la creacion falla', async () => {
+  it('propaga el error de supabase cuando la creacion falla, por ejemplo por una policy de RLS', async () => {
     const single = vi.fn().mockResolvedValue({
       data: null,
-      error: { message: 'permission denied' },
+      error: { message: 'new row violates row-level security policy for table "groups"' },
     })
     const select = vi.fn().mockReturnValue({ single })
     const insert = vi.fn().mockReturnValue({ select })
     mockedFrom.mockReturnValue({ insert } as never)
 
-    await expect(createGroup('Los pibes', 'user-1')).rejects.toThrow('permission denied')
+    await expect(createGroup('Los pibes', 'user-1')).rejects.toThrow(
+      'new row violates row-level security policy for table "groups"',
+    )
   })
 })
 
