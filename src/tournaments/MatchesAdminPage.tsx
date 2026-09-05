@@ -1,6 +1,12 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { createMatch, editMatch, listMatches, type Match } from './matchesAdminService'
+import {
+  createMatch,
+  editMatch,
+  listMatches,
+  type EditMatchInput,
+  type Match,
+} from './matchesAdminService'
 import { isSuperadmin, listTournamentStages, type TournamentStage } from './tournamentsService'
 
 export function MatchesAdminPage() {
@@ -90,6 +96,17 @@ export function MatchesAdminPage() {
     }
   }
 
+  async function handleSaveResult(matchId: string, result: EditMatchInput) {
+    setError(null)
+
+    try {
+      const updated = await editMatch(matchId, result)
+      setMatches((current) => current.map((match) => (match.id === updated.id ? updated : match)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo cargar el resultado')
+    }
+  }
+
   if (admin === null) return null
 
   if (!admin) return <p>No tenés permisos para administrar partidos</p>
@@ -139,9 +156,21 @@ export function MatchesAdminPage() {
         {matches.map((match) => (
           <li key={match.id}>
             {match.homeTeam} vs {match.awayTeam} — {match.source}
+            {match.status === 'finished' && (
+              <span>
+                {' '}
+                Resultado: {match.homeGoals}-{match.awayGoals}
+                {match.wentToPenalties &&
+                  ` (penales ${match.homeGoalsPenalties}-${match.awayGoalsPenalties})`}
+              </span>
+            )}
             <button type="button" onClick={() => startEditing(match)}>
               Editar partido {match.homeTeam} vs {match.awayTeam}
             </button>
+            <ResultForm
+              match={match}
+              onSave={(result) => handleSaveResult(match.id, result)}
+            />
           </li>
         ))}
       </ul>
@@ -184,5 +213,93 @@ export function MatchesAdminPage() {
         </form>
       )}
     </div>
+  )
+}
+
+function ResultForm({
+  match,
+  onSave,
+}: {
+  match: Match
+  onSave: (result: EditMatchInput) => void
+}) {
+  const [homeGoals, setHomeGoals] = useState('')
+  const [awayGoals, setAwayGoals] = useState('')
+  const [wentToPenalties, setWentToPenalties] = useState(false)
+  const [homeGoalsPenalties, setHomeGoalsPenalties] = useState('')
+  const [awayGoalsPenalties, setAwayGoalsPenalties] = useState('')
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+
+    const result: EditMatchInput = {
+      homeGoals: Number(homeGoals),
+      awayGoals: Number(awayGoals),
+      status: 'finished',
+    }
+
+    if (wentToPenalties) {
+      result.wentToPenalties = true
+      result.homeGoalsPenalties = Number(homeGoalsPenalties)
+      result.awayGoalsPenalties = Number(awayGoalsPenalties)
+    }
+
+    onSave(result)
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor={`result-home-${match.id}`}>Goles local (resultado)</label>
+      <input
+        id={`result-home-${match.id}`}
+        type="number"
+        value={homeGoals}
+        onChange={(event) => setHomeGoals(event.target.value)}
+      />
+
+      <label htmlFor={`result-away-${match.id}`}>Goles visitante (resultado)</label>
+      <input
+        id={`result-away-${match.id}`}
+        type="number"
+        value={awayGoals}
+        onChange={(event) => setAwayGoals(event.target.value)}
+      />
+
+      {match.isElimination && (
+        <>
+          <label htmlFor={`result-penalties-${match.id}`}>¿Fue a penales?</label>
+          <input
+            id={`result-penalties-${match.id}`}
+            type="checkbox"
+            checked={wentToPenalties}
+            onChange={(event) => setWentToPenalties(event.target.checked)}
+          />
+
+          {wentToPenalties && (
+            <>
+              <label htmlFor={`result-home-pen-${match.id}`}>Penales local</label>
+              <input
+                id={`result-home-pen-${match.id}`}
+                type="number"
+                value={homeGoalsPenalties}
+                onChange={(event) => setHomeGoalsPenalties(event.target.value)}
+              />
+
+              <label htmlFor={`result-away-pen-${match.id}`}>Penales visitante</label>
+              <input
+                id={`result-away-pen-${match.id}`}
+                type="number"
+                value={awayGoalsPenalties}
+                onChange={(event) => setAwayGoalsPenalties(event.target.value)}
+              />
+            </>
+          )}
+        </>
+      )}
+
+      <button type="submit">
+        Guardar resultado {match.homeTeam} vs {match.awayTeam}
+      </button>
+    </form>
   )
 }

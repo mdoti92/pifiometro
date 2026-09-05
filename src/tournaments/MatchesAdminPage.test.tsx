@@ -167,4 +167,97 @@ describe('MatchesAdminPage', () => {
 
     expect(await screen.findByText('El partido no existe')).toBeInTheDocument()
   })
+
+  it('carga el resultado de un partido y lo marca finished', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedListMatches.mockResolvedValue([
+      {
+        id: 'match-1',
+        tournamentId: 'tournament-1',
+        stageId: 'stage-1',
+        homeTeam: 'Nacional',
+        awayTeam: 'Peñarol',
+        kickoffAt: '2026-03-01T20:00:00Z',
+        isElimination: false,
+        source: 'manual',
+      },
+    ])
+    mockedEditMatch.mockResolvedValue({
+      id: 'match-1',
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00:00Z',
+      isElimination: false,
+      source: 'manual',
+      homeGoals: 2,
+      awayGoals: 1,
+      status: 'finished',
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(await screen.findByLabelText('Goles local (resultado)'), '2')
+    await user.type(screen.getByLabelText('Goles visitante (resultado)'), '1')
+    await user.click(screen.getByRole('button', { name: 'Guardar resultado Nacional vs Peñarol' }))
+
+    expect(mockedEditMatch).toHaveBeenCalledWith('match-1', {
+      homeGoals: 2,
+      awayGoals: 1,
+      status: 'finished',
+    })
+    expect(await screen.findByText(/Resultado: 2-1/)).toBeInTheDocument()
+  })
+
+  it('carga un resultado de eliminacion definido por penales, sin afectar los goles reglamentarios', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedListMatches.mockResolvedValue([
+      {
+        id: 'match-1',
+        tournamentId: 'tournament-1',
+        stageId: 'stage-1',
+        homeTeam: 'Nacional',
+        awayTeam: 'Peñarol',
+        kickoffAt: '2026-03-01T20:00:00Z',
+        isElimination: true,
+        source: 'manual',
+      },
+    ])
+    mockedEditMatch.mockResolvedValue({
+      id: 'match-1',
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00:00Z',
+      isElimination: true,
+      source: 'manual',
+      homeGoals: 1,
+      awayGoals: 1,
+      status: 'finished',
+      wentToPenalties: true,
+      homeGoalsPenalties: 5,
+      awayGoalsPenalties: 4,
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(await screen.findByLabelText('Goles local (resultado)'), '1')
+    await user.type(screen.getByLabelText('Goles visitante (resultado)'), '1')
+    await user.click(screen.getByLabelText('¿Fue a penales?'))
+    await user.type(screen.getByLabelText('Penales local'), '5')
+    await user.type(screen.getByLabelText('Penales visitante'), '4')
+    await user.click(screen.getByRole('button', { name: 'Guardar resultado Nacional vs Peñarol' }))
+
+    expect(mockedEditMatch).toHaveBeenCalledWith('match-1', {
+      homeGoals: 1,
+      awayGoals: 1,
+      status: 'finished',
+      wentToPenalties: true,
+      homeGoalsPenalties: 5,
+      awayGoalsPenalties: 4,
+    })
+    expect(await screen.findByText(/Resultado: 1-1 \(penales 5-4\)/)).toBeInTheDocument()
+  })
 })

@@ -82,6 +82,42 @@ describe('editMatch', () => {
 
     await expect(editMatch('match-inexistente', changes)).rejects.toThrow('El partido no existe')
   })
+
+  it('carga un resultado marcando el partido como finished', async () => {
+    const resultInput = { homeGoals: 2, awayGoals: 1, status: 'finished' as const }
+    const updated = { id: 'match-1', ...newMatchInput, ...resultInput, source: 'manual' }
+    mockedInvoke.mockResolvedValue({ data: updated, error: null } as never)
+
+    const result = await editMatch('match-1', resultInput)
+
+    expect(mockedInvoke).toHaveBeenCalledWith('matches-admin/match-1', {
+      method: 'PATCH',
+      body: resultInput,
+    })
+    expect(result.status).toBe('finished')
+  })
+
+  it('carga un resultado de eliminacion definido por penales', async () => {
+    const resultInput = {
+      homeGoals: 1,
+      awayGoals: 1,
+      status: 'finished' as const,
+      wentToPenalties: true,
+      homeGoalsPenalties: 5,
+      awayGoalsPenalties: 4,
+    }
+    const updated = { id: 'match-1', ...newMatchInput, ...resultInput, source: 'manual' }
+    mockedInvoke.mockResolvedValue({ data: updated, error: null } as never)
+
+    const result = await editMatch('match-1', resultInput)
+
+    expect(mockedInvoke).toHaveBeenCalledWith('matches-admin/match-1', {
+      method: 'PATCH',
+      body: resultInput,
+    })
+    expect(result.wentToPenalties).toBe(true)
+    expect(result.homeGoalsPenalties).toBe(5)
+  })
 })
 
 describe('listMatches', () => {
@@ -131,5 +167,33 @@ describe('listMatches', () => {
     mockedFrom.mockReturnValue({ select } as never)
 
     await expect(listMatches('tournament-1')).rejects.toThrow('permission denied')
+  })
+
+  it('incluye el resultado cargado cuando el partido ya finalizo', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'match-1',
+          tournament_id: 'tournament-1',
+          stage_id: 'stage-1',
+          home_team: 'Nacional',
+          away_team: 'Peñarol',
+          kickoff_at: '2026-03-01T20:00:00Z',
+          is_elimination: false,
+          source: 'manual',
+          home_goals: 2,
+          away_goals: 1,
+          status: 'finished',
+        },
+      ],
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ order })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const matches = await listMatches('tournament-1')
+
+    expect(matches[0]).toMatchObject({ homeGoals: 2, awayGoals: 1, status: 'finished' })
   })
 })
