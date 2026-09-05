@@ -92,4 +92,12 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
+
+  it('redirige a login al visitar /groups/:groupId/matches/:matchId/predict sin sesion activa', () => {
+    mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+
+    renderAppAt('/groups/group-1/matches/match-1/predict')
+
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
 })
