@@ -28,6 +28,7 @@ describe('createMatch', () => {
     awayTeam: 'Peñarol',
     kickoffAt: '2026-03-01T20:00:00Z',
     isElimination: false,
+    matchday: 3,
   }
 
   it('lanza NotSuperadminError sin insertar cuando el usuario no es superadmin', async () => {

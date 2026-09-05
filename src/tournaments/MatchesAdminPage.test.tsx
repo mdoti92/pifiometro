@@ -86,6 +86,39 @@ describe('MatchesAdminPage', () => {
     expect(screen.getByText(/Nacional vs Peñarol — manual/)).toBeInTheDocument()
   })
 
+  it('carga un partido con numero de fecha', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedCreateMatch.mockResolvedValue({
+      id: 'match-1',
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00',
+      isElimination: false,
+      source: 'manual',
+      matchday: 3,
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(await screen.findByLabelText('Local'), 'Nacional')
+    await user.type(screen.getByLabelText('Visitante'), 'Peñarol')
+    await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
+    await user.type(screen.getByLabelText('Número de fecha'), '3')
+    await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
+
+    expect(mockedCreateMatch).toHaveBeenCalledWith({
+      tournamentId: 'tournament-1',
+      stageId: 'stage-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00',
+      isElimination: false,
+      matchday: 3,
+    })
+  })
+
   it('muestra un error cuando falla la carga del partido', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
     mockedCreateMatch.mockRejectedValue(new Error('Solo un superadmin puede cargar o editar partidos'))

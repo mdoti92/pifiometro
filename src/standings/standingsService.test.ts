@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as groupMembersService from '../groups/groupMembersService'
 import { supabase } from '../lib/supabase'
-import { getGroupStageStandings, getGroupTournamentStandings } from './standingsService'
+import {
+  getGroupStageStandings,
+  getGroupTournamentStandings,
+  getMatchdaySummaries,
+} from './standingsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -135,5 +139,95 @@ describe('getGroupStageStandings', () => {
     const standings = await getGroupStageStandings('group-1', 'stage-1')
 
     expect(standings).toEqual([{ userId: 'user-1', displayName: 'Doti', totalPoints: 0, rank: 1 }])
+  })
+})
+
+function mockMatchdayPredictionsQuery(rows: unknown[]) {
+  const notFn = vi.fn().mockResolvedValue({ data: rows, error: null })
+  const eq2 = vi.fn().mockReturnValue({ not: notFn })
+  const eq1 = vi.fn().mockReturnValue({ eq: eq2 })
+  const select = vi.fn().mockReturnValue({ eq: eq1 })
+  mockedFrom.mockReturnValue({ select } as never)
+  return { select, eq1, eq2, notFn }
+}
+
+describe('getMatchdaySummaries', () => {
+  it('identifica la fecha con mas puntos como mejor fecha de cada usuario', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+    ])
+    mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 1, matches: { matchday: 1 } },
+      { user_id: 'user-1', points: 3, matches: { matchday: 2 } },
+      { user_id: 'user-1', points: 1, matches: { matchday: 2 } },
+    ])
+
+    const summaries = await getMatchdaySummaries('group-1', 'tournament-1')
+
+    expect(summaries).toContainEqual(
+      expect.objectContaining({
+        userId: 'user-1',
+        bestMatchday: { matchday: 2, points: 4 },
+      }),
+    )
+  })
+
+  it('suma una fecha ganada a quien tiene el puntaje mas alto de esa fecha', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+      { userId: 'user-2', displayName: 'Aldo', role: 'member', joinedAt: '2026-01-01' },
+    ])
+    mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 3, matches: { matchday: 1 } },
+      { user_id: 'user-2', points: 1, matches: { matchday: 1 } },
+    ])
+
+    const summaries = await getMatchdaySummaries('group-1', 'tournament-1')
+
+    expect(summaries).toContainEqual(expect.objectContaining({ userId: 'user-1', matchdaysWon: 1 }))
+    expect(summaries).toContainEqual(expect.objectContaining({ userId: 'user-2', matchdaysWon: 0 }))
+  })
+
+  it('cuenta la fecha como ganada para todos los empatados en el puntaje mas alto', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+      { userId: 'user-2', displayName: 'Aldo', role: 'member', joinedAt: '2026-01-01' },
+      { userId: 'user-3', displayName: 'Vieja', role: 'member', joinedAt: '2026-01-01' },
+    ])
+    mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 3, matches: { matchday: 1 } },
+      { user_id: 'user-2', points: 3, matches: { matchday: 1 } },
+      { user_id: 'user-3', points: 1, matches: { matchday: 1 } },
+    ])
+
+    const summaries = await getMatchdaySummaries('group-1', 'tournament-1')
+
+    expect(summaries).toContainEqual(expect.objectContaining({ userId: 'user-1', matchdaysWon: 1 }))
+    expect(summaries).toContainEqual(expect.objectContaining({ userId: 'user-2', matchdaysWon: 1 }))
+    expect(summaries).toContainEqual(expect.objectContaining({ userId: 'user-3', matchdaysWon: 0 }))
+  })
+
+  it('filtra por grupo, torneo y solo partidos con numero de fecha cargado', async () => {
+    mockedListMembers.mockResolvedValue([])
+    const { eq1, eq2, notFn } = mockMatchdayPredictionsQuery([])
+
+    await getMatchdaySummaries('group-1', 'tournament-1')
+
+    expect(eq1).toHaveBeenCalledWith('group_id', 'group-1')
+    expect(eq2).toHaveBeenCalledWith('matches.tournament_id', 'tournament-1')
+    expect(notFn).toHaveBeenCalledWith('matches.matchday', 'is', null)
+  })
+
+  it('devuelve bestMatchday null y matchdaysWon 0 para un usuario sin pronosticos con fecha cargada', async () => {
+    mockedListMembers.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', role: 'admin', joinedAt: '2026-01-01' },
+    ])
+    mockMatchdayPredictionsQuery([])
+
+    const summaries = await getMatchdaySummaries('group-1', 'tournament-1')
+
+    expect(summaries).toEqual([
+      { userId: 'user-1', displayName: 'Doti', bestMatchday: null, matchdaysWon: 0 },
+    ])
   })
 })

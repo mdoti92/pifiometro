@@ -10,6 +10,7 @@ export interface Match {
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
+  matchday?: number | null
   homeGoals?: number | null
   awayGoals?: number | null
   status?: 'scheduled' | 'finished' | 'postponed'
@@ -25,6 +26,7 @@ export interface NewMatchInput {
   awayTeam: string
   kickoffAt: string
   isElimination: boolean
+  matchday?: number | null
 }
 
 export interface EditMatchInput {
@@ -33,6 +35,7 @@ export interface EditMatchInput {
   awayTeam?: string
   kickoffAt?: string
   isElimination?: boolean
+  matchday?: number | null
   homeGoals?: number
   awayGoals?: number
   status?: 'scheduled' | 'finished' | 'postponed'
@@ -76,7 +79,7 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, tournament_id, stage_id, home_team, away_team, kickoff_at, is_elimination, source, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties',
+      'id, tournament_id, stage_id, home_team, away_team, kickoff_at, is_elimination, source, matchday, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties',
     )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
@@ -94,6 +97,7 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
     kickoffAt: row.kickoff_at,
     isElimination: row.is_elimination,
     source: row.source,
+    matchday: row.matchday,
     homeGoals: row.home_goals,
     awayGoals: row.away_goals,
     status: row.status,

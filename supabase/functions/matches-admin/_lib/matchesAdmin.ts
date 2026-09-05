@@ -7,6 +7,7 @@ export interface Match {
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
+  matchday?: number | null
   homeGoals?: number | null
   awayGoals?: number | null
   status?: 'scheduled' | 'finished' | 'postponed'
@@ -22,6 +23,7 @@ export interface NewMatchInput {
   awayTeam: string
   kickoffAt: string
   isElimination: boolean
+  matchday?: number | null
 }
 
 export interface EditMatchInput {
@@ -30,6 +32,7 @@ export interface EditMatchInput {
   awayTeam?: string
   kickoffAt?: string
   isElimination?: boolean
+  matchday?: number | null
   homeGoals?: number
   awayGoals?: number
   status?: 'scheduled' | 'finished' | 'postponed'
