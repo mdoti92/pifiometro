@@ -21,6 +21,7 @@ export function MatchesAdminPage() {
   const [awayTeam, setAwayTeam] = useState('')
   const [kickoffAt, setKickoffAt] = useState('')
   const [isElimination, setIsElimination] = useState(false)
+  const [matchday, setMatchday] = useState('')
 
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null)
   const [editHomeTeam, setEditHomeTeam] = useState('')
@@ -57,12 +58,14 @@ export function MatchesAdminPage() {
         awayTeam,
         kickoffAt,
         isElimination,
+        ...(matchday ? { matchday: Number(matchday) } : {}),
       })
       setMatches((current) => [...current, match])
       setHomeTeam('')
       setAwayTeam('')
       setKickoffAt('')
       setIsElimination(false)
+      setMatchday('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cargar el partido')
     }
@@ -137,6 +140,14 @@ export function MatchesAdminPage() {
           type="datetime-local"
           value={kickoffAt}
           onChange={(event) => setKickoffAt(event.target.value)}
+        />
+
+        <label htmlFor="match-matchday">Número de fecha</label>
+        <input
+          id="match-matchday"
+          type="number"
+          value={matchday}
+          onChange={(event) => setMatchday(event.target.value)}
         />
 
         <label htmlFor="match-elimination">Partido de eliminación</label>

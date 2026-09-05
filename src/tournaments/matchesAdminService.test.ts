@@ -169,6 +169,32 @@ describe('listMatches', () => {
     await expect(listMatches('tournament-1')).rejects.toThrow('permission denied')
   })
 
+  it('incluye el numero de fecha cuando el partido lo tiene cargado', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'match-1',
+          tournament_id: 'tournament-1',
+          stage_id: 'stage-1',
+          home_team: 'Nacional',
+          away_team: 'Peñarol',
+          kickoff_at: '2026-03-01T20:00:00Z',
+          is_elimination: false,
+          source: 'manual',
+          matchday: 3,
+        },
+      ],
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ order })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const matches = await listMatches('tournament-1')
+
+    expect(matches[0].matchday).toBe(3)
+  })
+
   it('incluye el resultado cargado cuando el partido ya finalizo', async () => {
     const order = vi.fn().mockResolvedValue({
       data: [

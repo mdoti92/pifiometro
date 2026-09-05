@@ -9,6 +9,7 @@ import { NotificationPreferencesPage } from './notifications/NotificationPrefere
 import { HistoryPage } from './predictions/HistoryPage'
 import { MyPredictionsPage } from './predictions/MyPredictionsPage'
 import { PredictionForm } from './predictions/PredictionForm'
+import { MatchdaySummaryPage } from './standings/MatchdaySummaryPage'
 import { StageStandingsPage } from './standings/StageStandingsPage'
 import { StandingsPage } from './standings/StandingsPage'
 import { MatchesAdminPage } from './tournaments/MatchesAdminPage'
@@ -104,6 +105,14 @@ function App() {
         element={
           <RequireAuth>
             <HistoryPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/groups/:groupId/tournaments/:tournamentId/matchday-summary"
+        element={
+          <RequireAuth>
+            <MatchdaySummaryPage />
           </RequireAuth>
         }
       />
