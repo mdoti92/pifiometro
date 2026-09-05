@@ -6,6 +6,7 @@ import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
 import { NotificationPreferencesPage } from './notifications/NotificationPreferencesPage'
+import { HistoryPage } from './predictions/HistoryPage'
 import { MyPredictionsPage } from './predictions/MyPredictionsPage'
 import { PredictionForm } from './predictions/PredictionForm'
 import { StageStandingsPage } from './standings/StageStandingsPage'
@@ -95,6 +96,14 @@ function App() {
         element={
           <RequireAuth>
             <StageStandingsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/groups/:groupId/tournaments/:tournamentId/history"
+        element={
+          <RequireAuth>
+            <HistoryPage />
           </RequireAuth>
         }
       />
