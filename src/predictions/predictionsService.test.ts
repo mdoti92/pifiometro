@@ -1,6 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '../lib/supabase'
-import { getPrediction, InvalidGoalsError, savePrediction } from './predictionsService'
+import {
+  getMatch,
+  getPrediction,
+  hasKickedOff,
+  InvalidGoalsError,
+  savePrediction,
+} from './predictionsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -84,5 +90,65 @@ describe('savePrediction', () => {
     await expect(savePrediction(validInput)).rejects.toThrow(
       'new row violates row-level security policy',
     )
+  })
+})
+
+describe('getMatch', () => {
+  it('devuelve los datos del partido', async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: {
+        id: 'match-1',
+        home_team: 'Nacional',
+        away_team: 'Peñarol',
+        kickoff_at: '2026-03-01T20:00:00Z',
+      },
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ single })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const match = await getMatch('match-1')
+
+    expect(mockedFrom).toHaveBeenCalledWith('matches')
+    expect(eq).toHaveBeenCalledWith('id', 'match-1')
+    expect(match).toEqual({
+      id: 'match-1',
+      homeTeam: 'Nacional',
+      awayTeam: 'Peñarol',
+      kickoffAt: '2026-03-01T20:00:00Z',
+    })
+  })
+
+  it('propaga el error cuando el partido no existe', async () => {
+    const single = vi.fn().mockResolvedValue({ data: null, error: { message: 'no rows found' } })
+    const eq = vi.fn().mockReturnValue({ single })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getMatch('match-inexistente')).rejects.toThrow('no rows found')
+  })
+})
+
+describe('hasKickedOff', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-01T20:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('devuelve true cuando la hora de kickoff ya paso', () => {
+    expect(hasKickedOff('2026-03-01T19:59:59Z')).toBe(true)
+  })
+
+  it('devuelve true cuando la hora de kickoff es exactamente ahora', () => {
+    expect(hasKickedOff('2026-03-01T20:00:00Z')).toBe(true)
+  })
+
+  it('devuelve false cuando la hora de kickoff todavia no llego', () => {
+    expect(hasKickedOff('2026-03-01T20:00:01Z')).toBe(false)
   })
 })

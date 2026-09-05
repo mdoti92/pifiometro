@@ -14,12 +14,27 @@ vi.mock('../auth/AuthContext', async () => {
 vi.mock('./predictionsService', async () => {
   const actual =
     await vi.importActual<typeof import('./predictionsService')>('./predictionsService')
-  return { ...actual, getPrediction: vi.fn(), savePrediction: vi.fn() }
+  return { ...actual, getPrediction: vi.fn(), savePrediction: vi.fn(), getMatch: vi.fn() }
 })
 
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedGetPrediction = vi.mocked(predictionsService.getPrediction)
 const mockedSavePrediction = vi.mocked(predictionsService.savePrediction)
+const mockedGetMatch = vi.mocked(predictionsService.getMatch)
+
+const FUTURE_MATCH = {
+  id: 'match-1',
+  homeTeam: 'Nacional',
+  awayTeam: 'Peñarol',
+  kickoffAt: '2999-01-01T20:00:00Z',
+}
+
+const PAST_MATCH = {
+  id: 'match-1',
+  homeTeam: 'Nacional',
+  awayTeam: 'Peñarol',
+  kickoffAt: '2000-01-01T20:00:00Z',
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -28,6 +43,7 @@ beforeEach(() => {
     user: { id: 'user-1' } as never,
     loading: false,
   })
+  mockedGetMatch.mockResolvedValue(FUTURE_MATCH)
 })
 
 function renderPage() {
@@ -103,5 +119,34 @@ describe('PredictionForm', () => {
     expect(
       await screen.findByText('new row violates row-level security policy'),
     ).toBeInTheDocument()
+  })
+
+  it('deshabilita el form y muestra un mensaje claro cuando el partido ya arranco', async () => {
+    mockedGetMatch.mockResolvedValue(PAST_MATCH)
+    mockedGetPrediction.mockResolvedValue(null)
+    renderPage()
+
+    expect(
+      await screen.findByText('El partido ya arrancó, no se puede cargar ni editar el pronóstico'),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles local')).toBeDisabled()
+    expect(screen.getByLabelText('Goles visitante')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Guardar pronóstico' })).toBeDisabled()
+  })
+
+  it('mantiene el pronostico ya cargado visible aunque el partido ya haya arrancado', async () => {
+    mockedGetMatch.mockResolvedValue(PAST_MATCH)
+    mockedGetPrediction.mockResolvedValue({ homeGoals: 2, awayGoals: 1 })
+    renderPage()
+
+    expect(await screen.findByDisplayValue('2')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('1')).toBeInTheDocument()
+  })
+
+  it('no deshabilita el form cuando el partido todavia no arranco', async () => {
+    mockedGetPrediction.mockResolvedValue(null)
+    renderPage()
+
+    expect(await screen.findByLabelText('Goles local')).not.toBeDisabled()
   })
 })
