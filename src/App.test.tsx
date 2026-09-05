@@ -76,4 +76,12 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
+
+  it('redirige a login al visitar /preferences/notifications sin sesion activa', () => {
+    mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+
+    renderAppAt('/preferences/notifications')
+
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
 })

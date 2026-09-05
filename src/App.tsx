@@ -5,6 +5,7 @@ import { RequireAuth } from './auth/RequireAuth'
 import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
+import { NotificationPreferencesPage } from './notifications/NotificationPreferencesPage'
 import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 
 function App() {
@@ -41,6 +42,14 @@ function App() {
         element={
           <RequireAuth>
             <TournamentAdminPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/preferences/notifications"
+        element={
+          <RequireAuth>
+            <NotificationPreferencesPage />
           </RequireAuth>
         }
       />
