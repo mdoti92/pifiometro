@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webpush from 'npm:web-push@3.6.7'
 import {
   createMatch,
   editMatch,
@@ -6,6 +7,7 @@ import {
   type MatchesAdminClient,
   NotSuperadminError,
 } from './_lib/matchesAdmin.ts'
+import { notifyResultChanges, type NotifyResultsClient } from './_lib/notifyResults.ts'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -79,7 +81,45 @@ Deno.serve(async (req: Request) => {
   const { data: userData, error: userError } = await authClient.auth.getUser()
   if (userError || !userData.user) return json({ error: 'Unauthorized' }, 401)
 
+  const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
+  const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
+  if (vapidPublicKey && vapidPrivateKey) {
+    webpush.setVapidDetails('mailto:soporte@pifiometro.app', vapidPublicKey, vapidPrivateKey)
+  }
+
   const admin = createClient(supabaseUrl, serviceRoleKey, { db: { schema: 'pifiometro' } })
+
+  const notifyClient: NotifyResultsClient = {
+    async getPredictionsSnapshot(matchId) {
+      const { data, error } = await admin
+        .from('predictions')
+        .select('user_id, points')
+        .eq('match_id', matchId)
+      if (error) throw new Error(error.message)
+      return data.map((row) => ({ userId: row.user_id, points: row.points }))
+    },
+    async getPushSubscriptions(userId) {
+      const { data, error } = await admin
+        .from('push_subscriptions')
+        .select('endpoint, p256dh, auth_key')
+        .eq('user_id', userId)
+      if (error) throw new Error(error.message)
+      return data.map((row) => ({ endpoint: row.endpoint, p256dh: row.p256dh, authKey: row.auth_key }))
+    },
+    async sendPush(subscription, payload) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: subscription.endpoint,
+            keys: { p256dh: subscription.p256dh, auth: subscription.authKey },
+          },
+          JSON.stringify(payload),
+        )
+      } catch (err) {
+        console.error(`No se pudo enviar push a ${subscription.endpoint}:`, err)
+      }
+    },
+  }
 
   const client: MatchesAdminClient = {
     async isSuperadmin(userId) {
@@ -120,8 +160,17 @@ Deno.serve(async (req: Request) => {
 
     const editMatchPath = path.match(/^\/([^/]+)$/)
     if (req.method === 'PATCH' && editMatchPath) {
+      const matchId = editMatchPath[1]
       const body = await req.json()
-      const match = await editMatch(client, userData.user.id, editMatchPath[1], body)
+      const before = await notifyClient.getPredictionsSnapshot(matchId)
+      const match = await editMatch(client, userData.user.id, matchId, body)
+
+      try {
+        await notifyResultChanges(notifyClient, matchId, before)
+      } catch (err) {
+        console.error('No se pudieron enviar las notificaciones de resultado:', err)
+      }
+
       return json(match)
     }
 
