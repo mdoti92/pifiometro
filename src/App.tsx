@@ -8,6 +8,7 @@ import { MembersPage } from './groups/MembersPage'
 import { NotificationPreferencesPage } from './notifications/NotificationPreferencesPage'
 import { MyPredictionsPage } from './predictions/MyPredictionsPage'
 import { PredictionForm } from './predictions/PredictionForm'
+import { StandingsPage } from './standings/StandingsPage'
 import { MatchesAdminPage } from './tournaments/MatchesAdminPage'
 import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 
@@ -77,6 +78,14 @@ function App() {
         element={
           <RequireAuth>
             <MyPredictionsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/groups/:groupId/tournaments/:tournamentId/standings"
+        element={
+          <RequireAuth>
+            <StandingsPage />
           </RequireAuth>
         }
       />
