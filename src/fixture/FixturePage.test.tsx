@@ -45,6 +45,8 @@ describe('FixturePage', () => {
         id: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
+        homeTeamSlug: 'danubio',
+        awayTeamSlug: 'wanderers',
         kickoffAt: '2026-03-08T20:00:00Z',
         matchday: 2,
         status: 'scheduled',
@@ -59,6 +61,8 @@ describe('FixturePage', () => {
         id: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
         matchday: 1,
         status: 'finished',
@@ -81,6 +85,40 @@ describe('FixturePage', () => {
     expect(headings[1]).toHaveTextContent('Fecha 2')
   })
 
+  it('muestra el logo de cada equipo junto al partido', async () => {
+    mockedListGroupTournaments.mockResolvedValue([
+      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
+    ])
+    mockedListTournamentFixture.mockResolvedValue([
+      {
+        id: 'match-1',
+        homeTeam: 'Nacional',
+        awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
+        kickoffAt: '2026-03-01T20:00:00Z',
+        matchday: 1,
+        status: 'finished',
+        homeGoals: 2,
+        awayGoals: 1,
+        isElimination: false,
+        wentToPenalties: false,
+        homeGoalsPenalties: null,
+        awayGoalsPenalties: null,
+      },
+    ])
+    renderPage()
+
+    expect(await screen.findByRole('img', { name: 'Nacional' })).toHaveAttribute(
+      'src',
+      '/team-logos/nacional.svg',
+    )
+    expect(screen.getByRole('img', { name: 'Peñarol' })).toHaveAttribute(
+      'src',
+      '/team-logos/penarol.svg',
+    )
+  })
+
   it('muestra el resultado final de un partido jugado', async () => {
     mockedListGroupTournaments.mockResolvedValue([
       { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
@@ -90,6 +128,8 @@ describe('FixturePage', () => {
         id: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
         matchday: 1,
         status: 'finished',
@@ -115,6 +155,8 @@ describe('FixturePage', () => {
         id: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
         matchday: null,
         status: 'finished',

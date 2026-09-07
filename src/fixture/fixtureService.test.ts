@@ -15,13 +15,11 @@ beforeEach(() => {
 })
 
 describe('listTournamentFixture', () => {
-  it('lista los partidos del torneo ordenados por kickoff', async () => {
+  it('lista los partidos del torneo ordenados por kickoff, resolviendo alias y slug de cada equipo', async () => {
     const order = vi.fn().mockResolvedValue({
       data: [
         {
           id: 'match-1',
-          home_team: 'Nacional',
-          away_team: 'Peñarol',
           kickoff_at: '2026-03-01T20:00:00Z',
           matchday: 1,
           status: 'finished',
@@ -31,6 +29,8 @@ describe('listTournamentFixture', () => {
           went_to_penalties: false,
           home_goals_penalties: null,
           away_goals_penalties: null,
+          home: { name: 'Nacional', alias: null, slug: 'nacional' },
+          away: { name: 'Peñarol', alias: null, slug: 'penarol' },
         },
       ],
       error: null,
@@ -48,6 +48,8 @@ describe('listTournamentFixture', () => {
         id: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
         matchday: 1,
         status: 'finished',
@@ -59,6 +61,36 @@ describe('listTournamentFixture', () => {
         awayGoalsPenalties: null,
       },
     ])
+  })
+
+  it('usa el alias del equipo cuando esta cargado', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'match-1',
+          kickoff_at: '2026-03-01T20:00:00Z',
+          matchday: 1,
+          status: 'scheduled',
+          home_goals: null,
+          away_goals: null,
+          is_elimination: false,
+          went_to_penalties: false,
+          home_goals_penalties: null,
+          away_goals_penalties: null,
+          home: { name: 'Danubio', alias: 'Diluvio', slug: 'danubio' },
+          away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
+        },
+      ],
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ order })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const fixture = await listTournamentFixture('tournament-1')
+
+    expect(fixture[0].homeTeam).toBe('Diluvio')
+    expect(fixture[0].awayTeam).toBe('Wanderers')
   })
 
   it('propaga el error de supabase', async () => {

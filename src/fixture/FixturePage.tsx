@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { listGroupTournaments, type GroupTournament } from '../groups/groupTournamentsService'
+import { TeamBadge } from '../teams/TeamBadge'
 import { formatFixtureResult } from './formatFixtureResult'
 import { listTournamentFixture, type FixtureMatch } from './fixtureService'
 import { groupMatchesByMatchday } from './groupMatchesByMatchday'
@@ -60,7 +61,9 @@ export function FixturePage() {
           <ul>
             {group.matches.map((match) => (
               <li key={match.id}>
-                {match.homeTeam} vs {match.awayTeam} — {formatFixtureResult(match)}
+                <TeamBadge name={match.homeTeam} slug={match.homeTeamSlug} /> {match.homeTeam} vs{' '}
+                {match.awayTeam} <TeamBadge name={match.awayTeam} slug={match.awayTeamSlug} /> —{' '}
+                {formatFixtureResult(match)}
               </li>
             ))}
           </ul>

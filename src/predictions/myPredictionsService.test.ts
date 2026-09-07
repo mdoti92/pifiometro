@@ -46,13 +46,13 @@ describe('listMatchPredictionStatuses', () => {
     expect(mockedFrom).toHaveBeenCalledTimes(1)
   })
 
-  it('marca como cargado un partido con pronostico guardado, mostrando los goles', async () => {
+  it('marca como cargado un partido con pronostico guardado, mostrando los goles y el equipo', async () => {
     const matches = [
       {
         id: 'match-1',
-        home_team: 'Nacional',
-        away_team: 'Peñarol',
         kickoff_at: '2999-01-01T20:00:00Z',
+        home: { name: 'Nacional', alias: null, slug: 'nacional' },
+        away: { name: 'Peñarol', alias: null, slug: 'penarol' },
       },
     ]
     const predictions = [{ match_id: 'match-1', home_goals: 2, away_goals: 1 }]
@@ -69,6 +69,8 @@ describe('listMatchPredictionStatuses', () => {
         matchId: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2999-01-01T20:00:00Z',
         status: 'cargado',
         homeGoals: 2,
@@ -77,13 +79,34 @@ describe('listMatchPredictionStatuses', () => {
     ])
   })
 
+  it('usa el alias del equipo cuando esta cargado', async () => {
+    const matches = [
+      {
+        id: 'match-1',
+        kickoff_at: '2999-01-01T20:00:00Z',
+        home: { name: 'Danubio', alias: 'Diluvio', slug: 'danubio' },
+        away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
+      },
+    ]
+    const matchesQuery = mockMatchesQuery(matches)
+    const predictionsQuery = mockPredictionsQuery([])
+    mockedFrom
+      .mockReturnValueOnce({ select: matchesQuery.select } as never)
+      .mockReturnValueOnce({ select: predictionsQuery.select } as never)
+
+    const result = await listMatchPredictionStatuses('stage-1', 'group-1', 'user-1')
+
+    expect(result[0].homeTeam).toBe('Diluvio')
+    expect(result[0].awayTeam).toBe('Wanderers')
+  })
+
   it('marca como pendiente un partido sin pronostico que todavia no arranco', async () => {
     const matches = [
       {
         id: 'match-2',
-        home_team: 'Danubio',
-        away_team: 'Wanderers',
         kickoff_at: '2999-01-01T20:00:00Z',
+        home: { name: 'Danubio', alias: null, slug: 'danubio' },
+        away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
       },
     ]
     const matchesQuery = mockMatchesQuery(matches)
@@ -99,6 +122,8 @@ describe('listMatchPredictionStatuses', () => {
         matchId: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
+        homeTeamSlug: 'danubio',
+        awayTeamSlug: 'wanderers',
         kickoffAt: '2999-01-01T20:00:00Z',
         status: 'pendiente',
         homeGoals: null,
@@ -111,9 +136,9 @@ describe('listMatchPredictionStatuses', () => {
     const matches = [
       {
         id: 'match-3',
-        home_team: 'Cerro',
-        away_team: 'Liverpool',
         kickoff_at: '2000-01-01T20:00:00Z',
+        home: { name: 'Cerro', alias: null, slug: 'cerro' },
+        away: { name: 'Liverpool', alias: null, slug: 'liverpool' },
       },
     ]
     const matchesQuery = mockMatchesQuery(matches)
@@ -129,6 +154,8 @@ describe('listMatchPredictionStatuses', () => {
         matchId: 'match-3',
         homeTeam: 'Cerro',
         awayTeam: 'Liverpool',
+        homeTeamSlug: 'cerro',
+        awayTeamSlug: 'liverpool',
         kickoffAt: '2000-01-01T20:00:00Z',
         status: 'no_pronosticado',
         homeGoals: null,

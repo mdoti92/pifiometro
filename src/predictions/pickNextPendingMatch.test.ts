@@ -9,6 +9,8 @@ function pending(matchId: string, kickoffAt: string): MatchPredictionStatus {
     matchId,
     homeTeam: 'Local',
     awayTeam: 'Visitante',
+    homeTeamSlug: 'local',
+    awayTeamSlug: 'visitante',
     kickoffAt,
     status: 'pendiente',
     homeGoals: null,

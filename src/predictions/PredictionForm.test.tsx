@@ -26,6 +26,8 @@ const FUTURE_MATCH = {
   id: 'match-1',
   homeTeam: 'Nacional',
   awayTeam: 'Peñarol',
+  homeTeamSlug: 'nacional',
+  awayTeamSlug: 'penarol',
   kickoffAt: '2999-01-01T20:00:00Z',
 }
 
@@ -33,6 +35,8 @@ const PAST_MATCH = {
   id: 'match-1',
   homeTeam: 'Nacional',
   awayTeam: 'Peñarol',
+  homeTeamSlug: 'nacional',
+  awayTeamSlug: 'penarol',
   kickoffAt: '2000-01-01T20:00:00Z',
 }
 

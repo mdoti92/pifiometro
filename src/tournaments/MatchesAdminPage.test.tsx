@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as teamsService from '../teams/teamsService'
 import * as matchesAdminService from './matchesAdminService'
 import { MatchesAdminPage } from './MatchesAdminPage'
 import * as tournamentsService from './tournamentsService'
@@ -17,11 +18,40 @@ vi.mock('./matchesAdminService', async () => {
   return { ...actual, listMatches: vi.fn(), createMatch: vi.fn(), editMatch: vi.fn() }
 })
 
+vi.mock('../teams/teamsService', async () => {
+  const actual = await vi.importActual<typeof import('../teams/teamsService')>('../teams/teamsService')
+  return { ...actual, listTeams: vi.fn() }
+})
+
 const mockedIsSuperadmin = vi.mocked(tournamentsService.isSuperadmin)
 const mockedListTournamentStages = vi.mocked(tournamentsService.listTournamentStages)
 const mockedListMatches = vi.mocked(matchesAdminService.listMatches)
 const mockedCreateMatch = vi.mocked(matchesAdminService.createMatch)
 const mockedEditMatch = vi.mocked(matchesAdminService.editMatch)
+const mockedListTeams = vi.mocked(teamsService.listTeams)
+
+const TEAMS = [
+  { id: 'team-nacional', name: 'Nacional', alias: null, slug: 'nacional' },
+  { id: 'team-penarol', name: 'Peñarol', alias: null, slug: 'penarol' },
+]
+
+function baseMatch(overrides: Partial<matchesAdminService.Match> = {}): matchesAdminService.Match {
+  return {
+    id: 'match-1',
+    tournamentId: 'tournament-1',
+    stageId: 'stage-1',
+    homeTeamId: 'team-nacional',
+    awayTeamId: 'team-penarol',
+    homeTeam: 'Nacional',
+    awayTeam: 'Peñarol',
+    homeTeamSlug: 'nacional',
+    awayTeamSlug: 'penarol',
+    kickoffAt: '2026-03-01T20:00',
+    isElimination: false,
+    source: 'manual',
+    ...overrides,
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -29,6 +59,7 @@ beforeEach(() => {
     { id: 'stage-1', tournamentId: 'tournament-1', name: 'Apertura', orderIndex: 0 },
   ])
   mockedListMatches.mockResolvedValue([])
+  mockedListTeams.mockResolvedValue(TEAMS)
 })
 
 function renderPage() {
@@ -52,31 +83,22 @@ describe('MatchesAdminPage', () => {
     expect(mockedCreateMatch).not.toHaveBeenCalled()
   })
 
-  it('carga un partido nuevo marcado como manual', async () => {
+  it('carga un partido nuevo eligiendo los equipos de una lista, marcado como manual', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
-    mockedCreateMatch.mockResolvedValue({
-      id: 'match-1',
-      tournamentId: 'tournament-1',
-      stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
-      kickoffAt: '2026-03-01T20:00',
-      isElimination: false,
-      source: 'manual',
-    })
+    mockedCreateMatch.mockResolvedValue(baseMatch())
     const user = userEvent.setup()
     renderPage()
 
-    await user.type(await screen.findByLabelText('Local'), 'Nacional')
-    await user.type(screen.getByLabelText('Visitante'), 'Peñarol')
+    await user.selectOptions(await screen.findByLabelText('Local'), 'team-nacional')
+    await user.selectOptions(screen.getByLabelText('Visitante'), 'team-penarol')
     await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
     await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
 
     expect(mockedCreateMatch).toHaveBeenCalledWith({
       tournamentId: 'tournament-1',
       stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
+      homeTeamId: 'team-nacional',
+      awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-01T20:00',
       isElimination: false,
     })
@@ -86,24 +108,30 @@ describe('MatchesAdminPage', () => {
     expect(screen.getByText(/Nacional vs Peñarol — manual/)).toBeInTheDocument()
   })
 
-  it('carga un partido con numero de fecha', async () => {
+  it('no permite elegir el mismo equipo como local y visitante', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
-    mockedCreateMatch.mockResolvedValue({
-      id: 'match-1',
-      tournamentId: 'tournament-1',
-      stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
-      kickoffAt: '2026-03-01T20:00',
-      isElimination: false,
-      source: 'manual',
-      matchday: 3,
-    })
     const user = userEvent.setup()
     renderPage()
 
-    await user.type(await screen.findByLabelText('Local'), 'Nacional')
-    await user.type(screen.getByLabelText('Visitante'), 'Peñarol')
+    await user.selectOptions(await screen.findByLabelText('Local'), 'team-nacional')
+    await user.selectOptions(screen.getByLabelText('Visitante'), 'team-nacional')
+    await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
+    await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
+
+    expect(
+      await screen.findByText('El equipo local y el visitante no pueden ser el mismo'),
+    ).toBeInTheDocument()
+    expect(mockedCreateMatch).not.toHaveBeenCalled()
+  })
+
+  it('carga un partido con numero de fecha', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedCreateMatch.mockResolvedValue(baseMatch({ matchday: 3 }))
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(await screen.findByLabelText('Local'), 'team-nacional')
+    await user.selectOptions(screen.getByLabelText('Visitante'), 'team-penarol')
     await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
     await user.type(screen.getByLabelText('Número de fecha'), '3')
     await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
@@ -111,8 +139,8 @@ describe('MatchesAdminPage', () => {
     expect(mockedCreateMatch).toHaveBeenCalledWith({
       tournamentId: 'tournament-1',
       stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
+      homeTeamId: 'team-nacional',
+      awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-01T20:00',
       isElimination: false,
       matchday: 3,
@@ -125,8 +153,8 @@ describe('MatchesAdminPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.type(await screen.findByLabelText('Local'), 'Nacional')
-    await user.type(screen.getByLabelText('Visitante'), 'Peñarol')
+    await user.selectOptions(await screen.findByLabelText('Local'), 'team-nacional')
+    await user.selectOptions(screen.getByLabelText('Visitante'), 'team-penarol')
     await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
     await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
 
@@ -135,42 +163,24 @@ describe('MatchesAdminPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('edita un partido existente que vino de la API y lo pasa a manual', async () => {
+  it('edita un partido existente que vino de la API y lo pasa a manual, preseleccionando sus equipos', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
-    mockedListMatches.mockResolvedValue([
-      {
-        id: 'match-1',
-        tournamentId: 'tournament-1',
-        stageId: 'stage-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        kickoffAt: '2026-03-01T20:00',
-        isElimination: false,
-        source: 'api',
-      },
-    ])
-    mockedEditMatch.mockResolvedValue({
-      id: 'match-1',
-      tournamentId: 'tournament-1',
-      stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
-      kickoffAt: '2026-03-02T21:00',
-      isElimination: false,
-      source: 'manual',
-    })
+    mockedListMatches.mockResolvedValue([baseMatch({ source: 'api' })])
+    mockedEditMatch.mockResolvedValue(baseMatch({ kickoffAt: '2026-03-02T21:00' }))
     const user = userEvent.setup()
     renderPage()
 
     await user.click(await screen.findByRole('button', { name: 'Editar partido Nacional vs Peñarol' }))
+    expect(screen.getByLabelText('Local (editar)')).toHaveValue('team-nacional')
+    expect(screen.getByLabelText('Visitante (editar)')).toHaveValue('team-penarol')
     const kickoffInput = screen.getByLabelText('Fecha y hora (editar)')
     await user.clear(kickoffInput)
     await user.type(kickoffInput, '2026-03-02T21:00')
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(mockedEditMatch).toHaveBeenCalledWith('match-1', {
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
+      homeTeamId: 'team-nacional',
+      awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-02T21:00',
       isElimination: false,
     })
@@ -179,18 +189,7 @@ describe('MatchesAdminPage', () => {
 
   it('muestra un error cuando falla la edicion', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
-    mockedListMatches.mockResolvedValue([
-      {
-        id: 'match-1',
-        tournamentId: 'tournament-1',
-        stageId: 'stage-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        kickoffAt: '2026-03-01T20:00',
-        isElimination: false,
-        source: 'api',
-      },
-    ])
+    mockedListMatches.mockResolvedValue([baseMatch({ source: 'api' })])
     mockedEditMatch.mockRejectedValue(new Error('El partido no existe'))
     const user = userEvent.setup()
     renderPage()
@@ -203,31 +202,15 @@ describe('MatchesAdminPage', () => {
 
   it('carga el resultado de un partido y lo marca finished', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
-    mockedListMatches.mockResolvedValue([
-      {
-        id: 'match-1',
-        tournamentId: 'tournament-1',
-        stageId: 'stage-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
+    mockedListMatches.mockResolvedValue([baseMatch({ kickoffAt: '2026-03-01T20:00:00Z' })])
+    mockedEditMatch.mockResolvedValue(
+      baseMatch({
         kickoffAt: '2026-03-01T20:00:00Z',
-        isElimination: false,
-        source: 'manual',
-      },
-    ])
-    mockedEditMatch.mockResolvedValue({
-      id: 'match-1',
-      tournamentId: 'tournament-1',
-      stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
-      kickoffAt: '2026-03-01T20:00:00Z',
-      isElimination: false,
-      source: 'manual',
-      homeGoals: 2,
-      awayGoals: 1,
-      status: 'finished',
-    })
+        homeGoals: 2,
+        awayGoals: 1,
+        status: 'finished',
+      }),
+    )
     const user = userEvent.setup()
     renderPage()
 
@@ -246,33 +229,20 @@ describe('MatchesAdminPage', () => {
   it('carga un resultado de eliminacion definido por penales, sin afectar los goles reglamentarios', async () => {
     mockedIsSuperadmin.mockResolvedValue(true)
     mockedListMatches.mockResolvedValue([
-      {
-        id: 'match-1',
-        tournamentId: 'tournament-1',
-        stageId: 'stage-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
+      baseMatch({ kickoffAt: '2026-03-01T20:00:00Z', isElimination: true }),
+    ])
+    mockedEditMatch.mockResolvedValue(
+      baseMatch({
         kickoffAt: '2026-03-01T20:00:00Z',
         isElimination: true,
-        source: 'manual',
-      },
-    ])
-    mockedEditMatch.mockResolvedValue({
-      id: 'match-1',
-      tournamentId: 'tournament-1',
-      stageId: 'stage-1',
-      homeTeam: 'Nacional',
-      awayTeam: 'Peñarol',
-      kickoffAt: '2026-03-01T20:00:00Z',
-      isElimination: true,
-      source: 'manual',
-      homeGoals: 1,
-      awayGoals: 1,
-      status: 'finished',
-      wentToPenalties: true,
-      homeGoalsPenalties: 5,
-      awayGoalsPenalties: 4,
-    })
+        homeGoals: 1,
+        awayGoals: 1,
+        status: 'finished',
+        wentToPenalties: true,
+        homeGoalsPenalties: 5,
+        awayGoalsPenalties: 4,
+      }),
+    )
     const user = userEvent.setup()
     renderPage()
 

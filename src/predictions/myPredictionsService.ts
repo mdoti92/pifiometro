@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getTeamDisplayName } from '../teams/teamsService'
 import { hasKickedOff } from './predictionsService'
 
 export type MatchPredictionStatusValue = 'pendiente' | 'cargado' | 'no_pronosticado'
@@ -7,10 +8,25 @@ export interface MatchPredictionStatus {
   matchId: string
   homeTeam: string
   awayTeam: string
+  homeTeamSlug: string
+  awayTeamSlug: string
   kickoffAt: string
   status: MatchPredictionStatusValue
   homeGoals: number | null
   awayGoals: number | null
+}
+
+interface MatchTeamRow {
+  name: string
+  alias: string | null
+  slug: string
+}
+
+interface MatchRow {
+  id: string
+  kickoff_at: string
+  home: MatchTeamRow | null
+  away: MatchTeamRow | null
 }
 
 export async function listMatchPredictionStatuses(
@@ -20,7 +36,7 @@ export async function listMatchPredictionStatuses(
 ): Promise<MatchPredictionStatus[]> {
   const { data: matches, error: matchesError } = await supabase
     .from('matches')
-    .select('id, home_team, away_team, kickoff_at')
+    .select('id, kickoff_at, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)')
     .eq('stage_id', stageId)
     .order('kickoff_at', { ascending: true })
 
@@ -32,7 +48,8 @@ export async function listMatchPredictionStatuses(
     return []
   }
 
-  const matchIds = matches.map((match) => match.id)
+  const matchRows = matches as unknown as MatchRow[]
+  const matchIds = matchRows.map((match) => match.id)
 
   const { data: predictions, error: predictionsError } = await supabase
     .from('predictions')
@@ -47,14 +64,20 @@ export async function listMatchPredictionStatuses(
 
   const predictionByMatchId = new Map(predictions.map((prediction) => [prediction.match_id, prediction]))
 
-  return matches.map((match) => {
+  return matchRows.map((match) => {
     const prediction = predictionByMatchId.get(match.id)
+    const homeTeam = getTeamDisplayName(match.home)
+    const awayTeam = getTeamDisplayName(match.away)
+    const homeTeamSlug = match.home?.slug ?? ''
+    const awayTeamSlug = match.away?.slug ?? ''
 
     if (prediction) {
       return {
         matchId: match.id,
-        homeTeam: match.home_team,
-        awayTeam: match.away_team,
+        homeTeam,
+        awayTeam,
+        homeTeamSlug,
+        awayTeamSlug,
         kickoffAt: match.kickoff_at,
         status: 'cargado' as const,
         homeGoals: prediction.home_goals,
@@ -64,8 +87,10 @@ export async function listMatchPredictionStatuses(
 
     return {
       matchId: match.id,
-      homeTeam: match.home_team,
-      awayTeam: match.away_team,
+      homeTeam,
+      awayTeam,
+      homeTeamSlug,
+      awayTeamSlug,
       kickoffAt: match.kickoff_at,
       status: hasKickedOff(match.kickoff_at) ? ('no_pronosticado' as const) : ('pendiente' as const),
       homeGoals: null,
