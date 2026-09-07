@@ -7,6 +7,8 @@ function baseMatch(overrides: Partial<FixtureMatch>): FixtureMatch {
     id: 'match-1',
     homeTeam: 'Nacional',
     awayTeam: 'Peñarol',
+    homeTeamSlug: 'nacional',
+    awayTeamSlug: 'penarol',
     kickoffAt: '2026-03-01T20:00:00Z',
     matchday: 1,
     status: 'scheduled',

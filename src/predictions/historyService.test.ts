@@ -44,12 +44,12 @@ describe('getMatchHistory', () => {
     const matches = [
       {
         id: 'match-1',
-        home_team: 'Nacional',
-        away_team: 'Peñarol',
         kickoff_at: '2000-01-01T20:00:00Z',
         home_goals: 2,
         away_goals: 1,
         status: 'finished',
+        home: { name: 'Nacional', alias: null, slug: 'nacional' },
+        away: { name: 'Peñarol', alias: null, slug: 'penarol' },
       },
     ]
     const predictions = [{ match_id: 'match-1', home_goals: 2, away_goals: 1, status: 'exacto' }]
@@ -64,6 +64,8 @@ describe('getMatchHistory', () => {
         matchId: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2000-01-01T20:00:00Z',
         predictedHomeGoals: 2,
         predictedAwayGoals: 1,
@@ -78,12 +80,12 @@ describe('getMatchHistory', () => {
     const matches = [
       {
         id: 'match-2',
-        home_team: 'Danubio',
-        away_team: 'Wanderers',
         kickoff_at: '2000-01-01T20:00:00Z',
         home_goals: 1,
         away_goals: 0,
         status: 'finished',
+        home: { name: 'Danubio', alias: null, slug: 'danubio' },
+        away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
       },
     ]
     mockedFrom
@@ -99,12 +101,12 @@ describe('getMatchHistory', () => {
     const matches = [
       {
         id: 'match-3',
-        home_team: 'Cerro',
-        away_team: 'Liverpool',
         kickoff_at: '2999-01-01T20:00:00Z',
         home_goals: null,
         away_goals: null,
         status: 'scheduled',
+        home: { name: 'Cerro', alias: null, slug: 'cerro' },
+        away: { name: 'Liverpool', alias: null, slug: 'liverpool' },
       },
     ]
     const predictions = [{ match_id: 'match-3', home_goals: 1, away_goals: 1, status: 'por_definir' }]

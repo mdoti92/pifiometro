@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getTeamDisplayName } from '../teams/teamsService'
 
 export type HistoryStatus = 'exacto' | 'resultado' | 'pifiado' | 'no_pronosticado' | 'por_definir'
 
@@ -6,12 +7,30 @@ export interface MatchHistoryRow {
   matchId: string
   homeTeam: string
   awayTeam: string
+  homeTeamSlug: string
+  awayTeamSlug: string
   kickoffAt: string
   predictedHomeGoals: number | null
   predictedAwayGoals: number | null
   actualHomeGoals: number | null
   actualAwayGoals: number | null
   status: HistoryStatus
+}
+
+interface HistoryTeamRow {
+  name: string
+  alias: string | null
+  slug: string
+}
+
+interface HistoryMatchRow {
+  id: string
+  kickoff_at: string
+  home_goals: number
+  away_goals: number
+  status: string
+  home: HistoryTeamRow | null
+  away: HistoryTeamRow | null
 }
 
 interface PredictionStatusRow {
@@ -28,7 +47,9 @@ export async function getMatchHistory(
 ): Promise<MatchHistoryRow[]> {
   const { data: matches, error: matchesError } = await supabase
     .from('matches')
-    .select('id, home_team, away_team, kickoff_at, home_goals, away_goals, status')
+    .select(
+      'id, kickoff_at, home_goals, away_goals, status, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
+    )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
 
@@ -40,7 +61,8 @@ export async function getMatchHistory(
     return []
   }
 
-  const matchIds = matches.map((match) => match.id)
+  const matchRows = matches as unknown as HistoryMatchRow[]
+  const matchIds = matchRows.map((match) => match.id)
 
   const { data: predictions, error: predictionsError } = await supabase
     .from('predictions')
@@ -57,14 +79,16 @@ export async function getMatchHistory(
     (predictions as PredictionStatusRow[]).map((prediction) => [prediction.match_id, prediction]),
   )
 
-  return matches.map((match) => {
+  return matchRows.map((match) => {
     const prediction = predictionByMatchId.get(match.id)
     const finished = match.status === 'finished'
 
     return {
       matchId: match.id,
-      homeTeam: match.home_team,
-      awayTeam: match.away_team,
+      homeTeam: getTeamDisplayName(match.home),
+      awayTeam: getTeamDisplayName(match.away),
+      homeTeamSlug: match.home?.slug ?? '',
+      awayTeamSlug: match.away?.slug ?? '',
       kickoffAt: match.kickoff_at,
       predictedHomeGoals: prediction?.home_goals ?? null,
       predictedAwayGoals: prediction?.away_goals ?? null,

@@ -2,8 +2,12 @@ export interface Match {
   id: string
   tournamentId: string
   stageId: string | null
+  homeTeamId: string
+  awayTeamId: string
   homeTeam: string
   awayTeam: string
+  homeTeamSlug: string
+  awayTeamSlug: string
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
@@ -19,8 +23,8 @@ export interface Match {
 export interface NewMatchInput {
   tournamentId: string
   stageId: string | null
-  homeTeam: string
-  awayTeam: string
+  homeTeamId: string
+  awayTeamId: string
   kickoffAt: string
   isElimination: boolean
   matchday?: number | null
@@ -28,8 +32,8 @@ export interface NewMatchInput {
 
 export interface EditMatchInput {
   stageId?: string | null
-  homeTeam?: string
-  awayTeam?: string
+  homeTeamId?: string
+  awayTeamId?: string
   kickoffAt?: string
   isElimination?: boolean
   matchday?: number | null

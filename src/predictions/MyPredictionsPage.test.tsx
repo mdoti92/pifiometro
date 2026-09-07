@@ -45,6 +45,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2999-01-01T20:00:00Z',
         status: 'cargado',
         homeGoals: 2,
@@ -54,6 +56,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
+        homeTeamSlug: 'danubio',
+        awayTeamSlug: 'wanderers',
         kickoffAt: '2999-01-02T20:00:00Z',
         status: 'pendiente',
         homeGoals: null,
@@ -65,7 +69,7 @@ describe('MyPredictionsPage', () => {
     expect(await screen.findByText(/Nacional vs Peñarol/)).toBeInTheDocument()
     expect(screen.getByText(/Cargado: 2-1/)).toBeInTheDocument()
     // el partido pendiente mas proximo se destaca en el hero, no en la lista
-    expect(screen.getByRole('heading', { name: 'Danubio vs Wanderers' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Danubio Danubio vs Wanderers Wanderers' })).toBeInTheDocument()
   })
 
   it('no muestra ningun hero cuando no tengo partidos pendientes', async () => {
@@ -74,6 +78,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-1',
         homeTeam: 'Nacional',
         awayTeam: 'Peñarol',
+        homeTeamSlug: 'nacional',
+        awayTeamSlug: 'penarol',
         kickoffAt: '2999-01-01T20:00:00Z',
         status: 'cargado',
         homeGoals: 2,
@@ -92,6 +98,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-3',
         homeTeam: 'Cerro',
         awayTeam: 'Liverpool',
+        homeTeamSlug: 'cerro',
+        awayTeamSlug: 'liverpool',
         kickoffAt: '2000-01-01T20:00:00Z',
         status: 'no_pronosticado',
         homeGoals: null,
@@ -111,6 +119,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
+        homeTeamSlug: 'danubio',
+        awayTeamSlug: 'wanderers',
         kickoffAt: '2999-01-02T20:00:00Z',
         status: 'pendiente',
         homeGoals: null,
@@ -120,6 +130,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-3',
         homeTeam: 'Cerro',
         awayTeam: 'Liverpool',
+        homeTeamSlug: 'cerro',
+        awayTeamSlug: 'liverpool',
         kickoffAt: '2000-01-01T20:00:00Z',
         status: 'no_pronosticado',
         homeGoals: null,
@@ -141,6 +153,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
+        homeTeamSlug: 'danubio',
+        awayTeamSlug: 'wanderers',
         kickoffAt: '2999-01-05T20:00:00Z',
         status: 'pendiente',
         homeGoals: null,
@@ -150,6 +164,8 @@ describe('MyPredictionsPage', () => {
         matchId: 'match-4',
         homeTeam: 'Fenix',
         awayTeam: 'Rentistas',
+        homeTeamSlug: 'fenix',
+        awayTeamSlug: 'rentistas',
         kickoffAt: '2999-01-02T20:00:00Z',
         status: 'pendiente',
         homeGoals: null,
@@ -158,7 +174,7 @@ describe('MyPredictionsPage', () => {
     ])
     renderPage()
 
-    expect(await screen.findByRole('heading', { name: 'Fenix vs Rentistas' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Fenix Fenix vs Rentistas Rentistas' })).toBeInTheDocument()
     expect(screen.getByText(/Danubio vs Wanderers — Pendiente/)).toBeInTheDocument()
   })
 })

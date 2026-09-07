@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getTeamDisplayName } from '../teams/teamsService'
 
 export interface Prediction {
   homeGoals: number
@@ -9,7 +10,15 @@ export interface MatchInfo {
   id: string
   homeTeam: string
   awayTeam: string
+  homeTeamSlug: string
+  awayTeamSlug: string
   kickoffAt: string
+}
+
+interface MatchInfoTeamRow {
+  name: string
+  alias: string | null
+  slug: string
 }
 
 export interface SavePredictionInput {
@@ -75,7 +84,7 @@ export async function savePrediction(input: SavePredictionInput): Promise<void> 
 export async function getMatch(matchId: string): Promise<MatchInfo> {
   const { data, error } = await supabase
     .from('matches')
-    .select('id, home_team, away_team, kickoff_at')
+    .select('id, kickoff_at, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)')
     .eq('id', matchId)
     .single()
 
@@ -83,10 +92,15 @@ export async function getMatch(matchId: string): Promise<MatchInfo> {
     throw new Error(error.message)
   }
 
+  const home = data.home as unknown as MatchInfoTeamRow | null
+  const away = data.away as unknown as MatchInfoTeamRow | null
+
   return {
     id: data.id,
-    homeTeam: data.home_team,
-    awayTeam: data.away_team,
+    homeTeam: getTeamDisplayName(home),
+    awayTeam: getTeamDisplayName(away),
+    homeTeamSlug: home?.slug ?? '',
+    awayTeamSlug: away?.slug ?? '',
     kickoffAt: data.kickoff_at,
   }
 }

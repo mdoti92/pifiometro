@@ -1,12 +1,17 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { getTeamDisplayName } from '../teams/teamsService'
 
 export interface Match {
   id: string
   tournamentId: string
   stageId: string | null
+  homeTeamId: string
+  awayTeamId: string
   homeTeam: string
   awayTeam: string
+  homeTeamSlug: string
+  awayTeamSlug: string
   kickoffAt: string
   isElimination: boolean
   source: 'api' | 'manual'
@@ -22,8 +27,8 @@ export interface Match {
 export interface NewMatchInput {
   tournamentId: string
   stageId: string | null
-  homeTeam: string
-  awayTeam: string
+  homeTeamId: string
+  awayTeamId: string
   kickoffAt: string
   isElimination: boolean
   matchday?: number | null
@@ -31,8 +36,8 @@ export interface NewMatchInput {
 
 export interface EditMatchInput {
   stageId?: string | null
-  homeTeam?: string
-  awayTeam?: string
+  homeTeamId?: string
+  awayTeamId?: string
   kickoffAt?: string
   isElimination?: boolean
   matchday?: number | null
@@ -75,11 +80,17 @@ export async function editMatch(matchId: string, input: EditMatchInput): Promise
   )
 }
 
+interface MatchAdminTeamRow {
+  name: string
+  alias: string | null
+  slug: string
+}
+
 export async function listMatches(tournamentId: string): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, tournament_id, stage_id, home_team, away_team, kickoff_at, is_elimination, source, matchday, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties',
+      'id, tournament_id, stage_id, home_team_id, away_team_id, kickoff_at, is_elimination, source, matchday, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
     )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
@@ -88,21 +99,30 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
     throw new Error(error.message)
   }
 
-  return data.map((row) => ({
-    id: row.id,
-    tournamentId: row.tournament_id,
-    stageId: row.stage_id,
-    homeTeam: row.home_team,
-    awayTeam: row.away_team,
-    kickoffAt: row.kickoff_at,
-    isElimination: row.is_elimination,
-    source: row.source,
-    matchday: row.matchday,
-    homeGoals: row.home_goals,
-    awayGoals: row.away_goals,
-    status: row.status,
-    wentToPenalties: row.went_to_penalties,
-    homeGoalsPenalties: row.home_goals_penalties,
-    awayGoalsPenalties: row.away_goals_penalties,
+  return (
+    data as unknown as (Record<string, unknown> & {
+      home: MatchAdminTeamRow | null
+      away: MatchAdminTeamRow | null
+    })[]
+  ).map((row) => ({
+    id: row.id as string,
+    tournamentId: row.tournament_id as string,
+    stageId: row.stage_id as string | null,
+    homeTeamId: row.home_team_id as string,
+    awayTeamId: row.away_team_id as string,
+    homeTeam: getTeamDisplayName(row.home),
+    awayTeam: getTeamDisplayName(row.away),
+    homeTeamSlug: row.home?.slug ?? '',
+    awayTeamSlug: row.away?.slug ?? '',
+    kickoffAt: row.kickoff_at as string,
+    isElimination: row.is_elimination as boolean,
+    source: row.source as 'api' | 'manual',
+    matchday: row.matchday as number | null,
+    homeGoals: row.home_goals as number | null,
+    awayGoals: row.away_goals as number | null,
+    status: row.status as Match['status'],
+    wentToPenalties: row.went_to_penalties as boolean,
+    homeGoalsPenalties: row.home_goals_penalties as number | null,
+    awayGoalsPenalties: row.away_goals_penalties as number | null,
   }))
 }

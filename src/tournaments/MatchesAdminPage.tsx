@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { listTeams, type Team } from '../teams/teamsService'
 import {
   createMatch,
   editMatch,
@@ -9,23 +10,26 @@ import {
 } from './matchesAdminService'
 import { isSuperadmin, listTournamentStages, type TournamentStage } from './tournamentsService'
 
+const SAME_TEAM_ERROR = 'El equipo local y el visitante no pueden ser el mismo'
+
 export function MatchesAdminPage() {
   const { tournamentId } = useParams<{ tournamentId: string }>()
   const [admin, setAdmin] = useState<boolean | null>(null)
   const [stages, setStages] = useState<TournamentStage[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [stageId, setStageId] = useState('')
-  const [homeTeam, setHomeTeam] = useState('')
-  const [awayTeam, setAwayTeam] = useState('')
+  const [homeTeamId, setHomeTeamId] = useState('')
+  const [awayTeamId, setAwayTeamId] = useState('')
   const [kickoffAt, setKickoffAt] = useState('')
   const [isElimination, setIsElimination] = useState(false)
   const [matchday, setMatchday] = useState('')
 
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null)
-  const [editHomeTeam, setEditHomeTeam] = useState('')
-  const [editAwayTeam, setEditAwayTeam] = useState('')
+  const [editHomeTeamId, setEditHomeTeamId] = useState('')
+  const [editAwayTeamId, setEditAwayTeamId] = useState('')
   const [editKickoffAt, setEditKickoffAt] = useState('')
   const [editIsElimination, setEditIsElimination] = useState(false)
 
@@ -39,6 +43,11 @@ export function MatchesAdminPage() {
           setStages(loadedStages)
           setStageId(loadedStages[0]?.id ?? '')
         })
+        listTeams().then((loadedTeams) => {
+          setTeams(loadedTeams)
+          setHomeTeamId(loadedTeams[0]?.id ?? '')
+          setAwayTeamId(loadedTeams[1]?.id ?? loadedTeams[0]?.id ?? '')
+        })
         listMatches(tournamentId).then(setMatches)
       }
     })
@@ -50,19 +59,22 @@ export function MatchesAdminPage() {
 
     if (!tournamentId) return
 
+    if (homeTeamId === awayTeamId) {
+      setError(SAME_TEAM_ERROR)
+      return
+    }
+
     try {
       const match = await createMatch({
         tournamentId,
         stageId: stageId || null,
-        homeTeam,
-        awayTeam,
+        homeTeamId,
+        awayTeamId,
         kickoffAt,
         isElimination,
         ...(matchday ? { matchday: Number(matchday) } : {}),
       })
       setMatches((current) => [...current, match])
-      setHomeTeam('')
-      setAwayTeam('')
       setKickoffAt('')
       setIsElimination(false)
       setMatchday('')
@@ -73,8 +85,8 @@ export function MatchesAdminPage() {
 
   function startEditing(match: Match) {
     setEditingMatchId(match.id)
-    setEditHomeTeam(match.homeTeam)
-    setEditAwayTeam(match.awayTeam)
+    setEditHomeTeamId(match.homeTeamId)
+    setEditAwayTeamId(match.awayTeamId)
     setEditKickoffAt(match.kickoffAt)
     setEditIsElimination(match.isElimination)
   }
@@ -85,10 +97,15 @@ export function MatchesAdminPage() {
 
     if (!editingMatchId) return
 
+    if (editHomeTeamId === editAwayTeamId) {
+      setError(SAME_TEAM_ERROR)
+      return
+    }
+
     try {
       const updated = await editMatch(editingMatchId, {
-        homeTeam: editHomeTeam,
-        awayTeam: editAwayTeam,
+        homeTeamId: editHomeTeamId,
+        awayTeamId: editAwayTeamId,
         kickoffAt: editKickoffAt,
         isElimination: editIsElimination,
       })
@@ -129,10 +146,22 @@ export function MatchesAdminPage() {
         </select>
 
         <label htmlFor="match-home">Local</label>
-        <input id="match-home" value={homeTeam} onChange={(event) => setHomeTeam(event.target.value)} />
+        <select id="match-home" value={homeTeamId} onChange={(event) => setHomeTeamId(event.target.value)}>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="match-away">Visitante</label>
-        <input id="match-away" value={awayTeam} onChange={(event) => setAwayTeam(event.target.value)} />
+        <select id="match-away" value={awayTeamId} onChange={(event) => setAwayTeamId(event.target.value)}>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="match-kickoff">Fecha y hora</label>
         <input
@@ -191,18 +220,30 @@ export function MatchesAdminPage() {
           <h2>Editar partido</h2>
 
           <label htmlFor="edit-home">Local (editar)</label>
-          <input
+          <select
             id="edit-home"
-            value={editHomeTeam}
-            onChange={(event) => setEditHomeTeam(event.target.value)}
-          />
+            value={editHomeTeamId}
+            onChange={(event) => setEditHomeTeamId(event.target.value)}
+          >
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
 
           <label htmlFor="edit-away">Visitante (editar)</label>
-          <input
+          <select
             id="edit-away"
-            value={editAwayTeam}
-            onChange={(event) => setEditAwayTeam(event.target.value)}
-          />
+            value={editAwayTeamId}
+            onChange={(event) => setEditAwayTeamId(event.target.value)}
+          >
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
 
           <label htmlFor="edit-kickoff">Fecha y hora (editar)</label>
           <input

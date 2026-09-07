@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { TeamBadge } from '../teams/TeamBadge'
 import { formatCountdown } from './formatCountdown'
 import type { MatchPredictionStatus } from './myPredictionsService'
 
@@ -18,7 +19,8 @@ export function PredictionHero({ match, groupId, now }: PredictionHeroProps) {
         {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
       </p>
       <h2 className="font-display">
-        {match.homeTeam} vs {match.awayTeam}
+        <TeamBadge name={match.homeTeam} slug={match.homeTeamSlug} /> {match.homeTeam} vs{' '}
+        {match.awayTeam} <TeamBadge name={match.awayTeam} slug={match.awayTeamSlug} />
       </h2>
       <Link
         to={`/groups/${groupId}/matches/${match.matchId}/predict`}

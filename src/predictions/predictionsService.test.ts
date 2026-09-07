@@ -98,9 +98,9 @@ describe('getMatch', () => {
     const single = vi.fn().mockResolvedValue({
       data: {
         id: 'match-1',
-        home_team: 'Nacional',
-        away_team: 'Peñarol',
         kickoff_at: '2026-03-01T20:00:00Z',
+        home: { name: 'Nacional', alias: null, slug: 'nacional' },
+        away: { name: 'Peñarol', alias: null, slug: 'penarol' },
       },
       error: null,
     })
@@ -116,6 +116,8 @@ describe('getMatch', () => {
       id: 'match-1',
       homeTeam: 'Nacional',
       awayTeam: 'Peñarol',
+      homeTeamSlug: 'nacional',
+      awayTeamSlug: 'penarol',
       kickoffAt: '2026-03-01T20:00:00Z',
     })
   })

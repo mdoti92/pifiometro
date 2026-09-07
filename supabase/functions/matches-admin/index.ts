@@ -11,7 +11,7 @@ import { notifyResultChanges, type NotifyResultsClient } from './_lib/notifyResu
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
   'Access-Control-Allow-Methods': 'POST, PATCH, OPTIONS',
 }
 
@@ -22,13 +22,16 @@ function json(data: unknown, status = 200): Response {
   })
 }
 
+const MATCH_SELECT =
+  '*, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)'
+
 // deno-lint-ignore no-explicit-any
 function toRow(input: Record<string, any>) {
   const row: Record<string, unknown> = {}
   if ('tournamentId' in input) row.tournament_id = input.tournamentId
   if ('stageId' in input) row.stage_id = input.stageId
-  if ('homeTeam' in input) row.home_team = input.homeTeam
-  if ('awayTeam' in input) row.away_team = input.awayTeam
+  if ('homeTeamId' in input) row.home_team_id = input.homeTeamId
+  if ('awayTeamId' in input) row.away_team_id = input.awayTeamId
   if ('kickoffAt' in input) row.kickoff_at = input.kickoffAt
   if ('isElimination' in input) row.is_elimination = input.isElimination
   if ('matchday' in input) row.matchday = input.matchday
@@ -43,13 +46,23 @@ function toRow(input: Record<string, any>) {
 }
 
 // deno-lint-ignore no-explicit-any
+function teamDisplayName(team: { name: string; alias: string | null } | null) {
+  if (!team) return ''
+  return team.alias ?? team.name
+}
+
+// deno-lint-ignore no-explicit-any
 function fromRow(row: any) {
   return {
     id: row.id,
     tournamentId: row.tournament_id,
     stageId: row.stage_id,
-    homeTeam: row.home_team,
-    awayTeam: row.away_team,
+    homeTeamId: row.home_team_id,
+    awayTeamId: row.away_team_id,
+    homeTeam: teamDisplayName(row.home),
+    awayTeam: teamDisplayName(row.away),
+    homeTeamSlug: row.home?.slug ?? '',
+    awayTeamSlug: row.away?.slug ?? '',
     kickoffAt: row.kickoff_at,
     isElimination: row.is_elimination,
     matchday: row.matchday,
@@ -132,7 +145,11 @@ Deno.serve(async (req: Request) => {
       return Boolean(data?.is_superadmin)
     },
     async insertMatch(data) {
-      const { data: row, error } = await admin.from('matches').insert(toRow(data)).select().single()
+      const { data: row, error } = await admin
+        .from('matches')
+        .insert(toRow(data))
+        .select(MATCH_SELECT)
+        .single()
       if (error) throw new Error(error.message)
       return fromRow(row)
     },
@@ -141,7 +158,7 @@ Deno.serve(async (req: Request) => {
         .from('matches')
         .update(toRow(data))
         .eq('id', matchId)
-        .select()
+        .select(MATCH_SELECT)
         .maybeSingle()
       if (error) throw new Error(error.message)
       return row ? fromRow(row) : null
