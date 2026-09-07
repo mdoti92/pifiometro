@@ -69,6 +69,14 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
+  it('redirige a login al visitar /groups/:groupId/fixture sin sesion activa', () => {
+    mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+
+    renderAppAt('/groups/group-1/fixture')
+
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
+
   it('redirige a login al visitar /groups/:groupId/tournaments sin sesion activa', () => {
     mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
 

@@ -19,7 +19,7 @@ export function resolveTabHrefs({ activeGroupId, soleActiveTournamentId }: Resol
 
   return {
     pronosticos: tournamentsHub,
-    fixture: soleActiveTournamentId ? `${tournamentsHub}/${soleActiveTournamentId}/history` : tournamentsHub,
+    fixture: `/groups/${activeGroupId}/fixture`,
     tabla: soleActiveTournamentId ? `${tournamentsHub}/${soleActiveTournamentId}/standings` : tournamentsHub,
     grupo: `/groups/${activeGroupId}/members`,
   }
