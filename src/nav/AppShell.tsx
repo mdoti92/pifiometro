@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { listGroupTournaments, pickSoleActiveTournament } from '../groups/groupTournamentsService'
 import { listMyGroups, type MyGroup } from '../groups/groupsService'
+import { getCurrentStage } from '../tournaments/tournamentsService'
 import { BottomNav } from './BottomNav'
 import { GroupSelector } from './GroupSelector'
 import { resolveTabHrefs } from './resolveTabHrefs'
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [groups, setGroups] = useState<MyGroup[]>([])
   const { activeGroupId, setActiveGroupId } = useActiveGroup(groups)
   const [soleActiveTournamentId, setSoleActiveTournamentId] = useState<string | null>(null)
+  const [currentStageId, setCurrentStageId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -26,7 +28,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     })
   }, [activeGroupId])
 
-  const hrefs = resolveTabHrefs({ activeGroupId, soleActiveTournamentId })
+  useEffect(() => {
+    if (!soleActiveTournamentId) return
+
+    getCurrentStage(soleActiveTournamentId).then((stage) => setCurrentStageId(stage?.id ?? null))
+  }, [soleActiveTournamentId])
+
+  const hrefs = resolveTabHrefs({ activeGroupId, soleActiveTournamentId, currentStageId })
 
   return (
     <div className="app-shell">

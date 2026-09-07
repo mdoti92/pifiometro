@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '../lib/supabase'
 import {
   createTournament,
+  getCurrentStage,
   isSuperadmin,
   listTournamentStages,
   renameStage,
@@ -132,6 +133,46 @@ describe('renameStage', () => {
     mockedFrom.mockReturnValue({ update } as never)
 
     await expect(renameStage('stage-1', 'Apertura 2026')).rejects.toThrow('permission denied')
+  })
+})
+
+describe('getCurrentStage', () => {
+  it('devuelve la etapa marcada como is_current del torneo', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { id: 'stage-2', tournament_id: 'tournament-1', name: 'Intermedio', order_index: 1 },
+      error: null,
+    })
+    const eq2 = vi.fn().mockReturnValue({ maybeSingle })
+    const eq1 = vi.fn().mockReturnValue({ eq: eq2 })
+    const select = vi.fn().mockReturnValue({ eq: eq1 })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const stage = await getCurrentStage('tournament-1')
+
+    expect(mockedFrom).toHaveBeenCalledWith('tournament_stages')
+    expect(eq1).toHaveBeenCalledWith('tournament_id', 'tournament-1')
+    expect(eq2).toHaveBeenCalledWith('is_current', true)
+    expect(stage).toEqual({ id: 'stage-2', tournamentId: 'tournament-1', name: 'Intermedio', orderIndex: 1 })
+  })
+
+  it('devuelve null cuando el torneo no tiene ninguna etapa marcada como actual', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eq2 = vi.fn().mockReturnValue({ maybeSingle })
+    const eq1 = vi.fn().mockReturnValue({ eq: eq2 })
+    const select = vi.fn().mockReturnValue({ eq: eq1 })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getCurrentStage('tournament-1')).resolves.toBeNull()
+  })
+
+  it('propaga el error cuando falla la consulta', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'permission denied' } })
+    const eq2 = vi.fn().mockReturnValue({ maybeSingle })
+    const eq1 = vi.fn().mockReturnValue({ eq: eq2 })
+    const select = vi.fn().mockReturnValue({ eq: eq1 })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getCurrentStage('tournament-1')).rejects.toThrow('permission denied')
   })
 })
 

@@ -72,6 +72,28 @@ export async function listTournamentStages(tournamentId: string): Promise<Tourna
   }))
 }
 
+export async function getCurrentStage(tournamentId: string): Promise<TournamentStage | null> {
+  const { data, error } = await supabase
+    .from('tournament_stages')
+    .select('id, tournament_id, name, order_index')
+    .eq('tournament_id', tournamentId)
+    .eq('is_current', true)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (!data) return null
+
+  return {
+    id: data.id,
+    tournamentId: data.tournament_id,
+    name: data.name,
+    orderIndex: data.order_index,
+  }
+}
+
 export async function renameStage(stageId: string, name: string): Promise<void> {
   const { error } = await supabase.from('tournament_stages').update({ name }).eq('id', stageId)
 
