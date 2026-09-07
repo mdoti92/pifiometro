@@ -108,3 +108,18 @@ select {
 .bottom-nav-tab.active {
   color: var(--hearth);
 }
+
+.prediction-hero {
+  background: var(--surface);
+  border: 1px solid var(--hearth);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.prediction-hero-countdown {
+  font-size: 2rem;
+  color: var(--hearth);
+  margin: 0;
+}
