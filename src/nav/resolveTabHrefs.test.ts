@@ -13,25 +13,33 @@ describe('resolveTabHrefs', () => {
     })
   })
 
-  it('manda Fixture y Tabla al hub de torneos del grupo cuando no hay un unico torneo activo', () => {
+  it('manda Tabla al hub de torneos del grupo cuando no hay un unico torneo activo', () => {
     const hrefs = resolveTabHrefs({ activeGroupId: 'group-1', soleActiveTournamentId: null })
 
     expect(hrefs).toEqual({
       pronosticos: '/groups/group-1/tournaments',
-      fixture: '/groups/group-1/tournaments',
+      fixture: '/groups/group-1/fixture',
       tabla: '/groups/group-1/tournaments',
       grupo: '/groups/group-1/members',
     })
   })
 
-  it('manda Fixture y Tabla directo al torneo activo cuando hay exactamente uno', () => {
+  it('manda Tabla directo al torneo activo cuando hay exactamente uno', () => {
     const hrefs = resolveTabHrefs({ activeGroupId: 'group-1', soleActiveTournamentId: 'tournament-1' })
 
     expect(hrefs).toEqual({
       pronosticos: '/groups/group-1/tournaments',
-      fixture: '/groups/group-1/tournaments/tournament-1/history',
+      fixture: '/groups/group-1/fixture',
       tabla: '/groups/group-1/tournaments/tournament-1/standings',
       grupo: '/groups/group-1/members',
     })
+  })
+
+  it('Fixture es siempre la pantalla de calendario del grupo, sin depender de cuantos torneos activos haya', () => {
+    const conVarios = resolveTabHrefs({ activeGroupId: 'group-1', soleActiveTournamentId: null })
+    const conUno = resolveTabHrefs({ activeGroupId: 'group-1', soleActiveTournamentId: 'tournament-1' })
+
+    expect(conVarios.fixture).toBe('/groups/group-1/fixture')
+    expect(conUno.fixture).toBe('/groups/group-1/fixture')
   })
 })

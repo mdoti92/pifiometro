@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
+import { FixturePage } from './fixture/FixturePage'
 import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
@@ -52,6 +53,14 @@ function App() {
         element={
           <Authenticated>
             <MembersPage />
+          </Authenticated>
+        }
+      />
+      <Route
+        path="/groups/:groupId/fixture"
+        element={
+          <Authenticated>
+            <FixturePage />
           </Authenticated>
         }
       />
