@@ -3,16 +3,24 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import * as AuthContextModule from './auth/AuthContext'
+import * as groupsService from './groups/groupsService'
 
 vi.mock('./auth/AuthContext', async () => {
   const actual = await vi.importActual<typeof import('./auth/AuthContext')>('./auth/AuthContext')
   return { ...actual, useAuth: vi.fn() }
 })
 
+vi.mock('./groups/groupsService', async () => {
+  const actual = await vi.importActual<typeof import('./groups/groupsService')>('./groups/groupsService')
+  return { ...actual, listMyGroups: vi.fn() }
+})
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
+const mockedListMyGroups = vi.mocked(groupsService.listMyGroups)
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockedListMyGroups.mockResolvedValue([])
 })
 
 function renderAppAt(path: string) {
@@ -32,17 +40,32 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
-  it('muestra la pantalla de crear grupo cuando se visita la raiz con sesion activa', () => {
+  it('muestra la pantalla de crear grupo cuando se visita la raiz con sesion activa y sin grupos', async () => {
     mockedUseAuth.mockReturnValue({
       session: { access_token: 't' } as never,
       user: { id: 'user-1' } as never,
       loading: false,
     })
+    mockedListMyGroups.mockResolvedValue([])
 
     renderAppAt('/')
 
-    expect(screen.getByRole('heading', { name: 'Crear grupo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Crear grupo' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Unirme a un grupo' })).toBeInTheDocument()
+  })
+
+  it('redirige directo al grupo cuando se visita la raiz con sesion activa y ya perteneciendo a un grupo', async () => {
+    mockedUseAuth.mockReturnValue({
+      session: { access_token: 't' } as never,
+      user: { id: 'user-1' } as never,
+      loading: false,
+    })
+    mockedListMyGroups.mockResolvedValue([{ id: 'group-1', name: 'LBDH' }])
+
+    renderAppAt('/')
+
+    expect(await screen.findByRole('heading', { name: 'Torneos del grupo' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Crear grupo' })).not.toBeInTheDocument()
   })
 
   it('muestra el formulario de registro en /register', () => {

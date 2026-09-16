@@ -7,6 +7,7 @@ import {
   regenerateInviteCode,
   removeMember,
 } from './groupMembersService'
+import { getInviteCode } from './groupsService'
 
 export function MembersPage() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -22,6 +23,7 @@ export function MembersPage() {
       setAdmin(isAdmin)
       if (isAdmin) {
         listMembers(groupId).then(setMembers)
+        getInviteCode(groupId).then(setInviteCode)
       }
     })
   }, [groupId])
@@ -75,7 +77,7 @@ export function MembersPage() {
         Regenerar código
       </button>
 
-      {inviteCode && <p>Nuevo código de invitación: {inviteCode}</p>}
+      {inviteCode && <p>Código de invitación: {inviteCode}</p>}
     </div>
   )
 }
