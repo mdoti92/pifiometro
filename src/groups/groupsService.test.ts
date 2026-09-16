@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '../lib/supabase'
-import { createGroup, GroupNameRequiredError, joinGroup, listMyGroups } from './groupsService'
+import { createGroup, getInviteCode, GroupNameRequiredError, joinGroup, listMyGroups } from './groupsService'
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -142,5 +142,29 @@ describe('listMyGroups', () => {
     mockedFrom.mockReturnValue({ select } as never)
 
     await expect(listMyGroups('user-1')).rejects.toThrow('no autenticado')
+  })
+})
+
+describe('getInviteCode', () => {
+  it('devuelve el codigo de invitacion vigente del grupo', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { invite_code: 'AB12CD' }, error: null })
+    const eq = vi.fn().mockReturnValue({ single })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const inviteCode = await getInviteCode('group-1')
+
+    expect(mockedFrom).toHaveBeenCalledWith('groups')
+    expect(eq).toHaveBeenCalledWith('id', 'group-1')
+    expect(inviteCode).toBe('AB12CD')
+  })
+
+  it('propaga el error de supabase, por ejemplo si no soy miembro del grupo', async () => {
+    const single = vi.fn().mockResolvedValue({ data: null, error: { message: 'permission denied' } })
+    const eq = vi.fn().mockReturnValue({ single })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getInviteCode('group-1')).rejects.toThrow('permission denied')
   })
 })

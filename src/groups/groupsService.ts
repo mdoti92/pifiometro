@@ -69,6 +69,20 @@ export async function listMyGroups(userId: string): Promise<MyGroup[]> {
     .map((row) => ({ id: row.groups!.id, name: row.groups!.name }))
 }
 
+export async function getInviteCode(groupId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('groups')
+    .select('invite_code')
+    .eq('id', groupId)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data.invite_code
+}
+
 export async function joinGroup(inviteCode: string): Promise<string> {
   const { data, error } = await supabase.rpc('join_group', { p_invite_code: inviteCode.trim() })
 

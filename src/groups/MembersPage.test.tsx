@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../auth/AuthContext'
 import * as groupMembersService from './groupMembersService'
+import * as groupsService from './groupsService'
 import { MembersPage } from './MembersPage'
 
 vi.mock('../auth/AuthContext', async () => {
@@ -23,11 +24,17 @@ vi.mock('./groupMembersService', async () => {
   }
 })
 
+vi.mock('./groupsService', async () => {
+  const actual = await vi.importActual<typeof import('./groupsService')>('./groupsService')
+  return { ...actual, getInviteCode: vi.fn() }
+})
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedIsGroupAdmin = vi.mocked(groupMembersService.isGroupAdmin)
 const mockedListMembers = vi.mocked(groupMembersService.listMembers)
 const mockedRemoveMember = vi.mocked(groupMembersService.removeMember)
 const mockedRegenerateInviteCode = vi.mocked(groupMembersService.regenerateInviteCode)
+const mockedGetInviteCode = vi.mocked(groupsService.getInviteCode)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -36,6 +43,7 @@ beforeEach(() => {
     user: { id: 'user-1' } as never,
     loading: false,
   })
+  mockedGetInviteCode.mockResolvedValue('CURRENT')
 })
 
 function renderPage() {
@@ -57,6 +65,16 @@ describe('MembersPage', () => {
       await screen.findByText('No tenés permisos para administrar este grupo'),
     ).toBeInTheDocument()
     expect(mockedListMembers).not.toHaveBeenCalled()
+    expect(mockedGetInviteCode).not.toHaveBeenCalled()
+  })
+
+  it('muestra el codigo de invitacion vigente sin tener que regenerarlo primero', async () => {
+    mockedIsGroupAdmin.mockResolvedValue(true)
+    mockedListMembers.mockResolvedValue([])
+    renderPage()
+
+    expect(await screen.findByText(/CURRENT/)).toBeInTheDocument()
+    expect(mockedGetInviteCode).toHaveBeenCalledWith('group-1')
   })
 
   it('lista los miembros del grupo cuando el usuario es admin', async () => {
