@@ -195,3 +195,48 @@ select {
 .match-card-footer {
   text-align: center;
 }
+
+.prediction-inline-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.prediction-inline-edit input {
+  width: 3rem;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.standings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.standings-tab {
+  color: var(--steel);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--steel);
+  border-radius: 0.75rem;
+}
+
+.standings-tab.active {
+  color: var(--hearth);
+  border-color: var(--hearth);
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.standings-table th,
+.standings-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--steel);
+}

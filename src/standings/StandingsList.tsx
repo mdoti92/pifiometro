@@ -7,12 +7,23 @@ interface StandingsListProps {
 
 export function StandingsList({ standings, currentUserId }: StandingsListProps) {
   return (
-    <ul>
-      {standings.map((row) => (
-        <li key={row.userId} style={{ color: row.userId === currentUserId ? 'var(--hearth)' : 'var(--ink)' }}>
-          {row.rank}° — {row.displayName ?? row.userId} — {row.totalPoints} pts
-        </li>
-      ))}
-    </ul>
+    <table className="standings-table">
+      <thead>
+        <tr>
+          <th>Posición</th>
+          <th>Jugador</th>
+          <th>Puntos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {standings.map((row) => (
+          <tr key={row.userId} style={{ color: row.userId === currentUserId ? 'var(--hearth)' : 'var(--ink)' }}>
+            <td>{row.rank}°</td>
+            <td>{row.displayName ?? row.userId}</td>
+            <td>{row.totalPoints} pts</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }

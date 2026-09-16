@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../auth/AuthContext'
+import * as tournamentsService from '../tournaments/tournamentsService'
 import { StageStandingsPage } from './StageStandingsPage'
 import * as standingsService from './standingsService'
 
@@ -16,8 +17,18 @@ vi.mock('./standingsService', async () => {
   return { ...actual, getGroupStageStandings: vi.fn() }
 })
 
+vi.mock('../tournaments/tournamentsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('../tournaments/tournamentsService')>(
+      '../tournaments/tournamentsService',
+    )
+  return { ...actual, getStage: vi.fn(), listTournamentStages: vi.fn() }
+})
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedGetStageStandings = vi.mocked(standingsService.getGroupStageStandings)
+const mockedGetStage = vi.mocked(tournamentsService.getStage)
+const mockedListTournamentStages = vi.mocked(tournamentsService.listTournamentStages)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -26,6 +37,16 @@ beforeEach(() => {
     user: { id: 'user-1' } as never,
     loading: false,
   })
+  mockedGetStage.mockResolvedValue({
+    id: 'stage-1',
+    tournamentId: 'tournament-1',
+    name: 'Apertura',
+    orderIndex: 0,
+  })
+  mockedListTournamentStages.mockResolvedValue([
+    { id: 'stage-1', tournamentId: 'tournament-1', name: 'Apertura', orderIndex: 0 },
+    { id: 'stage-2', tournamentId: 'tournament-1', name: 'Clausura', orderIndex: 1 },
+  ])
 })
 
 function renderPage() {
@@ -56,5 +77,20 @@ describe('StageStandingsPage', () => {
     renderPage()
 
     expect(await screen.findByText(/0 pts/)).toBeInTheDocument()
+  })
+
+  it('muestra tabs con General y las etapas hermanas, marcando la actual como activa', async () => {
+    mockedGetStageStandings.mockResolvedValue([])
+    renderPage()
+
+    expect(await screen.findByRole('link', { name: 'Apertura' })).toHaveClass('active')
+    expect(screen.getByRole('link', { name: 'Clausura' })).toHaveAttribute(
+      'href',
+      '/groups/group-1/stages/stage-2/standings',
+    )
+    expect(screen.getByRole('link', { name: 'General' })).toHaveAttribute(
+      'href',
+      '/groups/group-1/tournaments/tournament-1/standings',
+    )
   })
 })

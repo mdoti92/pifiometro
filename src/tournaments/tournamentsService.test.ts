@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import {
   createTournament,
   getCurrentStage,
+  getStage,
   isSuperadmin,
   listTournamentStages,
   renameStage,
@@ -173,6 +174,42 @@ describe('getCurrentStage', () => {
     mockedFrom.mockReturnValue({ select } as never)
 
     await expect(getCurrentStage('tournament-1')).rejects.toThrow('permission denied')
+  })
+})
+
+describe('getStage', () => {
+  it('devuelve la etapa por id, con el tournamentId al que pertenece', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { id: 'stage-1', tournament_id: 'tournament-1', name: 'Apertura', order_index: 0 },
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ maybeSingle })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    const stage = await getStage('stage-1')
+
+    expect(mockedFrom).toHaveBeenCalledWith('tournament_stages')
+    expect(eq).toHaveBeenCalledWith('id', 'stage-1')
+    expect(stage).toEqual({ id: 'stage-1', tournamentId: 'tournament-1', name: 'Apertura', orderIndex: 0 })
+  })
+
+  it('devuelve null cuando la etapa no existe', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const eq = vi.fn().mockReturnValue({ maybeSingle })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getStage('stage-inexistente')).resolves.toBeNull()
+  })
+
+  it('propaga el error cuando falla la consulta', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'permission denied' } })
+    const eq = vi.fn().mockReturnValue({ maybeSingle })
+    const select = vi.fn().mockReturnValue({ eq })
+    mockedFrom.mockReturnValue({ select } as never)
+
+    await expect(getStage('stage-1')).rejects.toThrow('permission denied')
   })
 })
 
