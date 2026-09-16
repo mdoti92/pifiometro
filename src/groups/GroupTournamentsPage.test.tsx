@@ -52,12 +52,15 @@ function renderPage() {
 }
 
 describe('GroupTournamentsPage', () => {
-  it('lista los torneos disponibles marcando cuales estan activos, sin controles para no-admins', async () => {
+  it('lista los torneos disponibles como tabla, con la temporada y un badge para la vigente, sin controles para no-admins', async () => {
     mockedIsGroupAdmin.mockResolvedValue(false)
     renderPage()
 
+    expect(screen.getByRole('table')).toBeInTheDocument()
     expect(await screen.findByText('Liga AUF 2026')).toBeInTheDocument()
     expect(screen.getByText('Copa AUF')).toBeInTheDocument()
+    expect(screen.getAllByText('— Temporada 2026', { exact: false })).toHaveLength(2)
+    expect(screen.getByText('Vigente')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Activar|Desactivar/ })).not.toBeInTheDocument()
   })
 
@@ -67,8 +70,8 @@ describe('GroupTournamentsPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('Copa AUF')
-    await user.click(screen.getByRole('button', { name: 'Activar Copa AUF' }))
+    const activateButton = await screen.findByRole('button', { name: 'Activar Copa AUF' })
+    await user.click(activateButton)
 
     expect(mockedActivateTournament).toHaveBeenCalledWith('group-1', 'tournament-2')
     await waitFor(() =>
@@ -82,8 +85,8 @@ describe('GroupTournamentsPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('Liga AUF 2026')
-    await user.click(screen.getByRole('button', { name: 'Desactivar Liga AUF 2026' }))
+    const deactivateButton = await screen.findByRole('button', { name: 'Desactivar Liga AUF 2026' })
+    await user.click(deactivateButton)
 
     expect(mockedDeactivateTournament).toHaveBeenCalledWith('group-1', 'tournament-1')
     await waitFor(() =>
@@ -91,7 +94,16 @@ describe('GroupTournamentsPage', () => {
     )
   })
 
-  it('muestra links a Tabla e Historial solo para los torneos activos', async () => {
+  it('muestra links a Tabla e Historial para cualquier temporada vinculada al grupo, este activa o no, sin necesidad de reactivarla', async () => {
+    mockedListAvailableTournaments.mockResolvedValue([
+      { id: 'tournament-1', name: 'Liga AUF 2026', season: '2026' },
+      { id: 'tournament-2', name: 'Liga AUF 2025', season: '2025' },
+      { id: 'tournament-3', name: 'Copa AUF', season: '2026' },
+    ])
+    mockedListGroupTournaments.mockResolvedValue([
+      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
+      { tournamentId: 'tournament-2', name: 'Liga AUF 2025', season: '2025', active: false },
+    ])
     mockedIsGroupAdmin.mockResolvedValue(false)
     renderPage()
 
@@ -101,11 +113,26 @@ describe('GroupTournamentsPage', () => {
       'href',
       '/groups/group-1/tournaments/tournament-1/standings',
     )
-    expect(screen.getByRole('link', { name: 'Ver historial de Liga AUF 2026' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Ver historial de Liga AUF 2025' })).toHaveAttribute(
       'href',
-      '/groups/group-1/tournaments/tournament-1/history',
+      '/groups/group-1/tournaments/tournament-2/history',
     )
     expect(screen.queryByRole('link', { name: 'Ver tabla de Copa AUF' })).not.toBeInTheDocument()
+  })
+
+  it('ordena las temporadas de mas reciente a mas antigua', async () => {
+    mockedListAvailableTournaments.mockResolvedValue([
+      { id: 'tournament-2', name: 'Liga AUF 2024', season: '2024' },
+      { id: 'tournament-1', name: 'Liga AUF 2026', season: '2026' },
+    ])
+    mockedListGroupTournaments.mockResolvedValue([])
+    mockedIsGroupAdmin.mockResolvedValue(false)
+    renderPage()
+
+    await screen.findByText('Liga AUF 2026')
+    const rows = screen.getAllByRole('row')
+    expect(rows[1]).toHaveTextContent('Liga AUF 2026')
+    expect(rows[2]).toHaveTextContent('Liga AUF 2024')
   })
 
   it('muestra un error cuando falla la activacion', async () => {
@@ -114,8 +141,8 @@ describe('GroupTournamentsPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('Copa AUF')
-    await user.click(screen.getByRole('button', { name: 'Activar Copa AUF' }))
+    const activateButton = await screen.findByRole('button', { name: 'Activar Copa AUF' })
+    await user.click(activateButton)
 
     expect(await screen.findByText('permission denied')).toBeInTheDocument()
   })
