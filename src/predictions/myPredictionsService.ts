@@ -3,6 +3,7 @@ import { getTeamDisplayName } from '../teams/teamsService'
 import { hasKickedOff } from './predictionsService'
 
 export type MatchPredictionStatusValue = 'pendiente' | 'cargado' | 'no_pronosticado'
+export type MatchStatusValue = 'scheduled' | 'finished' | 'postponed'
 
 export interface MatchPredictionStatus {
   matchId: string
@@ -11,6 +12,8 @@ export interface MatchPredictionStatus {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  matchday: number | null
+  matchStatus: MatchStatusValue
   status: MatchPredictionStatusValue
   homeGoals: number | null
   awayGoals: number | null
@@ -25,6 +28,8 @@ interface MatchTeamRow {
 interface MatchRow {
   id: string
   kickoff_at: string
+  matchday: number | null
+  status: MatchStatusValue
   home: MatchTeamRow | null
   away: MatchTeamRow | null
 }
@@ -36,7 +41,9 @@ export async function listMatchPredictionStatuses(
 ): Promise<MatchPredictionStatus[]> {
   const { data: matches, error: matchesError } = await supabase
     .from('matches')
-    .select('id, kickoff_at, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)')
+    .select(
+      'id, kickoff_at, matchday, status, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
+    )
     .eq('stage_id', stageId)
     .order('kickoff_at', { ascending: true })
 
@@ -79,6 +86,8 @@ export async function listMatchPredictionStatuses(
         homeTeamSlug,
         awayTeamSlug,
         kickoffAt: match.kickoff_at,
+        matchday: match.matchday,
+        matchStatus: match.status,
         status: 'cargado' as const,
         homeGoals: prediction.home_goals,
         awayGoals: prediction.away_goals,
@@ -92,6 +101,8 @@ export async function listMatchPredictionStatuses(
       homeTeamSlug,
       awayTeamSlug,
       kickoffAt: match.kickoff_at,
+      matchday: match.matchday,
+      matchStatus: match.status,
       status: hasKickedOff(match.kickoff_at) ? ('no_pronosticado' as const) : ('pendiente' as const),
       homeGoals: null,
       awayGoals: null,

@@ -1,12 +1,12 @@
-import type { FixtureMatch } from './fixtureService'
-
-export interface MatchdayGroup {
+export interface MatchdayGroup<T> {
   matchday: number | null
-  matches: FixtureMatch[]
+  matches: T[]
 }
 
-export function groupMatchesByMatchday(matches: FixtureMatch[]): MatchdayGroup[] {
-  const matchesByMatchday = new Map<number | null, FixtureMatch[]>()
+export function groupMatchesByMatchday<T extends { matchday: number | null }>(
+  matches: T[],
+): MatchdayGroup<T>[] {
+  const matchesByMatchday = new Map<number | null, T[]>()
 
   for (const match of matches) {
     const bucket = matchesByMatchday.get(match.matchday) ?? []

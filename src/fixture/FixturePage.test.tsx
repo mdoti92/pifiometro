@@ -21,8 +21,29 @@ vi.mock('./fixtureService', async () => {
 const mockedListGroupTournaments = vi.mocked(groupTournamentsService.listGroupTournaments)
 const mockedListTournamentFixture = vi.mocked(fixtureService.listTournamentFixture)
 
+function fixtureMatch(overrides: Partial<fixtureService.FixtureMatch>): fixtureService.FixtureMatch {
+  return {
+    id: 'match-1',
+    homeTeam: 'Nacional',
+    awayTeam: 'Peñarol',
+    homeTeamSlug: 'nacional',
+    awayTeamSlug: 'penarol',
+    kickoffAt: '2026-03-01T20:00:00Z',
+    matchday: 1,
+    status: 'scheduled',
+    homeGoals: null,
+    awayGoals: null,
+    isElimination: false,
+    wentToPenalties: false,
+    homeGoalsPenalties: null,
+    awayGoalsPenalties: null,
+    ...overrides,
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
+  window.HTMLElement.prototype.scrollIntoView = vi.fn()
 })
 
 function renderPage() {
@@ -36,12 +57,12 @@ function renderPage() {
 }
 
 describe('FixturePage', () => {
-  it('agrupa los partidos del torneo activo por matchday, en orden cronologico', async () => {
+  it('agrupa los partidos del torneo activo por matchday, en grilla, en orden cronologico', async () => {
     mockedListGroupTournaments.mockResolvedValue([
       { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
     ])
     mockedListTournamentFixture.mockResolvedValue([
-      {
+      fixtureMatch({
         id: 'match-2',
         homeTeam: 'Danubio',
         awayTeam: 'Wanderers',
@@ -49,30 +70,15 @@ describe('FixturePage', () => {
         awayTeamSlug: 'wanderers',
         kickoffAt: '2026-03-08T20:00:00Z',
         matchday: 2,
-        status: 'scheduled',
-        homeGoals: null,
-        awayGoals: null,
-        isElimination: false,
-        wentToPenalties: false,
-        homeGoalsPenalties: null,
-        awayGoalsPenalties: null,
-      },
-      {
+      }),
+      fixtureMatch({
         id: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
         matchday: 1,
         status: 'finished',
         homeGoals: 2,
         awayGoals: 1,
-        isElimination: false,
-        wentToPenalties: false,
-        homeGoalsPenalties: null,
-        awayGoalsPenalties: null,
-      },
+      }),
     ])
     renderPage()
 
@@ -85,27 +91,12 @@ describe('FixturePage', () => {
     expect(headings[1]).toHaveTextContent('Fecha 2')
   })
 
-  it('muestra el logo de cada equipo junto al partido', async () => {
+  it('muestra el logo y el nombre de cada equipo, con el resultado centrado', async () => {
     mockedListGroupTournaments.mockResolvedValue([
       { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
     ])
     mockedListTournamentFixture.mockResolvedValue([
-      {
-        id: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
-        kickoffAt: '2026-03-01T20:00:00Z',
-        matchday: 1,
-        status: 'finished',
-        homeGoals: 2,
-        awayGoals: 1,
-        isElimination: false,
-        wentToPenalties: false,
-        homeGoalsPenalties: null,
-        awayGoalsPenalties: null,
-      },
+      fixtureMatch({ status: 'finished', homeGoals: 2, awayGoals: 1 }),
     ])
     renderPage()
 
@@ -117,33 +108,9 @@ describe('FixturePage', () => {
       'src',
       '/team-logos/penarol.svg',
     )
-  })
-
-  it('muestra el resultado final de un partido jugado', async () => {
-    mockedListGroupTournaments.mockResolvedValue([
-      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
-    ])
-    mockedListTournamentFixture.mockResolvedValue([
-      {
-        id: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
-        kickoffAt: '2026-03-01T20:00:00Z',
-        matchday: 1,
-        status: 'finished',
-        homeGoals: 2,
-        awayGoals: 1,
-        isElimination: false,
-        wentToPenalties: false,
-        homeGoalsPenalties: null,
-        awayGoalsPenalties: null,
-      },
-    ])
-    renderPage()
-
-    expect(await screen.findByText(/Nacional vs Peñarol — 2-1/)).toBeInTheDocument()
+    expect(screen.getByText('Nacional')).toBeInTheDocument()
+    expect(screen.getByText('Peñarol')).toBeInTheDocument()
+    expect(screen.getByText('2-1')).toBeInTheDocument()
   })
 
   it('distingue el resultado de los 90 minutos del resultado por penales en un eliminatorio', async () => {
@@ -151,13 +118,7 @@ describe('FixturePage', () => {
       { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
     ])
     mockedListTournamentFixture.mockResolvedValue([
-      {
-        id: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
-        kickoffAt: '2026-03-01T20:00:00Z',
+      fixtureMatch({
         matchday: null,
         status: 'finished',
         homeGoals: 1,
@@ -166,11 +127,11 @@ describe('FixturePage', () => {
         wentToPenalties: true,
         homeGoalsPenalties: 4,
         awayGoalsPenalties: 3,
-      },
+      }),
     ])
     renderPage()
 
-    expect(await screen.findByText(/Nacional vs Peñarol — 1-1 \(penales 4-3\)/)).toBeInTheDocument()
+    expect(await screen.findByText('1-1 (penales 4-3)')).toBeInTheDocument()
   })
 
   it('deja elegir el torneo a ver cuando el grupo sigue mas de uno activo', async () => {
@@ -208,5 +169,33 @@ describe('FixturePage', () => {
 
     expect(await screen.findByText('Tu grupo no sigue ningún torneo activo todavía')).toBeInTheDocument()
     expect(mockedListTournamentFixture).not.toHaveBeenCalled()
+  })
+
+  it('muestra el boton para ir a la ultima fecha con partidos finalizados', async () => {
+    mockedListGroupTournaments.mockResolvedValue([
+      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
+    ])
+    mockedListTournamentFixture.mockResolvedValue([
+      fixtureMatch({ id: 'match-1', matchday: 1, status: 'finished', homeGoals: 1, awayGoals: 0 }),
+      fixtureMatch({ id: 'match-2', matchday: 2, status: 'scheduled' }),
+    ])
+    const user = userEvent.setup()
+    renderPage()
+
+    const button = await screen.findByRole('button', { name: 'Ver desde última fecha cargada' })
+    await user.click(button)
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('no muestra el boton de ultima fecha cuando ningun partido esta finalizado', async () => {
+    mockedListGroupTournaments.mockResolvedValue([
+      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
+    ])
+    mockedListTournamentFixture.mockResolvedValue([fixtureMatch({ status: 'scheduled' })])
+    renderPage()
+
+    await screen.findByText('Fecha 1')
+    expect(screen.queryByRole('button', { name: 'Ver desde última fecha cargada' })).not.toBeInTheDocument()
   })
 })

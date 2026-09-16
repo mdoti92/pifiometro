@@ -1,33 +1,28 @@
-import { Link } from 'react-router-dom'
-import { TeamBadge } from '../teams/TeamBadge'
-import { formatCountdown } from './formatCountdown'
-import type { MatchPredictionStatus } from './myPredictionsService'
+import { useEffect, useState } from 'react'
+import { getGroupStageStandings, type StandingRow } from '../standings/standingsService'
 
 interface PredictionHeroProps {
-  match: MatchPredictionStatus
   groupId: string
-  now: Date
+  stageId: string
+  userId: string
 }
 
-export function PredictionHero({ match, groupId, now }: PredictionHeroProps) {
-  const countdown = formatCountdown(new Date(match.kickoffAt).getTime() - now.getTime())
+export function PredictionHero({ groupId, stageId, userId }: PredictionHeroProps) {
+  const [standings, setStandings] = useState<StandingRow[]>([])
+
+  useEffect(() => {
+    getGroupStageStandings(groupId, stageId).then(setStandings)
+  }, [groupId, stageId])
+
+  const myStanding = standings.find((row) => row.userId === userId)
+
+  if (!myStanding) return null
 
   return (
     <section className="prediction-hero">
-      <p>Cierra en:</p>
-      <p className="font-display prediction-hero-countdown">
-        {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
-      </p>
-      <h2 className="font-display">
-        <TeamBadge name={match.homeTeam} slug={match.homeTeamSlug} /> {match.homeTeam} vs{' '}
-        {match.awayTeam} <TeamBadge name={match.awayTeam} slug={match.awayTeamSlug} />
-      </h2>
-      <Link
-        to={`/groups/${groupId}/matches/${match.matchId}/predict`}
-        aria-label={`Cargar pronóstico de ${match.homeTeam} vs ${match.awayTeam}`}
-      >
-        Cargar pronóstico
-      </Link>
+      <p>Tu puntaje en esta etapa</p>
+      <p className="font-display prediction-hero-score">{myStanding.totalPoints} pts</p>
+      <p>{myStanding.rank}° lugar</p>
     </section>
   )
 }
