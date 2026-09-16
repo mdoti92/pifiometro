@@ -142,6 +142,28 @@ describe('listMatchPredictionStatuses', () => {
     ])
   })
 
+  it('marca como pendiente (no no_pronosticado) un partido sin pronostico cuyo kickoff ya paso, mientras el partido no este finished', async () => {
+    const matches = [
+      {
+        id: 'match-2c',
+        kickoff_at: '2000-01-01T20:00:00Z',
+        matchday: 1,
+        status: 'scheduled',
+        home: { name: 'Danubio', alias: null, slug: 'danubio' },
+        away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
+      },
+    ]
+    const matchesQuery = mockMatchesQuery(matches)
+    const predictionsQuery = mockPredictionsQuery([])
+    mockedFrom
+      .mockReturnValueOnce({ select: matchesQuery.select } as never)
+      .mockReturnValueOnce({ select: predictionsQuery.select } as never)
+
+    const result = await listMatchPredictionStatuses('stage-1', 'group-1', 'user-1')
+
+    expect(result[0].status).toBe('pendiente')
+  })
+
   it('marca como no pronosticado un partido finalizado sin pronostico mio', async () => {
     const matches = [
       {
