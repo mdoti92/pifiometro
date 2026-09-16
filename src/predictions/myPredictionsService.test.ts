@@ -46,11 +46,13 @@ describe('listMatchPredictionStatuses', () => {
     expect(mockedFrom).toHaveBeenCalledTimes(1)
   })
 
-  it('marca como cargado un partido con pronostico guardado, mostrando los goles y el equipo', async () => {
+  it('marca como cargado un partido con pronostico guardado, mostrando los goles, el equipo, la fecha y el estado del partido', async () => {
     const matches = [
       {
         id: 'match-1',
         kickoff_at: '2999-01-01T20:00:00Z',
+        matchday: 3,
+        status: 'scheduled',
         home: { name: 'Nacional', alias: null, slug: 'nacional' },
         away: { name: 'Peñarol', alias: null, slug: 'penarol' },
       },
@@ -72,6 +74,8 @@ describe('listMatchPredictionStatuses', () => {
         homeTeamSlug: 'nacional',
         awayTeamSlug: 'penarol',
         kickoffAt: '2999-01-01T20:00:00Z',
+        matchday: 3,
+        matchStatus: 'scheduled',
         status: 'cargado',
         homeGoals: 2,
         awayGoals: 1,
@@ -84,6 +88,8 @@ describe('listMatchPredictionStatuses', () => {
       {
         id: 'match-1',
         kickoff_at: '2999-01-01T20:00:00Z',
+        matchday: 1,
+        status: 'scheduled',
         home: { name: 'Danubio', alias: 'Diluvio', slug: 'danubio' },
         away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
       },
@@ -105,6 +111,8 @@ describe('listMatchPredictionStatuses', () => {
       {
         id: 'match-2',
         kickoff_at: '2999-01-01T20:00:00Z',
+        matchday: 1,
+        status: 'scheduled',
         home: { name: 'Danubio', alias: null, slug: 'danubio' },
         away: { name: 'Wanderers', alias: null, slug: 'wanderers' },
       },
@@ -125,6 +133,8 @@ describe('listMatchPredictionStatuses', () => {
         homeTeamSlug: 'danubio',
         awayTeamSlug: 'wanderers',
         kickoffAt: '2999-01-01T20:00:00Z',
+        matchday: 1,
+        matchStatus: 'scheduled',
         status: 'pendiente',
         homeGoals: null,
         awayGoals: null,
@@ -132,11 +142,13 @@ describe('listMatchPredictionStatuses', () => {
     ])
   })
 
-  it('marca como no pronosticado un partido ya cerrado sin pronostico mio', async () => {
+  it('marca como no pronosticado un partido finalizado sin pronostico mio', async () => {
     const matches = [
       {
         id: 'match-3',
         kickoff_at: '2000-01-01T20:00:00Z',
+        matchday: 2,
+        status: 'finished',
         home: { name: 'Cerro', alias: null, slug: 'cerro' },
         away: { name: 'Liverpool', alias: null, slug: 'liverpool' },
       },
@@ -157,6 +169,8 @@ describe('listMatchPredictionStatuses', () => {
         homeTeamSlug: 'cerro',
         awayTeamSlug: 'liverpool',
         kickoffAt: '2000-01-01T20:00:00Z',
+        matchday: 2,
+        matchStatus: 'finished',
         status: 'no_pronosticado',
         homeGoals: null,
         awayGoals: null,

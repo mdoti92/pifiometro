@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../auth/AuthContext'
+import * as standingsService from '../standings/standingsService'
 import { MyPredictionsPage } from './MyPredictionsPage'
 import * as myPredictionsService from './myPredictionsService'
 
@@ -16,8 +18,15 @@ vi.mock('./myPredictionsService', async () => {
   return { ...actual, listMatchPredictionStatuses: vi.fn() }
 })
 
+vi.mock('../standings/standingsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('../standings/standingsService')>('../standings/standingsService')
+  return { ...actual, getGroupStageStandings: vi.fn() }
+})
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedListMatchPredictionStatuses = vi.mocked(myPredictionsService.listMatchPredictionStatuses)
+const mockedGetGroupStageStandings = vi.mocked(standingsService.getGroupStageStandings)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -26,6 +35,10 @@ beforeEach(() => {
     user: { id: 'user-1' } as never,
     loading: false,
   })
+  mockedGetGroupStageStandings.mockResolvedValue([
+    { userId: 'user-1', displayName: 'Doti', totalPoints: 6, rank: 1 },
+  ])
+  window.HTMLElement.prototype.scrollIntoView = vi.fn()
 })
 
 function renderPage() {
@@ -38,143 +51,86 @@ function renderPage() {
   )
 }
 
+function match(overrides: Partial<myPredictionsService.MatchPredictionStatus>) {
+  return {
+    matchId: 'match-1',
+    homeTeam: 'Nacional',
+    awayTeam: 'Peñarol',
+    homeTeamSlug: 'nacional',
+    awayTeamSlug: 'penarol',
+    kickoffAt: '2999-01-01T20:00:00Z',
+    matchday: 1,
+    matchStatus: 'scheduled' as const,
+    status: 'pendiente' as const,
+    homeGoals: null,
+    awayGoals: null,
+    ...overrides,
+  }
+}
+
 describe('MyPredictionsPage', () => {
-  it('muestra cada partido con su estado pendiente o cargado', async () => {
+  it('agrupa los partidos por fecha, en grilla, con escudos y estado del pronostico centrado', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
-      {
-        matchId: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
-        kickoffAt: '2999-01-01T20:00:00Z',
-        status: 'cargado',
-        homeGoals: 2,
-        awayGoals: 1,
-      },
-      {
-        matchId: 'match-2',
-        homeTeam: 'Danubio',
-        awayTeam: 'Wanderers',
-        homeTeamSlug: 'danubio',
-        awayTeamSlug: 'wanderers',
-        kickoffAt: '2999-01-02T20:00:00Z',
-        status: 'pendiente',
-        homeGoals: null,
-        awayGoals: null,
-      },
+      match({ matchId: 'match-1', matchday: 1, status: 'cargado', homeGoals: 2, awayGoals: 1 }),
+      match({ matchId: 'match-2', homeTeam: 'Danubio', awayTeam: 'Wanderers', homeTeamSlug: 'danubio', awayTeamSlug: 'wanderers', matchday: 2, status: 'pendiente' }),
     ])
     renderPage()
 
-    expect(await screen.findByText(/Nacional vs Peñarol/)).toBeInTheDocument()
-    expect(screen.getByText(/Cargado: 2-1/)).toBeInTheDocument()
-    // el partido pendiente mas proximo se destaca en el hero, no en la lista
-    expect(screen.getByRole('heading', { name: 'Danubio Danubio vs Wanderers Wanderers' })).toBeInTheDocument()
+    expect(await screen.findByText('Fecha 1')).toBeInTheDocument()
+    expect(screen.getByText('Fecha 2')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Nacional' })).toHaveAttribute('src', '/team-logos/nacional.svg')
+    expect(screen.getByText('Cargado: 2-1')).toBeInTheDocument()
+    expect(screen.getByText('Pendiente')).toBeInTheDocument()
   })
 
-  it('no muestra ningun hero cuando no tengo partidos pendientes', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([
-      {
-        matchId: 'match-1',
-        homeTeam: 'Nacional',
-        awayTeam: 'Peñarol',
-        homeTeamSlug: 'nacional',
-        awayTeamSlug: 'penarol',
-        kickoffAt: '2999-01-01T20:00:00Z',
-        status: 'cargado',
-        homeGoals: 2,
-        awayGoals: 1,
-      },
-    ])
+  it('muestra el resumen de puntaje propio en vez del cartel de cuenta regresiva', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({})])
     renderPage()
 
-    expect(await screen.findByText(/Nacional vs Peñarol/)).toBeInTheDocument()
+    expect(await screen.findByText('6 pts')).toBeInTheDocument()
+    expect(screen.getByText('1° lugar')).toBeInTheDocument()
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
   })
 
-  it('muestra un partido cerrado sin pronostico como no pronosticado, con 0 puntos posibles', async () => {
+  it('muestra un partido finalizado sin pronostico como no pronosticado, sin link de edicion', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
-      {
-        matchId: 'match-3',
-        homeTeam: 'Cerro',
-        awayTeam: 'Liverpool',
-        homeTeamSlug: 'cerro',
-        awayTeamSlug: 'liverpool',
-        kickoffAt: '2000-01-01T20:00:00Z',
-        status: 'no_pronosticado',
-        homeGoals: null,
-        awayGoals: null,
-      },
+      match({ matchday: 1, matchStatus: 'finished', status: 'no_pronosticado' }),
     ])
     renderPage()
 
-    expect(
-      await screen.findByText(/No pronosticado \(0 puntos posibles\)/),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('No pronosticado')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Cargar/ })).not.toBeInTheDocument()
   })
 
-  it('enlaza a la pantalla de carga desde el hero para el proximo partido pendiente', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([
-      {
-        matchId: 'match-2',
-        homeTeam: 'Danubio',
-        awayTeam: 'Wanderers',
-        homeTeamSlug: 'danubio',
-        awayTeamSlug: 'wanderers',
-        kickoffAt: '2999-01-02T20:00:00Z',
-        status: 'pendiente',
-        homeGoals: null,
-        awayGoals: null,
-      },
-      {
-        matchId: 'match-3',
-        homeTeam: 'Cerro',
-        awayTeam: 'Liverpool',
-        homeTeamSlug: 'cerro',
-        awayTeamSlug: 'liverpool',
-        kickoffAt: '2000-01-01T20:00:00Z',
-        status: 'no_pronosticado',
-        homeGoals: null,
-        awayGoals: null,
-      },
-    ])
+  it('enlaza a la pantalla de carga para un partido pendiente', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ status: 'pendiente' })])
     renderPage()
 
     const link = await screen.findByRole('link', {
-      name: 'Cargar pronóstico de Danubio vs Wanderers',
+      name: 'Cargar o editar pronóstico de Nacional vs Peñarol',
     })
-    expect(link).toHaveAttribute('href', '/groups/group-1/matches/match-2/predict')
-    expect(screen.getAllByRole('link')).toHaveLength(1)
+    expect(link).toHaveAttribute('href', '/groups/group-1/matches/match-1/predict')
   })
 
-  it('cuando hay dos pendientes, destaca en el hero el de kickoff mas cercano', async () => {
+  it('muestra el boton para ir a la ultima fecha con partidos finalizados, y no aparece si no hay ninguno', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
-      {
-        matchId: 'match-2',
-        homeTeam: 'Danubio',
-        awayTeam: 'Wanderers',
-        homeTeamSlug: 'danubio',
-        awayTeamSlug: 'wanderers',
-        kickoffAt: '2999-01-05T20:00:00Z',
-        status: 'pendiente',
-        homeGoals: null,
-        awayGoals: null,
-      },
-      {
-        matchId: 'match-4',
-        homeTeam: 'Fenix',
-        awayTeam: 'Rentistas',
-        homeTeamSlug: 'fenix',
-        awayTeamSlug: 'rentistas',
-        kickoffAt: '2999-01-02T20:00:00Z',
-        status: 'pendiente',
-        homeGoals: null,
-        awayGoals: null,
-      },
+      match({ matchId: 'match-1', matchday: 1, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0 }),
+      match({ matchId: 'match-2', matchday: 2, matchStatus: 'scheduled', status: 'pendiente' }),
     ])
     renderPage()
 
-    expect(await screen.findByRole('heading', { name: 'Fenix Fenix vs Rentistas Rentistas' })).toBeInTheDocument()
-    expect(screen.getByText(/Danubio vs Wanderers — Pendiente/)).toBeInTheDocument()
+    const button = await screen.findByRole('button', { name: 'Ver desde última fecha cargada' })
+    const user = userEvent.setup()
+    await user.click(button)
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('no muestra el boton de ultima fecha cuando ningun partido esta finalizado', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled' })])
+    renderPage()
+
+    await screen.findByText('Fecha 1')
+    expect(screen.queryByRole('button', { name: 'Ver desde última fecha cargada' })).not.toBeInTheDocument()
   })
 })

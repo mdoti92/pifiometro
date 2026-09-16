@@ -1,36 +1,40 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
-import type { MatchPredictionStatus } from './myPredictionsService'
+import { render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as standingsService from '../standings/standingsService'
 import { PredictionHero } from './PredictionHero'
 
-const MATCH: MatchPredictionStatus = {
-  matchId: 'match-1',
-  homeTeam: 'Nacional',
-  awayTeam: 'Peñarol',
-  homeTeamSlug: 'nacional',
-  awayTeamSlug: 'penarol',
-  kickoffAt: '2026-03-01T22:00:00Z',
-  status: 'pendiente',
-  homeGoals: null,
-  awayGoals: null,
-}
+vi.mock('../standings/standingsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('../standings/standingsService')>('../standings/standingsService')
+  return { ...actual, getGroupStageStandings: vi.fn() }
+})
+
+const mockedGetGroupStageStandings = vi.mocked(standingsService.getGroupStageStandings)
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('PredictionHero', () => {
-  it('muestra el logo de cada equipo del partido destacado', () => {
-    render(
-      <MemoryRouter>
-        <PredictionHero match={MATCH} groupId="group-1" now={new Date('2026-03-01T20:00:00Z')} />
-      </MemoryRouter>,
-    )
+  it('muestra el total de puntos y la posicion del usuario en la etapa', async () => {
+    mockedGetGroupStageStandings.mockResolvedValue([
+      { userId: 'user-2', displayName: 'Aldo', totalPoints: 9, rank: 1 },
+      { userId: 'user-1', displayName: 'Doti', totalPoints: 6, rank: 2 },
+    ])
 
-    expect(screen.getByRole('img', { name: 'Nacional' })).toHaveAttribute(
-      'src',
-      '/team-logos/nacional.svg',
-    )
-    expect(screen.getByRole('img', { name: 'Peñarol' })).toHaveAttribute(
-      'src',
-      '/team-logos/penarol.svg',
-    )
+    render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" />)
+
+    expect(mockedGetGroupStageStandings).toHaveBeenCalledWith('group-1', 'stage-1')
+    expect(await screen.findByText('6 pts')).toBeInTheDocument()
+    expect(screen.getByText('2° lugar')).toBeInTheDocument()
+  })
+
+  it('no muestra nada cuando el usuario no aparece en la tabla', async () => {
+    mockedGetGroupStageStandings.mockResolvedValue([])
+
+    const { container } = render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" />)
+
+    await waitFor(() => expect(mockedGetGroupStageStandings).toHaveBeenCalled())
+    expect(container).toBeEmptyDOMElement()
   })
 })

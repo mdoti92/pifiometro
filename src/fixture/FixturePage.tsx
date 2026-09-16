@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { listGroupTournaments, type GroupTournament } from '../groups/groupTournamentsService'
-import { TeamBadge } from '../teams/TeamBadge'
+import { MatchCard } from '../matches/MatchCard'
+import { findLastFinishedMatchday } from './findLastFinishedMatchday'
 import { formatFixtureResult } from './formatFixtureResult'
 import { listTournamentFixture, type FixtureMatch } from './fixtureService'
 import { groupMatchesByMatchday } from './groupMatchesByMatchday'
+
+function matchdaySectionId(matchday: number | null): string {
+  return `fecha-${matchday ?? 'sin-fecha'}`
+}
+
+function isMatchFinished(match: FixtureMatch): boolean {
+  return match.status === 'finished'
+}
 
 export function FixturePage() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -29,6 +38,12 @@ export function FixturePage() {
   }, [selectedTournamentId])
 
   const matchdayGroups = selectedTournamentId ? groupMatchesByMatchday(fixture) : []
+  const lastFinishedMatchday = findLastFinishedMatchday(matchdayGroups, isMatchFinished)
+
+  function scrollToLastFinishedMatchday() {
+    if (lastFinishedMatchday === null) return
+    document.getElementById(matchdaySectionId(lastFinishedMatchday))?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   return (
     <div>
@@ -53,18 +68,27 @@ export function FixturePage() {
 
       {activeTournaments.length === 0 && <p>Tu grupo no sigue ningún torneo activo todavía</p>}
 
+      {lastFinishedMatchday !== null && (
+        <button type="button" onClick={scrollToLastFinishedMatchday}>
+          Ver desde última fecha cargada
+        </button>
+      )}
+
       {matchdayGroups.map((group) => (
-        <section key={group.matchday ?? 'sin-fecha'}>
+        <section key={group.matchday ?? 'sin-fecha'} id={matchdaySectionId(group.matchday)}>
           <h2 className="font-display">
             {group.matchday !== null ? `Fecha ${group.matchday}` : 'Sin fecha asignada'}
           </h2>
-          <ul>
+          <ul className="matchday-grid">
             {group.matches.map((match) => (
-              <li key={match.id}>
-                <TeamBadge name={match.homeTeam} slug={match.homeTeamSlug} /> {match.homeTeam} vs{' '}
-                {match.awayTeam} <TeamBadge name={match.awayTeam} slug={match.awayTeamSlug} /> —{' '}
-                {formatFixtureResult(match)}
-              </li>
+              <MatchCard
+                key={match.id}
+                homeTeam={match.homeTeam}
+                homeTeamSlug={match.homeTeamSlug}
+                awayTeam={match.awayTeam}
+                awayTeamSlug={match.awayTeamSlug}
+                center={formatFixtureResult(match)}
+              />
             ))}
           </ul>
         </section>

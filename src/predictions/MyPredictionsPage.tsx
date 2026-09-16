@@ -1,24 +1,30 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { findLastFinishedMatchday } from '../fixture/findLastFinishedMatchday'
+import { groupMatchesByMatchday } from '../fixture/groupMatchesByMatchday'
+import { MatchCard } from '../matches/MatchCard'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
-import { pickNextPendingMatch } from './pickNextPendingMatch'
 import { PredictionHero } from './PredictionHero'
-import { useLiveNow } from './useLiveNow'
-
-const LIVE_NOW_INTERVAL_MS = 1000
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
   cargado: (m) => `Cargado: ${m.homeGoals}-${m.awayGoals}`,
   pendiente: () => 'Pendiente',
-  no_pronosticado: () => 'No pronosticado (0 puntos posibles)',
+  no_pronosticado: () => 'No pronosticado',
+}
+
+function matchdaySectionId(matchday: number | null): string {
+  return `fecha-${matchday ?? 'sin-fecha'}`
+}
+
+function isMatchFinished(match: MatchPredictionStatus): boolean {
+  return match.matchStatus === 'finished'
 }
 
 export function MyPredictionsPage() {
   const { groupId, stageId } = useParams<{ groupId: string; stageId: string }>()
   const { user } = useAuth()
   const [statuses, setStatuses] = useState<MatchPredictionStatus[]>([])
-  const now = useLiveNow(LIVE_NOW_INTERVAL_MS)
 
   useEffect(() => {
     if (!groupId || !stageId || !user) return
@@ -26,32 +32,57 @@ export function MyPredictionsPage() {
     listMatchPredictionStatuses(stageId, groupId, user.id).then(setStatuses)
   }, [groupId, stageId, user])
 
-  const heroMatch = pickNextPendingMatch(statuses, now)
-  const restOfMatches = statuses.filter((match) => match.matchId !== heroMatch?.matchId)
+  const matchdayGroups = groupMatchesByMatchday(statuses)
+  const lastFinishedMatchday = findLastFinishedMatchday(matchdayGroups, isMatchFinished)
+
+  function scrollToLastFinishedMatchday() {
+    if (lastFinishedMatchday === null) return
+    document.getElementById(matchdaySectionId(lastFinishedMatchday))?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   return (
     <div>
       <h1>Mis pronósticos</h1>
 
-      {heroMatch && groupId && <PredictionHero match={heroMatch} groupId={groupId} now={now} />}
+      {groupId && stageId && user && (
+        <PredictionHero groupId={groupId} stageId={stageId} userId={user.id} />
+      )}
 
-      <ul>
-        {restOfMatches.map((match) => (
-          <li key={match.matchId}>
-            <span>
-              {match.homeTeam} vs {match.awayTeam} — {STATUS_LABEL[match.status](match)}
-            </span>
-            {match.status !== 'no_pronosticado' && (
-              <Link
-                to={`/groups/${groupId}/matches/${match.matchId}/predict`}
-                aria-label={`Cargar o editar pronóstico de ${match.homeTeam} vs ${match.awayTeam}`}
-              >
-                Cargar/editar
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      {lastFinishedMatchday !== null && (
+        <button type="button" onClick={scrollToLastFinishedMatchday}>
+          Ver desde última fecha cargada
+        </button>
+      )}
+
+      {matchdayGroups.map((group) => (
+        <section key={group.matchday ?? 'sin-fecha'} id={matchdaySectionId(group.matchday)}>
+          <h2 className="font-display">
+            {group.matchday !== null ? `Fecha ${group.matchday}` : 'Sin fecha asignada'}
+          </h2>
+          <ul className="matchday-grid">
+            {group.matches.map((match) => (
+              <MatchCard
+                key={match.matchId}
+                homeTeam={match.homeTeam}
+                homeTeamSlug={match.homeTeamSlug}
+                awayTeam={match.awayTeam}
+                awayTeamSlug={match.awayTeamSlug}
+                center={STATUS_LABEL[match.status](match)}
+                footer={
+                  match.status !== 'no_pronosticado' && groupId ? (
+                    <Link
+                      to={`/groups/${groupId}/matches/${match.matchId}/predict`}
+                      aria-label={`Cargar o editar pronóstico de ${match.homeTeam} vs ${match.awayTeam}`}
+                    >
+                      Cargar/editar
+                    </Link>
+                  ) : undefined
+                }
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }
