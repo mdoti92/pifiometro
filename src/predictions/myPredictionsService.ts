@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase'
 import { getTeamDisplayName } from '../teams/teamsService'
-import { hasKickedOff } from './predictionsService'
 
 export type MatchPredictionStatusValue = 'pendiente' | 'cargado' | 'no_pronosticado'
 export type MatchStatusValue = 'scheduled' | 'finished' | 'postponed'
@@ -103,7 +102,7 @@ export async function listMatchPredictionStatuses(
       kickoffAt: match.kickoff_at,
       matchday: match.matchday,
       matchStatus: match.status,
-      status: hasKickedOff(match.kickoff_at) ? ('no_pronosticado' as const) : ('pendiente' as const),
+      status: match.status === 'finished' ? ('no_pronosticado' as const) : ('pendiente' as const),
       homeGoals: null,
       awayGoals: null,
     }

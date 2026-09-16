@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../auth/AuthContext'
+import * as predictionsService from './predictionsService'
 import * as standingsService from '../standings/standingsService'
 import { MyPredictionsPage } from './MyPredictionsPage'
 import * as myPredictionsService from './myPredictionsService'
@@ -18,6 +19,12 @@ vi.mock('./myPredictionsService', async () => {
   return { ...actual, listMatchPredictionStatuses: vi.fn() }
 })
 
+vi.mock('./predictionsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('./predictionsService')>('./predictionsService')
+  return { ...actual, savePrediction: vi.fn() }
+})
+
 vi.mock('../standings/standingsService', async () => {
   const actual =
     await vi.importActual<typeof import('../standings/standingsService')>('../standings/standingsService')
@@ -26,6 +33,7 @@ vi.mock('../standings/standingsService', async () => {
 
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedListMatchPredictionStatuses = vi.mocked(myPredictionsService.listMatchPredictionStatuses)
+const mockedSavePrediction = vi.mocked(predictionsService.savePrediction)
 const mockedGetGroupStageStandings = vi.mocked(standingsService.getGroupStageStandings)
 
 beforeEach(() => {
@@ -92,27 +100,7 @@ describe('MyPredictionsPage', () => {
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
   })
 
-  it('muestra un partido finalizado sin pronostico como no pronosticado, sin link de edicion', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([
-      match({ matchday: 1, matchStatus: 'finished', status: 'no_pronosticado' }),
-    ])
-    renderPage()
-
-    expect(await screen.findByText('No pronosticado')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Cargar/ })).not.toBeInTheDocument()
-  })
-
-  it('enlaza a la pantalla de carga para un partido pendiente', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([match({ status: 'pendiente' })])
-    renderPage()
-
-    const link = await screen.findByRole('link', {
-      name: 'Cargar o editar pronóstico de Nacional vs Peñarol',
-    })
-    expect(link).toHaveAttribute('href', '/groups/group-1/matches/match-1/predict')
-  })
-
-  it('muestra el boton para ir a la ultima fecha con partidos finalizados, y no aparece si no hay ninguno', async () => {
+  it('muestra el boton para ir a la ultima fecha con partidos finalizados', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchId: 'match-1', matchday: 1, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0 }),
       match({ matchId: 'match-2', matchday: 2, matchStatus: 'scheduled', status: 'pendiente' }),
@@ -126,11 +114,78 @@ describe('MyPredictionsPage', () => {
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
   })
 
-  it('no muestra el boton de ultima fecha cuando ningun partido esta finalizado', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled' })])
+  it('muestra un icono de lapiz (no texto) para editar un partido pendiente sin resultado real', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     renderPage()
 
-    await screen.findByText('Fecha 1')
-    expect(screen.queryByRole('button', { name: 'Ver desde última fecha cargada' })).not.toBeInTheDocument()
+    const editButton = await screen.findByRole('button', {
+      name: 'Editar pronóstico de Nacional vs Peñarol',
+    })
+    expect(editButton).toHaveTextContent('✏️')
+  })
+
+  it('tambien muestra el lapiz para un partido postponed sin resultado real', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'postponed', status: 'pendiente' })])
+    renderPage()
+
+    expect(
+      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
+    ).toBeInTheDocument()
+  })
+
+  it('no muestra ningun boton de edicion para un partido finalizado, y se ve de solo lectura', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 1 }),
+    ])
+    renderPage()
+
+    expect(await screen.findByText('Cargado: 2-1')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('habilita edicion inline al tocar el lapiz, y actualiza la fila sin recargar toda la pantalla al confirmar', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
+    mockedSavePrediction.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
+    )
+
+    await user.type(screen.getByLabelText('Goles local de Nacional'), '2')
+    await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() =>
+      expect(mockedSavePrediction).toHaveBeenCalledWith({
+        matchId: 'match-1',
+        groupId: 'group-1',
+        userId: 'user-1',
+        homeGoals: 2,
+        awayGoals: 1,
+      }),
+    )
+    expect(await screen.findByText('Cargado: 2-1')).toBeInTheDocument()
+    expect(mockedListMatchPredictionStatuses).toHaveBeenCalledTimes(1)
+  })
+
+  it('muestra un error cuando falla el guardado inline, sin perder la edicion', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
+    mockedSavePrediction.mockRejectedValue(new Error('permission denied'))
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
+    )
+    await user.type(screen.getByLabelText('Goles local de Nacional'), '2')
+    await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('permission denied')).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles local de Nacional')).toBeInTheDocument()
   })
 })
