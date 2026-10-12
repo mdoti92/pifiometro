@@ -54,7 +54,7 @@ export function MyPredictionsPage() {
       <h1>Mis pronósticos</h1>
 
       {groupId && stageId && user && (
-        <PredictionHero groupId={groupId} stageId={stageId} userId={user.id} />
+        <PredictionHero groupId={groupId} stageId={stageId} userId={user.id} statuses={statuses} />
       )}
 
       {lastFinishedMatchday !== null && (
@@ -157,6 +157,7 @@ function PredictionMatchCard({
 
   return (
     <MatchCard
+      id={`match-${match.matchId}`}
       homeTeam={match.homeTeam}
       homeTeamSlug={match.homeTeamSlug}
       awayTeam={match.awayTeam}
