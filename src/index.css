@@ -119,14 +119,21 @@ select {
   text-align: center;
 }
 
+.predictions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .rank-chip {
   display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.4rem 1.25rem;
+  padding: 0.3rem 0.9rem;
   border-radius: 999px;
   color: var(--ink);
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 button.prediction-hero-countdown-card {

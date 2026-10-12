@@ -93,13 +93,24 @@ describe('MyPredictionsPage', () => {
     expect(screen.getByLabelText('Goles visitante de Wanderers')).toHaveValue(null)
   })
 
+  it('muestra el chip de puntaje al lado del titulo, no como tarjeta aparte', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 1 }),
+    ])
+    renderPage()
+
+    const heading = await screen.findByRole('heading', { name: 'Mis pronósticos' })
+    const chip = await screen.findByText('6 pts - 1ro')
+    expect(heading.parentElement).toBe(chip.parentElement)
+  })
+
   it('muestra el resumen de puntaje propio', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 1 }),
     ])
     renderPage()
 
-    expect(await screen.findByText('6 pts - 1° lugar')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 1ro')).toBeInTheDocument()
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
   })
 
@@ -107,7 +118,7 @@ describe('MyPredictionsPage', () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     renderPage()
 
-    expect(await screen.findByText('6 pts - 1° lugar')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 1ro')).toBeInTheDocument()
     expect(screen.getByText('Cierra en:')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Nacional vs Peñarol' })).toBeInTheDocument()
   })
