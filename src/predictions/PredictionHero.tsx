@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getRankChipColor } from '../design/rankChipColor'
 import { getGroupStageStandings, type StandingRow } from '../standings/standingsService'
 import { formatCountdown, formatCountdownLabel } from './formatCountdown'
 import type { MatchPredictionStatus } from './myPredictionsService'
@@ -54,8 +55,12 @@ export function PredictionHero({ groupId, stageId, userId, statuses }: Predictio
       {myStanding && (
         <section className="prediction-hero">
           <p>Tu puntaje en esta etapa</p>
-          <p className="font-display prediction-hero-score">{myStanding.totalPoints} pts</p>
-          <p>{myStanding.rank}° lugar</p>
+          <span
+            className="rank-chip font-display"
+            style={{ backgroundColor: getRankChipColor(myStanding.rank) }}
+          >
+            {myStanding.totalPoints} pts - {myStanding.rank}° lugar
+          </span>
         </section>
       )}
     </>
