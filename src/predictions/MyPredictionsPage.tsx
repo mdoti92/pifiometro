@@ -7,6 +7,7 @@ import { MatchCard } from '../matches/MatchCard'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
 import { savePrediction } from './predictionsService'
+import { RankChip } from './RankChip'
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
   cargado: (m) => `Cargado: ${m.homeGoals}-${m.awayGoals}`,
@@ -51,11 +52,14 @@ export function MyPredictionsPage() {
 
   return (
     <div>
-      <h1>Mis pronósticos</h1>
+      <div className="predictions-header">
+        <h1>Mis pronósticos</h1>
+        {groupId && stageId && user && (
+          <RankChip groupId={groupId} stageId={stageId} userId={user.id} />
+        )}
+      </div>
 
-      {groupId && stageId && user && (
-        <PredictionHero groupId={groupId} stageId={stageId} userId={user.id} statuses={statuses} />
-      )}
+      <PredictionHero statuses={statuses} />
 
       {lastFinishedMatchday !== null && (
         <button type="button" onClick={scrollToLastFinishedMatchday}>
