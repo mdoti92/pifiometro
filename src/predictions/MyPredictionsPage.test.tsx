@@ -77,7 +77,7 @@ function match(overrides: Partial<myPredictionsService.MatchPredictionStatus>) {
 }
 
 describe('MyPredictionsPage', () => {
-  it('agrupa los partidos por fecha, en grilla, con escudos y estado del pronostico centrado', async () => {
+  it('agrupa los partidos por fecha, en grilla, con escudos e inputs editables centrados', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchId: 'match-1', matchday: 1, status: 'cargado', homeGoals: 2, awayGoals: 1 }),
       match({ matchId: 'match-2', homeTeam: 'Danubio', awayTeam: 'Wanderers', homeTeamSlug: 'danubio', awayTeamSlug: 'wanderers', matchday: 2, status: 'pendiente' }),
@@ -87,8 +87,10 @@ describe('MyPredictionsPage', () => {
     expect(await screen.findByText('Fecha 1')).toBeInTheDocument()
     expect(screen.getByText('Fecha 2')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Nacional' })).toHaveAttribute('src', '/team-logos/nacional.svg')
-    expect(screen.getByText('Cargado: 2-1')).toBeInTheDocument()
-    expect(screen.getByText('Pendiente')).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles local de Nacional')).toHaveValue(2)
+    expect(screen.getByLabelText('Goles visitante de Peñarol')).toHaveValue(1)
+    expect(screen.getByLabelText('Goles local de Danubio')).toHaveValue(null)
+    expect(screen.getByLabelText('Goles visitante de Wanderers')).toHaveValue(null)
   })
 
   it('muestra el resumen de puntaje propio en vez del cartel de cuenta regresiva', async () => {
@@ -114,50 +116,45 @@ describe('MyPredictionsPage', () => {
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
   })
 
-  it('muestra un icono de lapiz (no texto) para editar un partido pendiente sin resultado real', async () => {
+  it('muestra los inputs editables directamente, sin lapiz ni paso previo, para un partido pendiente', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     renderPage()
 
-    const editButton = await screen.findByRole('button', {
-      name: 'Editar pronóstico de Nacional vs Peñarol',
-    })
-    expect(editButton).toHaveTextContent('✏️')
+    expect(await screen.findByLabelText('Goles local de Nacional')).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles visitante de Peñarol')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
+    ).not.toBeInTheDocument()
   })
 
-  it('tambien muestra el lapiz para un partido postponed sin resultado real', async () => {
+  it('tambien muestra los inputs editables para un partido postponed sin resultado real', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'postponed', status: 'pendiente' })])
     renderPage()
 
-    expect(
-      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByLabelText('Goles local de Nacional')).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles visitante de Peñarol')).toBeInTheDocument()
   })
 
-  it('no muestra ningun boton de edicion para un partido finalizado, y se ve de solo lectura', async () => {
+  it('no muestra inputs editables para un partido finalizado, y se ve de solo lectura', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 1 }),
     ])
     renderPage()
 
     expect(await screen.findByText('Cargado: 2-1')).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
   })
 
-  it('habilita edicion inline al tocar el lapiz, y actualiza la fila sin recargar toda la pantalla al confirmar', async () => {
+  it('guarda el pronostico automaticamente al completar los dos inputs, sin boton de confirmar', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     mockedSavePrediction.mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
-    )
+    expect(screen.queryByRole('button', { name: 'Confirmar' })).not.toBeInTheDocument()
 
-    await user.type(screen.getByLabelText('Goles local de Nacional'), '2')
+    await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
     await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     await waitFor(() =>
       expect(mockedSavePrediction).toHaveBeenCalledWith({
@@ -168,24 +165,29 @@ describe('MyPredictionsPage', () => {
         awayGoals: 1,
       }),
     )
-    expect(await screen.findByText('Cargado: 2-1')).toBeInTheDocument()
     expect(mockedListMatchPredictionStatuses).toHaveBeenCalledTimes(1)
   })
 
-  it('muestra un error cuando falla el guardado inline, sin perder la edicion', async () => {
+  it('no guarda todavia si solo se completo uno de los dos inputs', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
+
+    expect(mockedSavePrediction).not.toHaveBeenCalled()
+  })
+
+  it('muestra un error cuando falla el guardado automatico, sin perder lo tipeado', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     mockedSavePrediction.mockRejectedValue(new Error('permission denied'))
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Editar pronóstico de Nacional vs Peñarol' }),
-    )
-    await user.type(screen.getByLabelText('Goles local de Nacional'), '2')
+    await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
     await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByText('permission denied')).toBeInTheDocument()
-    expect(screen.getByLabelText('Goles local de Nacional')).toBeInTheDocument()
+    expect(screen.getByLabelText('Goles local de Nacional')).toHaveValue(2)
   })
 })
