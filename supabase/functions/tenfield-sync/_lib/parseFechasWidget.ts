@@ -22,7 +22,10 @@ export function parseFechasWidget(html: string): TenfieldMatch[] {
     const [homeTeamName, awayTeamName] = teamNames
     if (!homeTeamName || !awayTeamName) return
 
-    const kickoffAt = ($row.find('.sp-event-date').attr('datetime') ?? '').replace(' ', 'T')
+    const rawDatetime = $row.find('.sp-event-date').attr('datetime') ?? ''
+    // tenfield publica el datetime en hora local de Uruguay (UTC-3, sin horario de
+    // verano), no en UTC: hay que aplicar el offset para guardar el instante real.
+    const kickoffAt = new Date(`${rawDatetime.replace(' ', 'T')}-03:00`).toISOString()
 
     const resultSpans = $row
       .find('.sp-result')
