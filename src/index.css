@@ -6,6 +6,7 @@
   --ink: #ede3ce;
   --hearth: #c97a2e;
   --moss: #5b7a52;
+  --gold: #c9a63e;
   --rust: #8c3b2e;
   --steel: #4a5568;
 
@@ -118,10 +119,14 @@ select {
   text-align: center;
 }
 
-.prediction-hero-score {
-  font-size: 2rem;
-  color: var(--hearth);
-  margin: 0;
+.rank-chip {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.4rem 1.25rem;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 button.prediction-hero-countdown-card {
