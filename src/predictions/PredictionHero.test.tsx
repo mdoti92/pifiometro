@@ -39,7 +39,7 @@ afterEach(() => {
 })
 
 describe('PredictionHero', () => {
-  it('muestra el total de puntos y la posicion del usuario en la etapa', async () => {
+  it('muestra el total de puntos y la posicion del usuario en la etapa, como chip', async () => {
     mockedGetGroupStageStandings.mockResolvedValue([
       { userId: 'user-2', displayName: 'Aldo', totalPoints: 9, rank: 1 },
       { userId: 'user-1', displayName: 'Doti', totalPoints: 6, rank: 2 },
@@ -48,8 +48,40 @@ describe('PredictionHero', () => {
     render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" statuses={[]} />)
 
     expect(mockedGetGroupStageStandings).toHaveBeenCalledWith('group-1', 'stage-1')
-    expect(await screen.findByText('6 pts')).toBeInTheDocument()
-    expect(screen.getByText('2° lugar')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 2° lugar')).toBeInTheDocument()
+  })
+
+  it('pinta el chip de verde (moss) cuando el usuario va primero', async () => {
+    mockedGetGroupStageStandings.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', totalPoints: 10, rank: 1 },
+    ])
+
+    render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" statuses={[]} />)
+
+    const chip = await screen.findByText('10 pts - 1° lugar')
+    expect(chip).toHaveStyle({ backgroundColor: 'var(--moss)' })
+  })
+
+  it('pinta el chip de amarillo (gold) cuando el usuario va segundo', async () => {
+    mockedGetGroupStageStandings.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', totalPoints: 6, rank: 2 },
+    ])
+
+    render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" statuses={[]} />)
+
+    const chip = await screen.findByText('6 pts - 2° lugar')
+    expect(chip).toHaveStyle({ backgroundColor: 'var(--gold)' })
+  })
+
+  it('pinta el chip de rojo (rust) cuando el usuario va tercero', async () => {
+    mockedGetGroupStageStandings.mockResolvedValue([
+      { userId: 'user-1', displayName: 'Doti', totalPoints: 2, rank: 3 },
+    ])
+
+    render(<PredictionHero groupId="group-1" stageId="stage-1" userId="user-1" statuses={[]} />)
+
+    const chip = await screen.findByText('2 pts - 3° lugar')
+    expect(chip).toHaveStyle({ backgroundColor: 'var(--rust)' })
   })
 
   it('no muestra nada cuando no hay posicion en la tabla ni partido pendiente', async () => {
@@ -79,7 +111,7 @@ describe('PredictionHero', () => {
 
     expect(await screen.findByText('Cierra en:')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Danubio vs Wanderers' })).toBeInTheDocument()
-    expect(screen.getByText('6 pts')).toBeInTheDocument()
+    expect(screen.getByText('6 pts - 1° lugar')).toBeInTheDocument()
   })
 
   it('muestra la cuenta regresiva con dias cuando faltan mas de 24 horas, con relleno de ceros', () => {
@@ -113,7 +145,7 @@ describe('PredictionHero', () => {
       />,
     )
 
-    expect(await screen.findByText('6 pts')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 1° lugar')).toBeInTheDocument()
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
   })
 

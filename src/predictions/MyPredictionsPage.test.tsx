@@ -99,8 +99,7 @@ describe('MyPredictionsPage', () => {
     ])
     renderPage()
 
-    expect(await screen.findByText('6 pts')).toBeInTheDocument()
-    expect(screen.getByText('1° lugar')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 1° lugar')).toBeInTheDocument()
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
   })
 
@@ -108,7 +107,7 @@ describe('MyPredictionsPage', () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
     renderPage()
 
-    expect(await screen.findByText('6 pts')).toBeInTheDocument()
+    expect(await screen.findByText('6 pts - 1° lugar')).toBeInTheDocument()
     expect(screen.getByText('Cierra en:')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Nacional vs Peñarol' })).toBeInTheDocument()
   })
