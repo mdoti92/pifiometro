@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as standingsService from '../standings/standingsService'
 import type { MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
@@ -32,6 +32,10 @@ function pendingMatch(overrides: Partial<MatchPredictionStatus> = {}): MatchPred
 beforeEach(() => {
   vi.clearAllMocks()
   window.HTMLElement.prototype.scrollIntoView = vi.fn()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('PredictionHero', () => {
@@ -76,6 +80,23 @@ describe('PredictionHero', () => {
     expect(await screen.findByText('Cierra en:')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Danubio vs Wanderers' })).toBeInTheDocument()
     expect(screen.getByText('6 pts')).toBeInTheDocument()
+  })
+
+  it('muestra la cuenta regresiva con dias cuando faltan mas de 24 horas, con relleno de ceros', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
+    mockedGetGroupStageStandings.mockResolvedValue([])
+
+    render(
+      <PredictionHero
+        groupId="group-1"
+        stageId="stage-1"
+        userId="user-1"
+        statuses={[pendingMatch({ kickoffAt: '2026-01-05T20:31:06.000Z' })]}
+      />,
+    )
+
+    expect(screen.getByText('4d 20h 31m 06s')).toBeInTheDocument()
   })
 
   it('no muestra la cuenta regresiva cuando no hay ningun partido pendiente', async () => {
