@@ -96,21 +96,15 @@ function PredictionMatchCard({
   userId: string
   onSaved: (matchId: string, homeGoals: number, awayGoals: number) => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [homeGoals, setHomeGoals] = useState('')
-  const [awayGoals, setAwayGoals] = useState('')
+  const [homeGoals, setHomeGoals] = useState(match.homeGoals !== null ? String(match.homeGoals) : '')
+  const [awayGoals, setAwayGoals] = useState(match.awayGoals !== null ? String(match.awayGoals) : '')
   const [error, setError] = useState<string | null>(null)
 
   const canEdit = match.matchStatus !== 'finished'
 
-  function startEditing() {
-    setHomeGoals(match.homeGoals !== null ? String(match.homeGoals) : '')
-    setAwayGoals(match.awayGoals !== null ? String(match.awayGoals) : '')
-    setError(null)
-    setEditing(true)
-  }
+  async function saveIfComplete(nextHomeGoals: string, nextAwayGoals: string) {
+    if (nextHomeGoals === '' || nextAwayGoals === '') return
 
-  async function handleConfirm() {
     setError(null)
 
     try {
@@ -118,52 +112,48 @@ function PredictionMatchCard({
         matchId: match.matchId,
         groupId,
         userId,
-        homeGoals: Number(homeGoals),
-        awayGoals: Number(awayGoals),
+        homeGoals: Number(nextHomeGoals),
+        awayGoals: Number(nextAwayGoals),
       })
-      onSaved(match.matchId, Number(homeGoals), Number(awayGoals))
-      setEditing(false)
+      onSaved(match.matchId, Number(nextHomeGoals), Number(nextAwayGoals))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el pronóstico')
     }
   }
 
-  const center = editing ? (
+  function handleHomeGoalsChange(event: { target: { value: string } }) {
+    const value = event.target.value
+    setHomeGoals(value)
+    void saveIfComplete(value, awayGoals)
+  }
+
+  function handleAwayGoalsChange(event: { target: { value: string } }) {
+    const value = event.target.value
+    setAwayGoals(value)
+    void saveIfComplete(homeGoals, value)
+  }
+
+  const center = canEdit ? (
     <div className="prediction-inline-edit">
       <input
         aria-label={`Goles local de ${match.homeTeam}`}
         type="number"
         value={homeGoals}
-        onChange={(event) => setHomeGoals(event.target.value)}
+        onChange={handleHomeGoalsChange}
       />
       <span>-</span>
       <input
         aria-label={`Goles visitante de ${match.awayTeam}`}
         type="number"
         value={awayGoals}
-        onChange={(event) => setAwayGoals(event.target.value)}
+        onChange={handleAwayGoalsChange}
       />
     </div>
   ) : (
     STATUS_LABEL[match.status](match)
   )
 
-  const footer = editing ? (
-    <>
-      <button type="button" onClick={handleConfirm}>
-        Confirmar
-      </button>
-      {error && <p role="alert">{error}</p>}
-    </>
-  ) : canEdit ? (
-    <button
-      type="button"
-      onClick={startEditing}
-      aria-label={`Editar pronóstico de ${match.homeTeam} vs ${match.awayTeam}`}
-    >
-      ✏️
-    </button>
-  ) : undefined
+  const footer = error ? <p role="alert">{error}</p> : undefined
 
   return (
     <MatchCard
