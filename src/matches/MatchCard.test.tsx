@@ -40,6 +40,21 @@ describe('MatchCard', () => {
     expect(screen.getByText('2-1')).toBeInTheDocument()
   })
 
+  it('aplica el id pasado por props, para poder scrollear hasta la tarjeta', () => {
+    const { container } = render(
+      <MatchCard
+        homeTeam="Nacional"
+        homeTeamSlug="nacional"
+        awayTeam="Peñarol"
+        awayTeamSlug="penarol"
+        center="2-1"
+        id="match-123"
+      />,
+    )
+
+    expect(container.querySelector('#match-123')).toBeInTheDocument()
+  })
+
   it('muestra el footer cuando se lo pasa', () => {
     render(
       <MatchCard

@@ -8,6 +8,7 @@ interface MatchCardProps {
   awayTeamSlug: string
   center: ReactNode
   footer?: ReactNode
+  id?: string
 }
 
 export function MatchCard({
@@ -17,9 +18,10 @@ export function MatchCard({
   awayTeamSlug,
   center,
   footer,
+  id,
 }: MatchCardProps) {
   return (
-    <li className="match-card">
+    <li id={id} className="match-card">
       <div className="match-card-teams">
         <div className="match-card-team">
           <TeamBadge name={homeTeam} slug={homeTeamSlug} />

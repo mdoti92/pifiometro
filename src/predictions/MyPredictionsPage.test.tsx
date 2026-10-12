@@ -93,13 +93,37 @@ describe('MyPredictionsPage', () => {
     expect(screen.getByLabelText('Goles visitante de Wanderers')).toHaveValue(null)
   })
 
-  it('muestra el resumen de puntaje propio en vez del cartel de cuenta regresiva', async () => {
-    mockedListMatchPredictionStatuses.mockResolvedValue([match({})])
+  it('muestra el resumen de puntaje propio', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 1 }),
+    ])
     renderPage()
 
     expect(await screen.findByText('6 pts')).toBeInTheDocument()
     expect(screen.getByText('1° lugar')).toBeInTheDocument()
     expect(screen.queryByText('Cierra en:')).not.toBeInTheDocument()
+  })
+
+  it('ademas del puntaje, destaca en un cartel la cuenta regresiva al proximo partido pendiente', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
+    renderPage()
+
+    expect(await screen.findByText('6 pts')).toBeInTheDocument()
+    expect(screen.getByText('Cierra en:')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Nacional vs Peñarol' })).toBeInTheDocument()
+  })
+
+  it('al tocar el cartel de cuenta regresiva, scrollea hasta la tarjeta de ese partido en la grilla', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([match({ matchStatus: 'scheduled', status: 'pendiente' })])
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ir al pronóstico de Nacional vs Peñarol' }),
+    )
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+    expect(screen.getByLabelText('Goles local de Nacional')).toBeInTheDocument()
   })
 
   it('muestra el boton para ir a la ultima fecha con partidos finalizados', async () => {
