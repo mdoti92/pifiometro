@@ -18,6 +18,7 @@
     "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
+    "cheerio": "^1.0.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
