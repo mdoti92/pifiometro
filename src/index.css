@@ -207,6 +207,13 @@ select {
   width: 3rem;
   text-align: center;
   padding: 0.25rem;
+  -moz-appearance: textfield;
+}
+
+.prediction-inline-edit input::-webkit-outer-spin-button,
+.prediction-inline-edit input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .standings-tabs {
