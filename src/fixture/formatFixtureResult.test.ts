@@ -23,10 +23,16 @@ function baseMatch(overrides: Partial<FixtureMatch>): FixtureMatch {
 }
 
 describe('formatFixtureResult', () => {
-  it('muestra la fecha y hora del kickoff para un partido todavia no jugado', () => {
-    const match = baseMatch({ status: 'scheduled' })
+  it('muestra la fecha y hora del kickoff en hora local de Uruguay (UTC-3), no en UTC', () => {
+    const match = baseMatch({ status: 'scheduled', kickoffAt: '2026-03-01T20:00:00Z' })
 
-    expect(formatFixtureResult(match)).toBe('1/3/2026, 20:00')
+    expect(formatFixtureResult(match)).toBe('1/3/2026, 17:00')
+  })
+
+  it('ajusta tambien la fecha cuando la conversion a hora local cruza la medianoche', () => {
+    const match = baseMatch({ status: 'scheduled', kickoffAt: '2026-10-20T01:30:00Z' })
+
+    expect(formatFixtureResult(match)).toBe('19/10/2026, 22:30')
   })
 
   it('muestra el resultado final para un partido jugado', () => {
