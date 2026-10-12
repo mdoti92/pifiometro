@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getGroupStageStandings, type StandingRow } from '../standings/standingsService'
-import { formatCountdown } from './formatCountdown'
+import { formatCountdown, formatCountdownLabel } from './formatCountdown'
 import type { MatchPredictionStatus } from './myPredictionsService'
 import { pickNextPendingMatch } from './pickNextPendingMatch'
 import { useLiveNow } from './useLiveNow'
@@ -44,9 +44,7 @@ export function PredictionHero({ groupId, stageId, userId, statuses }: Predictio
           aria-label={`Ir al pronóstico de ${nextMatch.homeTeam} vs ${nextMatch.awayTeam}`}
         >
           <p>Cierra en:</p>
-          <p className="font-display prediction-hero-countdown">
-            {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
-          </p>
+          <p className="font-display prediction-hero-countdown">{formatCountdownLabel(countdown)}</p>
           <h2 className="font-display">
             {nextMatch.homeTeam} vs {nextMatch.awayTeam}
           </h2>
