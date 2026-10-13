@@ -3,6 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import * as AuthContextModule from './auth/AuthContext'
+import * as standingsService from './standings/standingsService'
+import * as tournamentsService from './tournaments/tournamentsService'
+import * as groupTournamentsService from './groups/groupTournamentsService'
 import * as groupsService from './groups/groupsService'
 
 vi.mock('./auth/AuthContext', async () => {
@@ -15,12 +18,38 @@ vi.mock('./groups/groupsService', async () => {
   return { ...actual, listMyGroups: vi.fn() }
 })
 
+vi.mock('./groups/groupTournamentsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('./groups/groupTournamentsService')>('./groups/groupTournamentsService')
+  return { ...actual, listGroupTournaments: vi.fn() }
+})
+
+vi.mock('./tournaments/tournamentsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('./tournaments/tournamentsService')>('./tournaments/tournamentsService')
+  return { ...actual, listTournamentStages: vi.fn(), getCurrentStage: vi.fn() }
+})
+
+vi.mock('./standings/standingsService', async () => {
+  const actual =
+    await vi.importActual<typeof import('./standings/standingsService')>('./standings/standingsService')
+  return { ...actual, getGroupTournamentStandings: vi.fn() }
+})
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedListMyGroups = vi.mocked(groupsService.listMyGroups)
+const mockedListGroupTournaments = vi.mocked(groupTournamentsService.listGroupTournaments)
 
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
   mockedListMyGroups.mockResolvedValue([])
+  mockedListGroupTournaments.mockResolvedValue([
+    { tournamentId: 'tournament-1', name: 'Liga AUF', season: '2026', active: true },
+  ])
+  vi.mocked(tournamentsService.listTournamentStages).mockResolvedValue([])
+  vi.mocked(tournamentsService.getCurrentStage).mockResolvedValue(null)
+  vi.mocked(standingsService.getGroupTournamentStandings).mockResolvedValue([])
 })
 
 function renderAppAt(path: string) {
@@ -54,7 +83,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Unirme a un grupo' })).toBeInTheDocument()
   })
 
-  it('redirige directo al grupo cuando se visita la raiz con sesion activa y ya perteneciendo a un grupo', async () => {
+  it('redirige directo a la tabla del torneo vigente cuando se visita la raiz con sesion activa y ya perteneciendo a un grupo', async () => {
     mockedUseAuth.mockReturnValue({
       session: { access_token: 't' } as never,
       user: { id: 'user-1' } as never,
@@ -64,7 +93,7 @@ describe('App', () => {
 
     renderAppAt('/')
 
-    expect(await screen.findByRole('heading', { name: 'Torneos del grupo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Tabla', level: 1 })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Crear grupo' })).not.toBeInTheDocument()
   })
 

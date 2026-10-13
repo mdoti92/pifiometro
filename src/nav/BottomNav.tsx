@@ -5,7 +5,6 @@ const TABS: { key: keyof TabHrefs | 'perfil'; label: string }[] = [
   { key: 'pronosticos', label: 'Pronósticos' },
   { key: 'fixture', label: 'Fixture' },
   { key: 'tabla', label: 'Tabla' },
-  { key: 'grupo', label: 'Grupo' },
   { key: 'perfil', label: 'Perfil' },
 ]
 
