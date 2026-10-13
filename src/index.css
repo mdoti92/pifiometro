@@ -261,6 +261,23 @@ button.prediction-hero-countdown-card {
   border-color: var(--hearth);
 }
 
+button.standings-tab {
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+button.standings-tab.active {
+  background: var(--hearth);
+  color: var(--bg);
+}
+
+.standings-section {
+  margin-bottom: 1.5rem;
+}
+
 .standings-table {
   width: 100%;
   border-collapse: collapse;
