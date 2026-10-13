@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../auth/AuthContext'
 import * as authService from '../auth/authService'
+import * as groupMembersService from '../groups/groupMembersService'
+import * as groupsService from '../groups/groupsService'
 import * as tournamentsService from '../tournaments/tournamentsService'
 import { ProfilePage } from './ProfilePage'
 
@@ -24,12 +26,28 @@ vi.mock('../tournaments/tournamentsService', async () => {
   return { ...actual, isSuperadmin: vi.fn() }
 })
 
+vi.mock('../groups/groupsService', async () => {
+  const actual = await vi.importActual<typeof import('../groups/groupsService')>('../groups/groupsService')
+  return { ...actual, listMyGroups: vi.fn() }
+})
+
+vi.mock('../groups/groupMembersService', async () => {
+  const actual =
+    await vi.importActual<typeof import('../groups/groupMembersService')>('../groups/groupMembersService')
+  return { ...actual, isGroupAdmin: vi.fn() }
+})
+
+const mockedListMyGroups = vi.mocked(groupsService.listMyGroups)
+const mockedIsGroupAdmin = vi.mocked(groupMembersService.isGroupAdmin)
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedIsSuperadmin = vi.mocked(tournamentsService.isSuperadmin)
 const mockedSignOut = vi.mocked(authService.signOut)
 
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
+  mockedListMyGroups.mockResolvedValue([{ id: 'group-1', name: 'LBDH' }])
+  mockedIsGroupAdmin.mockResolvedValue(false)
   mockedUseAuth.mockReturnValue({
     session: { access_token: 't' } as never,
     user: { id: 'user-1', email: 'martin@example.com' } as never,
@@ -70,5 +88,23 @@ describe('ProfilePage', () => {
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(mockedSignOut).toHaveBeenCalled()
+  })
+
+  it('muestra el acceso al grupo activo cuando el usuario es admin del grupo', async () => {
+    mockedIsSuperadmin.mockResolvedValue(false)
+    mockedIsGroupAdmin.mockResolvedValue(true)
+    renderProfilePage()
+
+    expect(await screen.findByRole('link', { name: 'Grupo' })).toHaveAttribute('href', '/groups/group-1/members')
+    expect(mockedIsGroupAdmin).toHaveBeenCalledWith('group-1')
+  })
+
+  it('no muestra el acceso al grupo cuando el usuario no es admin del grupo', async () => {
+    mockedIsSuperadmin.mockResolvedValue(false)
+    renderProfilePage()
+
+    await screen.findByText('martin@example.com')
+    await vi.waitFor(() => expect(mockedIsGroupAdmin).toHaveBeenCalled())
+    expect(screen.queryByRole('link', { name: 'Grupo' })).not.toBeInTheDocument()
   })
 })
