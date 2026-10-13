@@ -9,7 +9,6 @@ describe('resolveTabHrefs', () => {
       pronosticos: '/',
       fixture: '/',
       tabla: '/',
-      grupo: '/',
     })
   })
 
@@ -24,7 +23,6 @@ describe('resolveTabHrefs', () => {
       pronosticos: '/groups/group-1/tournaments',
       fixture: '/groups/group-1/fixture',
       tabla: '/groups/group-1/tournaments',
-      grupo: '/groups/group-1/members',
     })
   })
 
@@ -39,7 +37,6 @@ describe('resolveTabHrefs', () => {
       pronosticos: '/groups/group-1/tournaments',
       fixture: '/groups/group-1/fixture',
       tabla: '/groups/group-1/tournaments/tournament-1/standings',
-      grupo: '/groups/group-1/members',
     })
   })
 

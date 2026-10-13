@@ -2,7 +2,6 @@ export interface TabHrefs {
   pronosticos: string
   fixture: string
   tabla: string
-  grupo: string
 }
 
 interface ResolveTabHrefsInput {
@@ -17,7 +16,7 @@ export function resolveTabHrefs({
   currentStageId,
 }: ResolveTabHrefsInput): TabHrefs {
   if (!activeGroupId) {
-    return { pronosticos: '/', fixture: '/', tabla: '/', grupo: '/' }
+    return { pronosticos: '/', fixture: '/', tabla: '/' }
   }
 
   const tournamentsHub = `/groups/${activeGroupId}/tournaments`
@@ -29,6 +28,5 @@ export function resolveTabHrefs({
       : tournamentsHub,
     fixture: `/groups/${activeGroupId}/fixture`,
     tabla: soleActiveTournamentId ? `${tournamentsHub}/${soleActiveTournamentId}/standings` : tournamentsHub,
-    grupo: `/groups/${activeGroupId}/members`,
   }
 }
