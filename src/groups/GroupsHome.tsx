@@ -1,30 +1,41 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { resolveTabHrefs } from '../nav/resolveTabHrefs'
+import { useActiveGroup } from '../nav/useActiveGroup'
 import { usePushSubscriptionPrompt } from '../notifications/usePushSubscriptionPrompt'
 import { CreateGroupForm } from './CreateGroupForm'
-import { listMyGroups } from './groupsService'
+import { listGroupTournaments, pickSoleActiveTournament } from './groupTournamentsService'
+import { listMyGroups, type MyGroup } from './groupsService'
 import { JoinGroupForm } from './JoinGroupForm'
+
+const NO_GROUPS: MyGroup[] = []
 
 export function GroupsHome() {
   const { user } = useAuth()
   usePushSubscriptionPrompt(user?.id)
-  const [checked, setChecked] = useState(false)
-  const [myGroupId, setMyGroupId] = useState<string | null>(null)
+  const [groups, setGroups] = useState<MyGroup[] | null>(null)
+  const { activeGroupId } = useActiveGroup(groups ?? NO_GROUPS)
+  const [homeHref, setHomeHref] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
-
-    listMyGroups(user.id).then((groups) => {
-      setMyGroupId(groups[0]?.id ?? null)
-      setChecked(true)
-    })
+    listMyGroups(user.id).then(setGroups)
   }, [user])
 
-  if (!checked) return null
+  useEffect(() => {
+    if (!activeGroupId) return
 
-  if (myGroupId) {
-    return <Navigate to={`/groups/${myGroupId}/tournaments`} replace />
+    listGroupTournaments(activeGroupId).then((groupTournaments) => {
+      const soleActiveTournamentId = pickSoleActiveTournament(groupTournaments)?.tournamentId ?? null
+      setHomeHref(resolveTabHrefs({ activeGroupId, soleActiveTournamentId }).tabla)
+    })
+  }, [activeGroupId])
+
+  if (groups === null) return null
+
+  if (activeGroupId) {
+    return homeHref ? <Navigate to={homeHref} replace /> : null
   }
 
   return (
