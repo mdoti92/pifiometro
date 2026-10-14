@@ -27,6 +27,8 @@ const SNAKE: GameDefinition = {
   description: '',
   path: '/games/snake',
   metric: 'highest',
+  goal: '',
+  howToPlay: '',
 }
 
 beforeEach(() => {

@@ -82,6 +82,18 @@ export function GameScreen({
 }: GameScreenProps) {
   const lastTouchEnd = useRef(0)
   const counting = status === 'countdown'
+  const shownDetail =
+    detail ??
+    (status === 'idle' ? (
+      <div className="game-rules">
+        <p>
+          <strong>Objetivo:</strong> {game.goal}
+        </p>
+        <p>
+          <strong>Cómo se juega:</strong> {game.howToPlay}
+        </p>
+      </div>
+    ) : undefined)
   const shownMessage = counting ? null : message === undefined ? DEFAULT_MESSAGES[status] : message
 
   function handleTouchEnd(event: TouchEvent) {
@@ -125,7 +137,7 @@ export function GameScreen({
           {shownMessage && (
             <div className="game-message" role="status">
               <span>{shownMessage}</span>
-              {status === 'over' ? overDetail : detail}
+              {status === 'over' ? overDetail : shownDetail}
             </div>
           )}
         </div>

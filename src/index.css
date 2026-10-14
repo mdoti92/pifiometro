@@ -665,8 +665,17 @@ button.standings-tab.active {
 }
 
 .game-rules {
-  max-width: 85%;
-  font-size: 0.75rem;
+  max-width: 92%;
+  font-size: 0.7rem;
   text-transform: none;
-  line-height: 1.3;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.game-rules p {
+  margin: 0.25rem 0;
+}
+
+.game-message {
+  overflow-y: auto;
 }
