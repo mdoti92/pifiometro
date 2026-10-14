@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { VRALLY_GAME, formatTenths } from '../catalog'
 import { GameScreen } from '../shared/GameScreen'
 import type { Horizontal } from '../shared/input'
@@ -7,11 +7,13 @@ import type { GameEngine } from '../shared/useGameLoop'
 import { useGameRecord } from '../shared/useGameRecord'
 import { useHoldGame } from '../shared/useHoldGame'
 import { STEP_MS, createVRally, stepVRally, timeInTenths, type VRallyState } from './vrally'
+import { loadBestSplits, renderHud, saveBestSplitsIfBetter } from './vrallyHud'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, renderVRally } from './vrallyRender'
 
 const VRALLY_ENGINE: GameEngine<VRallyState, Horizontal> = {
   key: VRALLY_GAME.key,
-  create: createVRally,
+  // Cada carrera nueva compara contra los parciales del mejor tiempo guardado.
+  create: (random) => createVRally(random, loadBestSplits()),
   step: stepVRally,
   isOver: (state) => state.isOver,
   intervalMs: () => STEP_MS,
@@ -22,7 +24,14 @@ export function VRallyPage() {
   const { state, status, press, touchHandlers } = useHoldGame(VRALLY_ENGINE)
   const tenths = timeInTenths(state.elapsedMs)
   const { record } = useGameRecord(VRALLY_GAME, status === 'over', tenths)
-  const rects = useMemo(() => renderVRally(state), [state])
+  const rects = useMemo(() => [...renderVRally(state), ...renderHud(state)], [state])
+  const finished = status === 'over'
+
+  useEffect(() => {
+    if (finished) saveBestSplitsIfBetter(tenths, state.splits)
+    // Se guarda una vez por llegada; tiempo y parciales no cambian con la carrera terminada.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished])
 
   return (
     <GameScreen
