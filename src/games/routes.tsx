@@ -7,6 +7,7 @@ import {
   SNAKE_GAME,
   SPRING_BALL_GAME,
   TETRIS_GAME,
+  TWENTY48_GAME,
   type GameDefinition,
 } from './catalog'
 import { FlappyPage } from './flappy/FlappyPage'
@@ -16,6 +17,7 @@ import { SmallBeePage } from './smallBee/SmallBeePage'
 import { SnakeGamePage } from './snake/SnakeGamePage'
 import { SpringBallPage } from './springBall/SpringBallPage'
 import { TetrisPage } from './tetris/TetrisPage'
+import { Twenty48Page } from './twenty48/Twenty48Page'
 
 export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: SNAKE_GAME, element: <SnakeGamePage /> },
@@ -25,4 +27,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: TETRIS_GAME, element: <TetrisPage /> },
   { game: PENALTIES_GAME, element: <PenaltiesPage /> },
   { game: MINESWEEPER_GAME, element: <MinesweeperPage /> },
+  { game: TWENTY48_GAME, element: <Twenty48Page /> },
 ]

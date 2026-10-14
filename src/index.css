@@ -544,3 +544,40 @@ button.standings-tab.active {
   color: var(--lcd-pixel);
   outline: 1px solid var(--lcd-glow);
 }
+
+.twenty48-board {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+}
+
+.twenty48-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid var(--lcd-glow);
+  color: var(--lcd-pixel);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: clamp(0.8rem, 5vw, 1.4rem);
+}
+
+/* Las fichas se distinguen por numero; el tono solo oscurece a medida que crecen. */
+.twenty48-cell.tone-1 {
+  background: rgba(43, 51, 43, 0.12);
+}
+
+.twenty48-cell.tone-2 {
+  background: rgba(43, 51, 43, 0.3);
+}
+
+.twenty48-cell.tone-3 {
+  background: rgba(43, 51, 43, 0.6);
+  color: var(--lcd-screen);
+}
+
+.twenty48-cell.tone-4 {
+  background: var(--lcd-pixel);
+  color: var(--lcd-screen);
+}
