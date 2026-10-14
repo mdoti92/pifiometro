@@ -18,7 +18,7 @@ vi.mock('./gameScoresService', () => ({
 
 const mockedFetchScores = vi.mocked(service.fetchGameScores)
 
-const SNAKE: GameDefinition = { key: 'snake', name: 'Viborita', description: '', path: '/games/snake', metric: 'highest' }
+const SNAKE: GameDefinition = { key: 'snake', name: 'Viborita', description: '', path: '/games/snake', metric: 'highest', goal: '', howToPlay: '' }
 
 function score(userId: string, value: number, displayName = userId) {
   return { userId, displayName, value, achievedAt: '2026-10-01T00:00:00Z' }

@@ -32,8 +32,6 @@ const RESULT_MESSAGES: Record<Outcome, string> = {
   out: '¡AFUERA!',
 }
 
-const RULES = 'Tocá cuando la mira esté donde querés patear. Si el arquero adivina el lado, ataja.'
-
 const kick = (state: PenaltiesState) => shoot(state, Math.random)
 
 export function PenaltiesPage() {
@@ -62,7 +60,6 @@ export function PenaltiesPage() {
       touchHandlers={touchHandlers}
       message={message}
       overDetail={<span>Game Over · {state.goals} goles seguidos</span>}
-      detail={status === 'idle' ? <span className="game-rules">{RULES}</span> : undefined}
       hint="Tocá la pantalla (o espacio) para patear. Muerte súbita: el primero que errás, perdés."
     >
       <PixelCanvas width={VIEW_WIDTH} height={VIEW_HEIGHT} rects={rects} label={PENALTIES_GAME.name} />
