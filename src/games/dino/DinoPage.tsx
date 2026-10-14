@@ -13,6 +13,7 @@ const DINO_ENGINE: GameEngine<DinoState> = {
   step: stepDino,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function DinoPage() {

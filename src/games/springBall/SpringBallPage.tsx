@@ -22,6 +22,7 @@ const SPRING_BALL_ENGINE: GameEngine<SpringBallState, Horizontal> = {
   step: stepSpringBall,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function SpringBallPage() {

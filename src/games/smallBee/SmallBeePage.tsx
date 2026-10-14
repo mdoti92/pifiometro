@@ -22,6 +22,7 @@ const SMALL_BEE_ENGINE: GameEngine<SmallBeeState, Horizontal> = {
   step: stepSmallBee,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function SmallBeePage() {

@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react'
 
+/**
+ * Resolución interna del lienzo respecto de la lógica: los objetos se mueven en fracciones de píxel
+ * lógico y el movimiento se ve fluido, sin perder el aspecto pixelado.
+ */
+export const RENDER_SCALE = 4
+
 export interface PixelRect {
   x: number
   y: number
@@ -25,11 +31,16 @@ export function PixelCanvas({ width, height, rects, label }: PixelCanvasProps) {
     const context = canvas?.getContext('2d')
     if (!canvas || !context) return
 
-    context.clearRect(0, 0, width, height)
+    context.clearRect(0, 0, width * RENDER_SCALE, height * RENDER_SCALE)
     const pixelColor = getComputedStyle(canvas).getPropertyValue('--lcd-pixel').trim() || '#000'
     for (const rect of rects) {
       context.fillStyle = rect.color ?? pixelColor
-      context.fillRect(Math.round(rect.x), Math.round(rect.y), Math.round(rect.w), Math.round(rect.h))
+      context.fillRect(
+        Math.round(rect.x * RENDER_SCALE),
+        Math.round(rect.y * RENDER_SCALE),
+        Math.round(rect.w * RENDER_SCALE),
+        Math.round(rect.h * RENDER_SCALE),
+      )
     }
   }, [rects, width, height])
 
@@ -37,8 +48,8 @@ export function PixelCanvas({ width, height, rects, label }: PixelCanvasProps) {
     <canvas
       ref={canvasRef}
       className="pixel-canvas"
-      width={width}
-      height={height}
+      width={width * RENDER_SCALE}
+      height={height * RENDER_SCALE}
       role="img"
       aria-label={label}
       style={{ aspectRatio: `${width} / ${height}` }}

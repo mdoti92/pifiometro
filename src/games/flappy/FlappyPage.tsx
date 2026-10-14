@@ -13,6 +13,7 @@ const FLAPPY_ENGINE: GameEngine<FlappyState> = {
   step: stepFlappy,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function FlappyPage() {

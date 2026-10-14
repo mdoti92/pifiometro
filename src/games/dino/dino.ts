@@ -11,15 +11,15 @@ export const DINO_HEIGHT = 6
 export const CACTUS_WIDTH = 3
 export const MIN_CACTUS_HEIGHT = 4
 export const MAX_CACTUS_HEIGHT = 7
-export const GRAVITY = 0.2
-export const JUMP_VELOCITY = 2.6
+export const GRAVITY = 0.05
+export const JUMP_VELOCITY = 1.3
 /** Ticks que dura un salto completo. */
 export const AIR_TICKS = Math.ceil((2 * JUMP_VELOCITY) / GRAVITY)
-export const INITIAL_SPEED = 0.8
-export const ACCELERATION = 0.0008
-export const MAX_SPEED = 2
+export const INITIAL_SPEED = 0.4
+export const ACCELERATION = 0.0002
+export const MAX_SPEED = 1
 export const SCORE_UNIT = 5
-export const TICK_MS = 33
+export const TICK_MS = 1000 / 60
 
 // Separación entre cactus en múltiplos de lo que avanza el escenario durante un salto.
 const MIN_GAP_IN_JUMPS = 1.3

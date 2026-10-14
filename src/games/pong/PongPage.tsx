@@ -17,6 +17,7 @@ const PONG_ENGINE: GameEngine<PongState, PaddleInput> = {
   step: stepPong,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 function loadLosses(): number {
