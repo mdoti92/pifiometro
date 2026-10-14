@@ -98,6 +98,14 @@ export const DINO_GAME: GameDefinition = {
   metric: 'highest',
 }
 
+export const BREAKOUT_GAME: GameDefinition = {
+  key: 'breakout',
+  name: 'Breakout',
+  description: 'Rompé todos los ladrillos con la pelotita',
+  path: '/games/breakout',
+  metric: 'highest',
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -109,6 +117,7 @@ export const GAMES: GameDefinition[] = [
   TWENTY48_GAME,
   PONG_GAME,
   DINO_GAME,
+  BREAKOUT_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
