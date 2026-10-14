@@ -61,6 +61,31 @@ function renderAppAt(path: string) {
 }
 
 describe('App', () => {
+  it('muestra el tab Juegos en la barra de navegación y la lista de juegos en /games', async () => {
+    mockedUseAuth.mockReturnValue({
+      session: { access_token: 't' } as never,
+      user: { id: 'user-1' } as never,
+      loading: false,
+    })
+
+    renderAppAt('/games')
+
+    expect(await screen.findByRole('link', { name: 'Juegos' })).toHaveAttribute('href', '/games')
+    expect(screen.getByRole('link', { name: /Viborita/ })).toHaveAttribute('href', '/games/snake')
+  })
+
+  it('muestra la Viborita en /games/snake', async () => {
+    mockedUseAuth.mockReturnValue({
+      session: { access_token: 't' } as never,
+      user: { id: 'user-1' } as never,
+      loading: false,
+    })
+
+    renderAppAt('/games/snake')
+
+    expect(await screen.findByTestId('snake-screen')).toBeInTheDocument()
+  })
+
   it('redirige a login cuando se visita la raiz sin sesion activa', () => {
     mockedUseAuth.mockReturnValue({ session: null, user: null, loading: false })
 
