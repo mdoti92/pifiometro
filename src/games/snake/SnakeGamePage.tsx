@@ -16,7 +16,7 @@ function padScore(value: number): string {
 }
 
 export function SnakeGamePage() {
-  const { game, status, press, steer } = useSnakeGame()
+  const { game, status, countdown, press, steer } = useSnakeGame()
   const { record } = useGameRecord(SNAKE_GAME, status === 'over', game.score)
   const touchHandlers = useSwipeHandlers({ onSwipe: steer, onTap: press })
 
@@ -42,6 +42,7 @@ export function SnakeGamePage() {
       game={SNAKE_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: padScore(game.score) },
         { label: 'Récord', prefix: 'HI', value: padScore(record ?? 0) },

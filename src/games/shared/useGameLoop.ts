@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type GameStatus = 'idle' | 'running' | 'paused' | 'over'
+/** countdown: cuenta regresiva antes de arrancar o reanudar; los toques no cuentan como jugada. */
+export type GameStatus = 'idle' | 'countdown' | 'running' | 'paused' | 'over'
 
 /** Devuelve un número en [0, 1), igual que Math.random; inyectable para tests. */
 export type RandomSource = () => number
@@ -22,15 +23,21 @@ export interface GameEngine<S, I = undefined> {
 const MAX_FRAME_GAP_MS = 250
 const MAX_STEPS_PER_FRAME = 8
 
+// En el celular el toque que arranca la partida no tiene que tomarse como jugada.
+export const COUNTDOWN_SECONDS = 3
+const COUNTDOWN_TICK_MS = 1000
+
 interface GameLoopOptions<S, I> {
   random?: RandomSource
   initialState?: S
   readInput?: () => I
+  countdownSeconds?: number
 }
 
 interface Session<S> {
   state: S
   status: GameStatus
+  countdown: number
 }
 
 // Viven fuera de los componentes para que, al salir de la pantalla de un juego y volver,
@@ -43,6 +50,7 @@ export function resetSavedGameSessions() {
 
 export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options: GameLoopOptions<S, I> = {}) {
   const random = options.random ?? Math.random
+  const countdownSeconds = options.countdownSeconds ?? COUNTDOWN_SECONDS
   const engineRef = useRef(engine)
   const randomRef = useRef(random)
   const readInputRef = useRef(options.readInput)
@@ -56,7 +64,7 @@ export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options:
   const [session, setSession] = useState<Session<S>>(() => {
     const saved = savedSessions.get(engine.key) as Session<S> | undefined
     if (saved) return saved
-    return { state: options.initialState ?? engine.create(random), status: 'idle' }
+    return { state: options.initialState ?? engine.create(random), status: 'idle', countdown: 0 }
   })
   const sessionRef = useRef(session)
 
@@ -66,21 +74,25 @@ export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options:
 
   const press = useCallback(() => {
     setSession((current) => {
-      if (current.status === 'running') return current
-      if (current.status === 'over') return { state: engineRef.current.create(randomRef.current), status: 'running' }
-      return { ...current, status: 'running' }
+      if (current.status === 'running' || current.status === 'countdown') return current
+      const state = current.status === 'over' ? engineRef.current.create(randomRef.current) : current.state
+      return countdownSeconds > 0
+        ? { state, status: 'countdown', countdown: countdownSeconds }
+        : { state, status: 'running', countdown: 0 }
     })
-  }, [])
+  }, [countdownSeconds])
 
   const pause = useCallback(() => {
-    setSession((current) => (current.status === 'running' ? { ...current, status: 'paused' } : current))
+    setSession((current) =>
+      current.status === 'running' || current.status === 'countdown' ? { ...current, status: 'paused' } : current,
+    )
   }, [])
 
   const act = useCallback((update: (state: S) => S) => {
     setSession((current) => {
       if (current.status !== 'running') return current
       const state = update(current.state)
-      return { state, status: engineRef.current.isOver(state) ? 'over' : 'running' }
+      return { ...current, state, status: engineRef.current.isOver(state) ? 'over' : 'running' }
     })
   }, [])
 
@@ -94,9 +106,21 @@ export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options:
       for (let step = 0; step < steps && !currentEngine.isOver(state); step++) {
         state = currentEngine.step(state, readInputRef.current?.() as I, randomRef.current)
       }
-      return { state, status: currentEngine.isOver(state) ? 'over' : 'running' }
+      return { ...current, state, status: currentEngine.isOver(state) ? 'over' : 'running' }
     })
   }, [])
+
+  useEffect(() => {
+    if (session.status !== 'countdown') return
+    const timer = setTimeout(() => {
+      setSession((current) => {
+        if (current.status !== 'countdown') return current
+        const countdown = current.countdown - 1
+        return countdown > 0 ? { ...current, countdown } : { ...current, status: 'running', countdown: 0 }
+      })
+    }, COUNTDOWN_TICK_MS)
+    return () => clearTimeout(timer)
+  }, [session.status, session.countdown])
 
   const usesAnimationFrame = Boolean(engine.animationFrame)
 
@@ -136,10 +160,11 @@ export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options:
     const key = engine.key
     return () => {
       const { state, status } = sessionRef.current
-      if (status === 'running' || status === 'paused') savedSessions.set(key, { state, status: 'paused' })
+      const inProgress = status === 'running' || status === 'paused' || status === 'countdown'
+      if (inProgress) savedSessions.set(key, { state, status: 'paused', countdown: 0 })
       else savedSessions.delete(key)
     }
   }, [engine.key])
 
-  return { state: session.state, status: session.status, press, pause, act }
+  return { state: session.state, status: session.status, countdown: session.countdown, press, pause, act }
 }

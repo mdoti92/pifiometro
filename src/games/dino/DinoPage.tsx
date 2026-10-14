@@ -16,7 +16,7 @@ const DINO_ENGINE: GameEngine<DinoState> = {
 }
 
 export function DinoPage() {
-  const { state, status, tap, touchHandlers } = useTapGame(DINO_ENGINE, { action: jump })
+  const { state, status, countdown, tap, touchHandlers } = useTapGame(DINO_ENGINE, { action: jump })
   const { record } = useGameRecord(DINO_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -25,6 +25,7 @@ export function DinoPage() {
       game={DINO_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },

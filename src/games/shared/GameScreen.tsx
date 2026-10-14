@@ -33,6 +33,8 @@ interface GameScreenProps {
   game: GameDefinition
   palette: GamePalette
   status: GameStatus
+  /** Segundos que faltan de la cuenta regresiva de arranque. */
+  countdown?: number
   hud: HudItem[]
   onPress: () => void
   touchHandlers?: TouchHandlers
@@ -54,6 +56,7 @@ interface GameScreenProps {
 
 const DEFAULT_MESSAGES: Record<GameStatus, string | null> = {
   idle: 'Tocá para jugar',
+  countdown: null,
   running: null,
   paused: 'Pausa — tocá para seguir',
   over: 'Game Over',
@@ -63,6 +66,7 @@ export function GameScreen({
   game,
   palette,
   status,
+  countdown = 0,
   hud,
   onPress,
   touchHandlers = {},
@@ -77,7 +81,8 @@ export function GameScreen({
   children,
 }: GameScreenProps) {
   const lastTouchEnd = useRef(0)
-  const shownMessage = message === undefined ? DEFAULT_MESSAGES[status] : message
+  const counting = status === 'countdown'
+  const shownMessage = counting ? null : message === undefined ? DEFAULT_MESSAGES[status] : message
 
   function handleTouchEnd(event: TouchEvent) {
     lastTouchEnd.current = Date.now()
@@ -112,6 +117,11 @@ export function GameScreen({
         {aside}
         <div className="game-board" style={boardStyle}>
           {children}
+          {counting && (
+            <div className="game-message game-countdown" role="status" aria-label={`Arranca en ${countdown}`}>
+              <span>{countdown}</span>
+            </div>
+          )}
           {shownMessage && (
             <div className="game-message" role="status">
               <span>{shownMessage}</span>
@@ -121,7 +131,7 @@ export function GameScreen({
         </div>
         {controls}
       </div>
-      <RankingLauncher game={game} showButton={status !== 'running'} />
+      <RankingLauncher game={game} showButton={status !== 'running' && !counting} />
       <p className="game-hint">{hint}</p>
     </div>
   )

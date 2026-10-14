@@ -25,7 +25,7 @@ function loadLosses(): number {
 }
 
 export function PongPage() {
-  const { state, status, press, touchHandlers } = useControlledGame(PONG_ENGINE, usePaddleControl())
+  const { state, status, countdown, press, touchHandlers } = useControlledGame(PONG_ENGINE, usePaddleControl())
   const finished = status === 'over'
   const lost = finished && !state.playerWon
   // Los ganados son la marca acumulada del ranking; los perdidos solo se guardan en el dispositivo.
@@ -43,6 +43,7 @@ export function PongPage() {
       game={PONG_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Mis puntos', prefix: 'VOS', value: String(state.playerScore) },
         { label: 'Puntos de la CPU', prefix: 'CPU', value: String(state.cpuScore) },

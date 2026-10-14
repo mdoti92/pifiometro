@@ -659,3 +659,7 @@ button.standings-tab.active {
 .abyss-button:active {
   background: #2c3650;
 }
+
+.game-message.game-countdown {
+  font-size: 3rem;
+}

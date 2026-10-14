@@ -33,7 +33,7 @@ const MISSED_MESSAGES: Record<Exclude<Outcome, 'goal'>, string> = {
 const kick = (state: PenaltiesState) => shoot(state, Math.random)
 
 export function PenaltiesPage() {
-  const { state, status, tap, touchHandlers } = useTapGame(PENALTIES_ENGINE, { action: kick, keys: [' '] })
+  const { state, status, countdown, tap, touchHandlers } = useTapGame(PENALTIES_ENGINE, { action: kick, keys: [' '] })
   const { record } = useGameRecord(PENALTIES_GAME, status === 'over', state.goals)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -46,6 +46,7 @@ export function PenaltiesPage() {
       game={PENALTIES_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Goles seguidos', prefix: 'GOLES', value: String(state.goals) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },

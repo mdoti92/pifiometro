@@ -25,7 +25,7 @@ const SMALL_BEE_ENGINE: GameEngine<SmallBeeState, Horizontal> = {
 }
 
 export function SmallBeePage() {
-  const { state, status, press, touchHandlers } = useHoldGame(SMALL_BEE_ENGINE)
+  const { state, status, countdown, press, touchHandlers } = useHoldGame(SMALL_BEE_ENGINE)
   const { record } = useGameRecord(SMALL_BEE_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -34,6 +34,7 @@ export function SmallBeePage() {
       game={SMALL_BEE_GAME}
       palette="c115"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Vidas', prefix: '♥', value: String(state.lives) },
