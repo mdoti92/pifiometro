@@ -153,4 +153,15 @@ describe('useGameLoop', () => {
 
     expect(result.current.status).toBe('over')
   })
+
+  it('con animationFrame avanza a paso fijo independiente del framerate', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] })
+    const framed: GameEngine<CounterState> = { ...counterEngine, key: 'framed', animationFrame: true, step: (state) => ({ ...state, ticks: state.ticks + 1 }) }
+    const { result } = renderHook(() => useGameLoop(framed))
+
+    act(() => result.current.press())
+    advance(TICK_MS * 3 + TICK_MS / 2)
+
+    expect(result.current.state.ticks).toBe(3)
+  })
 })

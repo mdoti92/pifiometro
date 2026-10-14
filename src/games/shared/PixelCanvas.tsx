@@ -5,6 +5,8 @@ export interface PixelRect {
   y: number
   w: number
   h: number
+  /** Color propio (juegos a color); por defecto, el píxel del LCD de la paleta. */
+  color?: string
 }
 
 interface PixelCanvasProps {
@@ -24,8 +26,9 @@ export function PixelCanvas({ width, height, rects, label }: PixelCanvasProps) {
     if (!canvas || !context) return
 
     context.clearRect(0, 0, width, height)
-    context.fillStyle = getComputedStyle(canvas).getPropertyValue('--lcd-pixel').trim() || '#000'
+    const pixelColor = getComputedStyle(canvas).getPropertyValue('--lcd-pixel').trim() || '#000'
     for (const rect of rects) {
+      context.fillStyle = rect.color ?? pixelColor
       context.fillRect(Math.round(rect.x), Math.round(rect.y), Math.round(rect.w), Math.round(rect.h))
     }
   }, [rects, width, height])

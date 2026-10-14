@@ -359,6 +359,15 @@ button.standings-tab.active {
   --lcd-glow: rgba(11, 35, 64, 0.25);
 }
 
+/* Sony Ericsson T290: pantalla a color; los juegos pintan sus propios colores sobre fondo negro. */
+.lcd-ericsson-t290 {
+  --lcd-screen: #000000;
+  --lcd-frame: #3a3f4a;
+  --lcd-pixel: #f4f4f4;
+  --lcd-overlay: rgba(0, 0, 0, 0.6);
+  --lcd-glow: rgba(255, 255, 255, 0.08);
+}
+
 .game-screen {
   min-height: calc(100dvh - 9rem);
   display: flex;
