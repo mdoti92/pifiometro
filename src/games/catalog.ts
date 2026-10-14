@@ -90,6 +90,14 @@ export const PONG_GAME: GameDefinition = {
   metric: 'cumulative',
 }
 
+export const DINO_GAME: GameDefinition = {
+  key: 'dino',
+  name: 'Dino',
+  description: 'Corré y saltá los cactus',
+  path: '/games/dino',
+  metric: 'highest',
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -100,6 +108,7 @@ export const GAMES: GameDefinition[] = [
   MINESWEEPER_GAME,
   TWENTY48_GAME,
   PONG_GAME,
+  DINO_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {

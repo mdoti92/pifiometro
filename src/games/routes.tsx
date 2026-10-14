@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import {
+  DINO_GAME,
   FLAPPY_GAME,
   MINESWEEPER_GAME,
   PENALTIES_GAME,
@@ -11,6 +12,7 @@ import {
   TWENTY48_GAME,
   type GameDefinition,
 } from './catalog'
+import { DinoPage } from './dino/DinoPage'
 import { FlappyPage } from './flappy/FlappyPage'
 import { MinesweeperPage } from './minesweeper/MinesweeperPage'
 import { PenaltiesPage } from './penalties/PenaltiesPage'
@@ -31,4 +33,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: MINESWEEPER_GAME, element: <MinesweeperPage /> },
   { game: TWENTY48_GAME, element: <Twenty48Page /> },
   { game: PONG_GAME, element: <PongPage /> },
+  { game: DINO_GAME, element: <DinoPage /> },
 ]
