@@ -40,6 +40,8 @@ interface GameScreenProps {
   overDetail?: ReactNode
   hint: string
   boardStyle?: CSSProperties
+  /** Proporción ancho/alto del tablero, para que entre entero en pantallas bajas. */
+  boardAspect?: number
   children: ReactNode
 }
 
@@ -61,6 +63,7 @@ export function GameScreen({
   overDetail,
   hint,
   boardStyle,
+  boardAspect,
   children,
 }: GameScreenProps) {
   const lastTouchEnd = useRef(0)
@@ -86,7 +89,7 @@ export function GameScreen({
       onTouchEnd={handleTouchEnd}
       onTouchCancel={touchHandlers.onTouchCancel}
     >
-      <div className="game-device">
+      <div className="game-device" style={boardAspect ? ({ '--board-aspect': boardAspect } as CSSProperties) : undefined}>
         <div className="game-hud">
           {hud.map((item) => (
             <span key={item.label}>

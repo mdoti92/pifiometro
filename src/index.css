@@ -370,7 +370,8 @@ button.standings-tab.active {
 }
 
 .game-device {
-  width: min(100%, 28rem);
+  /* --board-aspect (ancho/alto) achica el dispositivo para que un tablero vertical entre en la pantalla. */
+  width: min(100%, 28rem, calc((100dvh - 16rem) * var(--board-aspect, 10)));
   padding: 0.75rem;
   background: var(--lcd-frame);
   border: 0.5rem solid #2b2f2a;
@@ -399,8 +400,6 @@ button.standings-tab.active {
 .pixel-canvas {
   display: block;
   width: 100%;
-  max-height: calc(100dvh - 16rem);
-  object-fit: contain;
   image-rendering: pixelated;
 }
 

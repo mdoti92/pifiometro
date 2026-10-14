@@ -33,7 +33,15 @@ export const SMALL_BEE_GAME: GameDefinition = {
   metric: 'highest',
 }
 
-export const GAMES: GameDefinition[] = [SNAKE_GAME, SPRING_BALL_GAME, SMALL_BEE_GAME]
+export const FLAPPY_GAME: GameDefinition = {
+  key: 'flappy',
+  name: 'Flappy Bird',
+  description: 'Pasá entre las tuberías sin chocar',
+  path: '/games/flappy',
+  metric: 'highest',
+}
+
+export const GAMES: GameDefinition[] = [SNAKE_GAME, SPRING_BALL_GAME, SMALL_BEE_GAME, FLAPPY_GAME]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
   return game.formatValue ? game.formatValue(value) : String(value)
