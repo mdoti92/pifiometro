@@ -6,7 +6,7 @@ import { PixelCanvas } from '../shared/PixelCanvas'
 import type { GameEngine } from '../shared/useGameLoop'
 import { useGameRecord } from '../shared/useGameRecord'
 import { useHoldGame } from '../shared/useHoldGame'
-import { STEP_MS, createVRally, stepVRally, timeInTenths, type VRallyState } from './vrally'
+import { RIVALS, STEP_MS, createVRally, stepVRally, timeInTenths, type VRallyState } from './vrally'
 import { loadBestSplits, renderHud, saveBestSplitsIfBetter } from './vrallyHud'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, renderVRally } from './vrallyRender'
 
@@ -47,7 +47,11 @@ export function VRallyPage() {
       onPress={press}
       touchHandlers={touchHandlers}
       message={status === 'over' ? 'Llegada' : undefined}
-      overDetail={<span>Tiempo {formatTenths(tenths)}</span>}
+      overDetail={
+        <span>
+          Tiempo {formatTenths(tenths)} · {state.finalPosition}° de {RIVALS.length + 1}
+        </span>
+      }
       hint="Mantené tocada la mitad izquierda o derecha (o ← →) para doblar. El auto acelera solo."
     >
       <PixelCanvas width={SCREEN_WIDTH} height={SCREEN_HEIGHT} rects={rects} label={VRALLY_GAME.name} />
