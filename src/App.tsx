@@ -4,6 +4,8 @@ import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
 import { FixturePage } from './fixture/FixturePage'
+import { GamesPage } from './games/GamesPage'
+import { SnakeGamePage } from './games/snake/SnakeGamePage'
 import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
@@ -45,6 +47,22 @@ function App() {
         element={
           <Authenticated>
             <ProfilePage />
+          </Authenticated>
+        }
+      />
+      <Route
+        path="/games"
+        element={
+          <Authenticated>
+            <GamesPage />
+          </Authenticated>
+        }
+      />
+      <Route
+        path="/games/snake"
+        element={
+          <Authenticated>
+            <SnakeGamePage />
           </Authenticated>
         }
       />
