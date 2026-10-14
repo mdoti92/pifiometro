@@ -25,7 +25,15 @@ export const SPRING_BALL_GAME: GameDefinition = {
   metric: 'highest',
 }
 
-export const GAMES: GameDefinition[] = [SNAKE_GAME, SPRING_BALL_GAME]
+export const SMALL_BEE_GAME: GameDefinition = {
+  key: 'small-bee',
+  name: 'Small Bee',
+  description: 'La abejita a los aguijonazos, también del C115',
+  path: '/games/small-bee',
+  metric: 'highest',
+}
+
+export const GAMES: GameDefinition[] = [SNAKE_GAME, SPRING_BALL_GAME, SMALL_BEE_GAME]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
   return game.formatValue ? game.formatValue(value) : String(value)
