@@ -1,5 +1,5 @@
 import type { PixelRect } from '../shared/PixelCanvas'
-import { CHECKPOINT_COUNT, MAX_SPEED, SEGMENT_LENGTH, segmentAt, type VRallyState } from './vrally'
+import { CHECKPOINT_COUNT, MAX_SPEED, RIVALS, SEGMENT_LENGTH, racePosition, segmentAt, type VRallyState } from './vrally'
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from './vrallyRender'
 
 /** Distancia antes de una curva a la que el copiloto la anuncia. */
@@ -7,11 +7,13 @@ export const COPILOT_LOOKAHEAD = SEGMENT_LENGTH * 40
 export const DIFF_DISPLAY_MS = 3000
 /** A partir de esta fracción de la velocidad máxima la barra se pinta en rojo. */
 export const SPEED_RED_THRESHOLD = 0.85
+export const POSITION_COLOR = '#ff9f40'
 export const BEST_SPLITS_STORAGE_KEY = 'pifiometro.games.vrally.bestSplits'
 
 const HUD_MARGIN = 3
 const GLYPH_WIDTH = 3
 const GLYPH_SPACING = 1
+const GLYPH_ROWS = 5
 const SPEED_BAR_WIDTH = 40
 const SPEED_BAR_HEIGHT = 4
 
@@ -147,6 +149,9 @@ export function renderHud(state: VRallyState): PixelRect[] {
 
   const diff = visibleDiff(state)
   if (diff !== null) rects.push(...shadowedText(formatDiff(diff), HUD_MARGIN, HUD_MARGIN, diff > 0 ? COLORS.slower : COLORS.faster))
+
+  const position = `${racePosition(state)}/${RIVALS.length + 1}`
+  rects.push(...shadowedText(position, HUD_MARGIN, SCREEN_HEIGHT - GLYPH_ROWS - HUD_MARGIN, POSITION_COLOR))
 
   rects.push(...speedBar(state.speed))
   return rects

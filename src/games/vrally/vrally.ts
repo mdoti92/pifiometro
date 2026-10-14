@@ -17,6 +17,28 @@ export const MAX_PLAYER_X = 2.6
 export const TREE_HIT_HALF_WIDTH = 0.35
 
 export const CHECKPOINT_COUNT = 8
+/** Al alcanzar a un rival de atrás, la velocidad cae a la suya menos este margen. */
+export const BUMP_SPEED_MARGIN = MAX_SPEED / 20
+/** Largo de un auto en unidades del mundo y medio ancho en medios anchos de ruta. */
+export const CAR_LENGTH = 220
+export const CAR_HALF_WIDTH = 0.3
+
+export interface RivalDefinition {
+  color: string
+  /** Carril fijo en medios anchos de ruta (-1 borde izquierdo, 1 borde derecho). */
+  lane: number
+  speed: number
+  startAhead: number
+}
+
+// Siempre los mismos rivales, para que todos corran el mismo tramo.
+export const RIVALS: RivalDefinition[] = [
+  { color: '#2f6fe0', lane: -0.45, speed: MAX_SPEED * 0.93, startAhead: SEGMENT_LENGTH * 10 },
+  { color: '#f2c230', lane: 0.4, speed: MAX_SPEED * 0.97, startAhead: SEGMENT_LENGTH * 18 },
+  { color: '#2fb04a', lane: -0.1, speed: MAX_SPEED * 1.02, startAhead: SEGMENT_LENGTH * 26 },
+  { color: '#ff8a1f', lane: 0.55, speed: MAX_SPEED * 0.9, startAhead: SEGMENT_LENGTH * 34 },
+  { color: '#9b3fd0', lane: -0.55, speed: MAX_SPEED * 1.04, startAhead: SEGMENT_LENGTH * 42 },
+]
 
 const ROAD_HALF_WIDTH = 1
 const TREE_INTERVAL_SEGMENTS = 9
@@ -104,6 +126,9 @@ export interface VRallyState {
   /** Parciales de la mejor carrera propia, para mostrar diferencias. */
   bestSplits: number[] | null
   lastDiff: { tenths: number; atMs: number } | null
+  rivals: { position: number; speed: number }[]
+  /** Posición en carrera al cruzar la llegada (1 = primero). */
+  finalPosition: number | null
   isOver: boolean
 }
 
@@ -117,8 +142,24 @@ export function createVRally(_random: RandomSource, bestSplits: number[] | null 
     splits: [],
     bestSplits,
     lastDiff: null,
+    rivals: RIVALS.map((rival) => ({ position: rival.startAhead, speed: 0 })),
+    finalPosition: null,
     isOver: false,
   }
+}
+
+export function racePosition(state: Pick<VRallyState, 'position' | 'rivals'>): number {
+  return 1 + state.rivals.filter((rival) => rival.position > state.position).length
+}
+
+/** Rival al que se le está pegando de atrás (mismo carril y muy cerca adelante), si hay. */
+function rivalAhead(state: VRallyState): { speed: number } | null {
+  return (
+    state.rivals.find((rival, i) => {
+      const gap = rival.position - state.position
+      return gap >= 0 && gap < CAR_LENGTH && Math.abs(state.playerX - RIVALS[i].lane) < CAR_HALF_WIDTH * 2
+    }) ?? null
+  )
 }
 
 function passCheckpoint(state: VRallyState, position: number, elapsedMs: number) {
@@ -153,8 +194,18 @@ export function stepVRally(state: VRallyState, input: Horizontal, _random: Rando
   playerX -= segment.curve * CENTRIFUGAL * speedRatio * speedRatio * dt
   playerX = Math.min(Math.max(playerX, -MAX_PLAYER_X), MAX_PLAYER_X)
 
+  // Los rivales no esquivan: si lo alcanzo de atrás, quedo a su velocidad menos un margen.
+  const blocking = rivalAhead({ ...state, playerX })
+  if (blocking) speed = Math.min(speed, Math.max(blocking.speed - BUMP_SPEED_MARGIN, 0))
+
   const position = state.position + speed * dt
   if (hitsTree(segmentAt(position).index, playerX)) speed = Math.min(speed, CRASH_SPEED)
+  // Los rivales largan parados y aceleran igual que el jugador hasta su velocidad fija.
+  const rivals = state.rivals.map((rival, index) => {
+    const rivalSpeed = Math.min(rival.speed + ACCELERATION * dt, RIVALS[index].speed)
+    return { position: rival.position + rivalSpeed * dt, speed: rivalSpeed }
+  })
+  const finished = position >= trackLength()
 
   const elapsedMs = state.elapsedMs + STEP_MS
   return {
@@ -165,7 +216,9 @@ export function stepVRally(state: VRallyState, input: Horizontal, _random: Rando
     playerX,
     elapsedMs,
     backgroundOffset: state.backgroundOffset + segment.curve * speedRatio * dt,
-    isOver: position >= trackLength(),
+    rivals,
+    finalPosition: finished ? racePosition({ position, rivals }) : null,
+    isOver: finished,
   }
 }
 
