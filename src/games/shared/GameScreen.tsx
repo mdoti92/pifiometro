@@ -39,6 +39,8 @@ interface GameScreenProps {
   /** Reemplaza el mensaje por defecto según el estado (null = sin mensaje). */
   message?: ReactNode | null
   overDetail?: ReactNode
+  /** Detalle bajo el mensaje mientras la partida sigue (ej. entre niveles). */
+  detail?: ReactNode
   hint: string
   boardStyle?: CSSProperties
   /** Proporción ancho/alto del tablero, para que entre entero en pantallas bajas. */
@@ -66,6 +68,7 @@ export function GameScreen({
   touchHandlers = {},
   message,
   overDetail,
+  detail,
   hint,
   boardStyle,
   boardAspect,
@@ -112,7 +115,7 @@ export function GameScreen({
           {shownMessage && (
             <div className="game-message" role="status">
               <span>{shownMessage}</span>
-              {status === 'over' && overDetail}
+              {status === 'over' ? overDetail : detail}
             </div>
           )}
         </div>

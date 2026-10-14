@@ -4,7 +4,16 @@ import { GameScreen } from '../shared/GameScreen'
 import { PixelCanvas } from '../shared/PixelCanvas'
 import { useGameLoop, type GameEngine } from '../shared/useGameLoop'
 import { useGameRecord } from '../shared/useGameRecord'
-import { SCREEN_HEIGHT, SCREEN_WIDTH, STEP_MS, createDeepAbyss, stepDeepAbyss, type AbyssInput, type DeepAbyssState } from './deepAbyss'
+import {
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  STEP_MS,
+  advanceLevel,
+  createDeepAbyss,
+  stepDeepAbyss,
+  type AbyssInput,
+  type DeepAbyssState,
+} from './deepAbyss'
 import { renderDeepAbyss } from './deepAbyssRender'
 import { useAbyssControls, type ButtonKind } from './abyssControls'
 import { LEVELS } from './levels'
@@ -50,10 +59,13 @@ export function DeepAbyssPage() {
   // Los controles arrancan el juego y el loop lee los controles: se cruzan a través de un ref.
   const startRef = useRef(() => {})
   const controls = useAbyssControls(useCallback(() => startRef.current(), []))
-  const { state, status, press } = useGameLoop(DEEP_ABYSS_ENGINE, { readInput: controls.read })
+  const { state, status, press, act } = useGameLoop(DEEP_ABYSS_ENGINE, { readInput: controls.read })
+  const waitingNextLevel = state.phase === 'levelComplete'
+  // Un toque arranca, reanuda o reinicia; entre niveles, pasa al siguiente.
   const startIfNeeded = useCallback(() => {
     if (status !== 'running') press()
-  }, [status, press])
+    else if (waitingNextLevel) act(advanceLevel)
+  }, [status, press, act, waitingNextLevel])
 
   useEffect(() => {
     startRef.current = startIfNeeded
@@ -62,7 +74,10 @@ export function DeepAbyssPage() {
   const { record } = useGameRecord(DEEP_ABYSS_GAME, status === 'over', state.score)
   const rects = useMemo(() => renderDeepAbyss(state), [state])
 
-  const message = status === 'over' ? (state.phase === 'complete' ? 'Nivel completo' : 'Game Over') : undefined
+  const levelNumber = state.levelIndex + 1
+  let message: string | undefined
+  if (status === 'over') message = state.phase === 'won' ? '¡Llegaste al fondo!' : 'Game Over'
+  else if (waitingNextLevel) message = `Nivel ${levelNumber} completo`
 
   return (
     <GameScreen
@@ -74,13 +89,15 @@ export function DeepAbyssPage() {
         { label: 'Cofres', prefix: '▣', value: String(state.chests) },
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Vidas', prefix: '♥', value: String(state.lives) },
+        { label: 'Nivel', value: `N${levelNumber}` },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },
       ]}
       boardAspect={SCREEN_WIDTH / SCREEN_HEIGHT}
-      onPress={press}
+      onPress={startIfNeeded}
       touchHandlers={{ onTouchStart: startIfNeeded }}
       message={message}
       overDetail={<span>Puntaje {state.score}</span>}
+      detail={waitingNextLevel ? <span>Puntaje {state.score} · tocá para seguir</span> : undefined}
       controls={
         <div className="abyss-controls">
           <div className="abyss-controls-move">

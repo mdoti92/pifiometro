@@ -74,6 +74,7 @@ describe('DeepAbyssPage', () => {
     expect(screen.getByLabelText('Puntaje')).toHaveTextContent('0')
     expect(screen.getByLabelText('Vidas')).toHaveTextContent('3')
     expect(screen.getByLabelText('Récord')).toHaveTextContent('480')
+    expect(screen.getByLabelText('Nivel')).toHaveTextContent('N1')
   })
 
   it('tiene botones en pantalla ◀ ▶ y Saltar que arrancan el juego sin scrollear', () => {

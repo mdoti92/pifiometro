@@ -10,6 +10,7 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
   TILE_SIZE,
+  advanceLevel,
   cameraFor,
   createDeepAbyss,
   parseLevel,
@@ -165,13 +166,30 @@ describe('burbuja', () => {
 })
 
 describe('salida', () => {
-  it('llegar a la salida completa el nivel con bonus', () => {
+  it('en el último nivel, llegar a la salida termina el juego con bonus', () => {
     const atExit = onTestLevel({ player: standingAtTile(10, 2), score: 10 })
 
     const next = stepDeepAbyss(atExit, still, none)
 
-    expect(next.phase).toBe('complete')
+    expect(next.phase).toBe('won')
+    expect(next.isOver).toBe(true)
     expect(next.score).toBe(10 + LEVEL_COMPLETE_BONUS)
+  })
+
+  it('en un nivel intermedio queda esperando y al seguir pasa al próximo conservando todo', () => {
+    const twoLevels = createDeepAbyss(none, [TEST_LEVEL, TEST_LEVEL])
+    const atExit = { ...twoLevels, player: standingAtTile(10, 2), score: 30, gems: 2, chests: 1, lives: 2 }
+
+    const completed = stepDeepAbyss(atExit, still, none)
+    expect(completed.phase).toBe('levelComplete')
+    expect(completed.isOver).toBe(false)
+    expect(stepDeepAbyss(completed, still, none)).toBe(completed)
+
+    const next = advanceLevel(completed)
+    expect(next.phase).toBe('playing')
+    expect(next.levelIndex).toBe(1)
+    expect(next.player.x).toBe(createDeepAbyss(none, [TEST_LEVEL]).player.x)
+    expect([next.score, next.gems, next.chests, next.lives]).toEqual([30 + LEVEL_COMPLETE_BONUS, 2, 1, 2])
   })
 })
 
@@ -185,24 +203,73 @@ describe('cameraFor', () => {
   })
 })
 
-describe('nivel 1', () => {
-  // Bot con la ruta pensada para el nivel 1: en cada piso va hacia el hueco o la burbuja, salta los pinchos
-  // y en el aire mantiene la dirección.
-  const DIRECTION_BY_FLOOR_ROW: Record<number, -1 | 1> = { 3: 1, 8: -1, 12: 1, 17: -1 }
+describe('niveles', () => {
+  it('hay 5 niveles con el mismo formato', () => {
+    expect(LEVELS).toHaveLength(5)
+  })
 
+  describe.each(LEVELS.map((level, index) => [index + 1, level] as const))('nivel %i', (_number, definition) => {
+    const level = parseLevel(definition)
+
+    it('tiene exactamente un inicio y una salida, y la salida en lo más profundo', () => {
+      const text = definition.map.join('')
+      expect(text.split('S')).toHaveLength(2)
+      expect(text.split('E')).toHaveLength(2)
+      const exitRow = definition.map.findIndex((row) => row.includes('E'))
+      expect(definition.map.slice(exitRow + 1).every((row) => /^#+$/.test(row))).toBe(true)
+      expect(definition.map.every((row) => row.length === definition.map[0].length)).toBe(true)
+    })
+
+    it('todo tramo de lava tiene una burbuja que lo cruza', () => {
+      definition.map.forEach((row, rowIndex) => {
+        for (const run of row.matchAll(/~+/g)) {
+          const first = run.index
+          const last = run.index + run[0].length - 1
+          const crossing = definition.bubbles.some(({ from, to }) => {
+            const [left, right] = [Math.min(from[0], to[0]), Math.max(from[0], to[0])]
+            return from[1] === rowIndex - 1 && to[1] === rowIndex - 1 && left <= first && right >= last
+          })
+          expect(crossing).toBe(true)
+        }
+      })
+      expect(level.bubbles.length).toBe(definition.bubbles.length)
+    })
+  })
+
+  it('la dificultad crece: más pinchos y más burbujas encadenadas en los últimos niveles', () => {
+    const spikes = LEVELS.map((level) => level.map.join('').split('^').length - 1)
+    const bubbles = LEVELS.map((level) => level.bubbles.length)
+
+    expect(spikes[4]).toBeGreaterThan(spikes[0])
+    expect(bubbles[4]).toBeGreaterThan(bubbles[0])
+    expect(Math.max(...bubbles.slice(1))).toBeGreaterThan(1)
+  })
+})
+
+describe('recorrido completo', () => {
+  // Bot genérico: en cada piso va hacia el hueco del piso (o la salida), salta los pinchos que tiene
+  // adelante, se sube a las burbujas y se baja cuando llegan. En el aire mantiene la dirección.
   function createBot() {
     let direction: -1 | 1 = 1
     return (state: DeepAbyssState): AbyssInput => {
-      const level = state.levels[0]
+      const level = state.levels[state.levelIndex]
       const { player } = state
 
       if (player.riding !== null) {
         const arrived = Math.abs(state.bubbles[player.riding].x - level.bubbles[player.riding].to.x) < 0.01
-        return { move: arrived ? 1 : 0, jump: false }
+        return { move: arrived ? direction : 0, jump: false }
       }
 
       const floorRow = Math.round((player.y + PLAYER_HEIGHT) / TILE_SIZE)
-      if (player.grounded) direction = DIRECTION_BY_FLOOR_ROW[floorRow] ?? direction
+      if (player.grounded) {
+        const exitOnThisFloor = level.exit.y / TILE_SIZE === floorRow - 1
+        const holes = level.tiles[floorRow].map((char, column) => (char === '.' ? column : -1)).filter((c) => c >= 0)
+        const targetColumn = exitOnThisFloor ? level.exit.x / TILE_SIZE : holes[0]
+        if (targetColumn !== undefined) {
+          const center = player.x + PLAYER_WIDTH / 2
+          direction = targetColumn * TILE_SIZE + TILE_SIZE / 2 < center ? -1 : 1
+        }
+      }
 
       const lookAhead = direction < 0 ? player.x - TILE_SIZE : player.x + PLAYER_WIDTH + TILE_SIZE
       const spikeAhead = level.tiles[floorRow - 1]?.[Math.floor(lookAhead / TILE_SIZE)] === '^'
@@ -210,12 +277,15 @@ describe('nivel 1', () => {
     }
   }
 
-  it('se puede completar sin perder vidas', () => {
+  it('los 5 niveles se pueden completar sin perder vidas y el juego termina en el fondo', () => {
     const bot = createBot()
     let state = createDeepAbyss(none, LEVELS)
-    for (let i = 0; i < 6000 && state.phase === 'playing'; i++) state = stepDeepAbyss(state, bot(state), none)
+    for (let i = 0; i < 40000 && state.phase !== 'won' && state.phase !== 'over'; i++) {
+      state = state.phase === 'levelComplete' ? advanceLevel(state) : stepDeepAbyss(state, bot(state), none)
+    }
 
-    expect(state.phase).toBe('complete')
+    expect(state.phase).toBe('won')
+    expect(state.levelIndex).toBe(4)
     expect(state.lives).toBe(INITIAL_LIVES)
   })
 })
