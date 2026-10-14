@@ -626,3 +626,36 @@ button.standings-tab.active {
   border-radius: 999px;
   border: 1px solid var(--steel);
 }
+
+.abyss-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  touch-action: none;
+}
+
+.abyss-controls-move {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.abyss-button {
+  min-width: 3.5rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: #1c2230;
+  color: #f4f4f4;
+  border: 2px solid #5a6478;
+  font-size: 1.2rem;
+  font-weight: 700;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.abyss-button:active {
+  background: #2c3650;
+}

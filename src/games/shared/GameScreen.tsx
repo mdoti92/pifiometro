@@ -45,6 +45,8 @@ interface GameScreenProps {
   boardAspect?: number
   /** Información extra entre el HUD y el tablero (ej. la próxima pieza). */
   aside?: ReactNode
+  /** Controles en pantalla debajo del tablero (ej. botones de un juego de plataformas). */
+  controls?: ReactNode
   children: ReactNode
 }
 
@@ -68,6 +70,7 @@ export function GameScreen({
   boardStyle,
   boardAspect,
   aside,
+  controls,
   children,
 }: GameScreenProps) {
   const lastTouchEnd = useRef(0)
@@ -92,6 +95,7 @@ export function GameScreen({
       onTouchMove={touchHandlers.onTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={touchHandlers.onTouchCancel}
+      onContextMenu={(event) => event.preventDefault()}
     >
       <div className="game-device" style={boardAspect ? ({ '--board-aspect': boardAspect } as CSSProperties) : undefined}>
         <div className="game-hud">
@@ -112,6 +116,7 @@ export function GameScreen({
             </div>
           )}
         </div>
+        {controls}
       </div>
       <RankingLauncher game={game} showButton={status !== 'running'} />
       <p className="game-hint">{hint}</p>

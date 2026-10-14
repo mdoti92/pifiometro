@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import {
+  DEEP_ABYSS_GAME,
   BREAKOUT_GAME,
   DINO_GAME,
   FLAPPY_GAME,
@@ -15,6 +16,7 @@ import {
   type GameDefinition,
 } from './catalog'
 import { BreakoutPage } from './breakout/BreakoutPage'
+import { DeepAbyssPage } from './deepAbyss/DeepAbyssPage'
 import { DinoPage } from './dino/DinoPage'
 import { FlappyPage } from './flappy/FlappyPage'
 import { MinesweeperPage } from './minesweeper/MinesweeperPage'
@@ -40,4 +42,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: DINO_GAME, element: <DinoPage /> },
   { game: BREAKOUT_GAME, element: <BreakoutPage /> },
   { game: VRALLY_GAME, element: <VRallyPage /> },
+  { game: DEEP_ABYSS_GAME, element: <DeepAbyssPage /> },
 ]
