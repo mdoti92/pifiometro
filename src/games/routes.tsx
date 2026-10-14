@@ -3,6 +3,7 @@ import {
   FLAPPY_GAME,
   MINESWEEPER_GAME,
   PENALTIES_GAME,
+  PONG_GAME,
   SMALL_BEE_GAME,
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -13,6 +14,7 @@ import {
 import { FlappyPage } from './flappy/FlappyPage'
 import { MinesweeperPage } from './minesweeper/MinesweeperPage'
 import { PenaltiesPage } from './penalties/PenaltiesPage'
+import { PongPage } from './pong/PongPage'
 import { SmallBeePage } from './smallBee/SmallBeePage'
 import { SnakeGamePage } from './snake/SnakeGamePage'
 import { SpringBallPage } from './springBall/SpringBallPage'
@@ -28,4 +30,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: PENALTIES_GAME, element: <PenaltiesPage /> },
   { game: MINESWEEPER_GAME, element: <MinesweeperPage /> },
   { game: TWENTY48_GAME, element: <Twenty48Page /> },
+  { game: PONG_GAME, element: <PongPage /> },
 ]

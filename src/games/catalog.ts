@@ -82,6 +82,14 @@ export const TWENTY48_GAME: GameDefinition = {
   metric: 'highest',
 }
 
+export const PONG_GAME: GameDefinition = {
+  key: 'pong',
+  name: 'Pong',
+  description: 'Paletas contra la CPU, partido a 5',
+  path: '/games/pong',
+  metric: 'cumulative',
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -91,6 +99,7 @@ export const GAMES: GameDefinition[] = [
   PENALTIES_GAME,
   MINESWEEPER_GAME,
   TWENTY48_GAME,
+  PONG_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
