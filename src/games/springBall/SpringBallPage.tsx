@@ -1,10 +1,11 @@
-import { useMemo, type TouchEvent } from 'react'
+import { useMemo } from 'react'
 import { SPRING_BALL_GAME } from '../catalog'
 import { GameScreen } from '../shared/GameScreen'
-import { ARROW_KEYS, useHorizontalHold, useWindowKeys, type Horizontal } from '../shared/input'
+import type { Horizontal } from '../shared/input'
 import { PixelCanvas } from '../shared/PixelCanvas'
-import { useGameLoop, type GameEngine } from '../shared/useGameLoop'
+import type { GameEngine } from '../shared/useGameLoop'
 import { useGameRecord } from '../shared/useGameRecord'
+import { useHoldGame } from '../shared/useHoldGame'
 import {
   TICK_MS,
   VIEW_HEIGHT,
@@ -24,19 +25,9 @@ const SPRING_BALL_ENGINE: GameEngine<SpringBallState, Horizontal> = {
 }
 
 export function SpringBallPage() {
-  const hold = useHorizontalHold()
-  const { state, status, press } = useGameLoop(SPRING_BALL_ENGINE, { readInput: hold.read })
+  const { state, status, press, touchHandlers } = useHoldGame(SPRING_BALL_ENGINE)
   const { record } = useGameRecord(SPRING_BALL_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
-
-  useWindowKeys(ARROW_KEYS, () => {
-    if (status !== 'running') press()
-  })
-
-  function handleTouchStart(event: TouchEvent) {
-    if (status !== 'running') press()
-    hold.touchHandlers.onTouchStart(event)
-  }
 
   return (
     <GameScreen
@@ -48,7 +39,7 @@ export function SpringBallPage() {
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },
       ]}
       onPress={press}
-      touchHandlers={{ ...hold.touchHandlers, onTouchStart: handleTouchStart }}
+      touchHandlers={touchHandlers}
       overDetail={<span>Puntaje {state.score}</span>}
       hint="Mantené tocada la mitad izquierda o derecha (o las flechas ← →)"
     >
