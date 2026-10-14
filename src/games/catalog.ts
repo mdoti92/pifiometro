@@ -121,6 +121,14 @@ export const VRALLY_GAME: GameDefinition = {
   formatValue: formatTenths,
 }
 
+export const DEEP_ABYSS_GAME: GameDefinition = {
+  key: 'deep-abyss',
+  name: 'Deep Abyss',
+  description: 'Bajá al fondo del abismo, del Sony Ericsson T290',
+  path: '/games/deep-abyss',
+  metric: 'highest',
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -134,6 +142,7 @@ export const GAMES: GameDefinition[] = [
   DINO_GAME,
   BREAKOUT_GAME,
   VRALLY_GAME,
+  DEEP_ABYSS_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
