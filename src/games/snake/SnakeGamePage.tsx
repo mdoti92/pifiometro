@@ -1,4 +1,7 @@
 import { useEffect, useRef, type TouchEvent } from 'react'
+import { SNAKE_GAME } from '../catalog'
+import { RankingLauncher } from '../ranking/RankingLauncher'
+import { useGameRanking } from '../ranking/useGameRanking'
 import { BOARD_COLUMNS, BOARD_ROWS, type Cell } from './snakeGame'
 import { directionFromKey, directionFromSwipe } from './snakeInput'
 import { useSnakeGame, type SnakeStatus } from './useSnakeGame'
@@ -16,7 +19,13 @@ function cellKey({ x, y }: Cell): string {
 
 export function SnakeGamePage() {
   const { game, status, highScore, press, steer } = useSnakeGame()
+  const { remoteBest, reportResult } = useGameRanking(SNAKE_GAME)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const record = Math.max(highScore, remoteBest ?? 0)
+
+  useEffect(() => {
+    if (status === 'over') reportResult(game.score)
+  }, [status, game.score, reportResult])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -71,7 +80,7 @@ export function SnakeGamePage() {
         <div className="snake-hud">
           <span aria-label="Puntaje">{String(game.score).padStart(4, '0')}</span>
           <span>
-            HI <span aria-label="Récord">{String(highScore).padStart(4, '0')}</span>
+            HI <span aria-label="Récord">{String(record).padStart(4, '0')}</span>
           </span>
         </div>
         <div
@@ -87,6 +96,7 @@ export function SnakeGamePage() {
           )}
         </div>
       </div>
+      <RankingLauncher game={SNAKE_GAME} showButton={status !== 'running'} />
       <p className="snake-hint">Deslizá en cualquier parte de la pantalla (o usá las flechas)</p>
     </div>
   )

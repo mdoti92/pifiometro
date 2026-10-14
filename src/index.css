@@ -420,3 +420,49 @@ button.standings-tab.active {
   font-size: 0.8rem;
   text-align: center;
 }
+
+.game-ranking-button {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--steel);
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+}
+
+.ranking-panel {
+  position: fixed;
+  inset: 1rem 1rem calc(4.5rem + env(safe-area-inset-bottom));
+  z-index: 10;
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--hearth);
+  border-radius: 1rem;
+  touch-action: pan-y;
+}
+
+.ranking-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ranking-panel-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.ranking-table tr.is-current-user,
+.ranking-current-user {
+  color: var(--hearth);
+}
+
+.ranking-current-user {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--steel);
+}
