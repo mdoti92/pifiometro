@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import {
   FLAPPY_GAME,
+  MINESWEEPER_GAME,
   PENALTIES_GAME,
   SMALL_BEE_GAME,
   SNAKE_GAME,
@@ -9,6 +10,7 @@ import {
   type GameDefinition,
 } from './catalog'
 import { FlappyPage } from './flappy/FlappyPage'
+import { MinesweeperPage } from './minesweeper/MinesweeperPage'
 import { PenaltiesPage } from './penalties/PenaltiesPage'
 import { SmallBeePage } from './smallBee/SmallBeePage'
 import { SnakeGamePage } from './snake/SnakeGamePage'
@@ -22,4 +24,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: FLAPPY_GAME, element: <FlappyPage /> },
   { game: TETRIS_GAME, element: <TetrisPage /> },
   { game: PENALTIES_GAME, element: <PenaltiesPage /> },
+  { game: MINESWEEPER_GAME, element: <MinesweeperPage /> },
 ]

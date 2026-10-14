@@ -519,3 +519,28 @@ button.standings-tab.active {
 .tetris-preview {
   width: 3rem;
 }
+
+.minesweeper-board {
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+}
+
+.minesweeper-cell {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--lcd-pixel);
+  color: var(--lcd-screen);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  touch-action: none;
+}
+
+.minesweeper-cell.is-revealed {
+  background: transparent;
+  color: var(--lcd-pixel);
+  outline: 1px solid var(--lcd-glow);
+}

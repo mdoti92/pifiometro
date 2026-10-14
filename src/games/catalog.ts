@@ -57,6 +57,23 @@ export const PENALTIES_GAME: GameDefinition = {
   metric: 'highest',
 }
 
+const SECONDS_PER_MINUTE = 60
+
+export function formatSeconds(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE)
+  const seconds = totalSeconds % SECONDS_PER_MINUTE
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+export const MINESWEEPER_GAME: GameDefinition = {
+  key: 'minesweeper',
+  name: 'Buscaminas',
+  description: 'Destapá todo sin pisar una mina',
+  path: '/games/buscaminas',
+  metric: 'lowest',
+  formatValue: formatSeconds,
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -64,6 +81,7 @@ export const GAMES: GameDefinition[] = [
   FLAPPY_GAME,
   TETRIS_GAME,
   PENALTIES_GAME,
+  MINESWEEPER_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
