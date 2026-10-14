@@ -49,7 +49,22 @@ export const TETRIS_GAME: GameDefinition = {
   metric: 'highest',
 }
 
-export const GAMES: GameDefinition[] = [SNAKE_GAME, SPRING_BALL_GAME, SMALL_BEE_GAME, FLAPPY_GAME, TETRIS_GAME]
+export const PENALTIES_GAME: GameDefinition = {
+  key: 'penalties',
+  name: 'Penales',
+  description: 'Muerte súbita desde los once metros',
+  path: '/games/penales',
+  metric: 'highest',
+}
+
+export const GAMES: GameDefinition[] = [
+  SNAKE_GAME,
+  SPRING_BALL_GAME,
+  SMALL_BEE_GAME,
+  FLAPPY_GAME,
+  TETRIS_GAME,
+  PENALTIES_GAME,
+]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
   return game.formatValue ? game.formatValue(value) : String(value)
