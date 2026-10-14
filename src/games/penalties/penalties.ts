@@ -13,10 +13,10 @@ export const POST_THICKNESS = 2
 export const MISS_MARGIN = 5
 export const INDICATOR_MIN = GOAL_LEFT - MISS_MARGIN
 export const INDICATOR_MAX = GOAL_RIGHT + MISS_MARGIN
-export const INITIAL_SPEED = 0.8
-export const SPEED_INCREMENT = 0.15
-export const RESULT_TICKS = 30
-export const TICK_MS = 33
+export const INITIAL_SPEED = 0.4
+export const SPEED_INCREMENT = 0.075
+export const RESULT_TICKS = 60
+export const TICK_MS = 1000 / 60
 
 const KEEPER_WIDTH = 8
 const KEEPER_HEIGHT = 12

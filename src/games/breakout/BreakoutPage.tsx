@@ -24,6 +24,7 @@ const BREAKOUT_ENGINE: GameEngine<BreakoutState, PaddleInput> = {
   step: stepBreakout,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function BreakoutPage() {

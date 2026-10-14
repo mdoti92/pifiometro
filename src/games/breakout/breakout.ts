@@ -14,12 +14,12 @@ export const BRICK_POINTS = 1
 export const PADDLE_WIDTH = 10
 export const PADDLE_HEIGHT = 2
 export const PADDLE_Y = VIEW_HEIGHT - 4
-export const PADDLE_SPEED = 1.6
+export const PADDLE_SPEED = 0.8
 export const BALL_SIZE = 2
-export const INITIAL_BALL_SPEED = 0.9
-export const WAVE_SPEED_INCREMENT = 0.15
+export const INITIAL_BALL_SPEED = 0.45
+export const WAVE_SPEED_INCREMENT = 0.075
 export const INITIAL_LIVES = 3
-export const TICK_MS = 33
+export const TICK_MS = 1000 / 60
 
 const BRICK_SPACING_X = VIEW_WIDTH / BRICK_COLUMNS
 const BRICK_SPACING_Y = BRICK_HEIGHT + 1

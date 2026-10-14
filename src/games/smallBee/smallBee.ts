@@ -8,16 +8,16 @@ export const VIEW_HEIGHT = 72
 export const BEE_WIDTH = 5
 export const BEE_HEIGHT = 3
 export const BEE_Y = VIEW_HEIGHT - 6
-export const BEE_SPEED = 1
+export const BEE_SPEED = 0.5
 export const BUG_WIDTH = 4
 export const BUG_HEIGHT = 3
 export const STINGER_WIDTH = 1
 export const STINGER_HEIGHT = 2
-export const STINGER_SPEED = 2
-export const FIRE_INTERVAL_TICKS = 12
+export const STINGER_SPEED = 1
+export const FIRE_INTERVAL_TICKS = 24
 export const BUG_POINTS = 1
 export const INITIAL_LIVES = 3
-export const TICK_MS = 33
+export const TICK_MS = 1000 / 60
 
 export interface Level {
   minScore: number
@@ -26,11 +26,11 @@ export interface Level {
 }
 
 export const LEVELS: Level[] = [
-  { minScore: 0, fallSpeed: 0.35, spawnEveryTicks: 45 },
-  { minScore: 10, fallSpeed: 0.5, spawnEveryTicks: 36 },
-  { minScore: 25, fallSpeed: 0.65, spawnEveryTicks: 28 },
-  { minScore: 45, fallSpeed: 0.8, spawnEveryTicks: 22 },
-  { minScore: 70, fallSpeed: 1, spawnEveryTicks: 16 },
+  { minScore: 0, fallSpeed: 0.175, spawnEveryTicks: 90 },
+  { minScore: 10, fallSpeed: 0.25, spawnEveryTicks: 72 },
+  { minScore: 25, fallSpeed: 0.325, spawnEveryTicks: 56 },
+  { minScore: 45, fallSpeed: 0.4, spawnEveryTicks: 44 },
+  { minScore: 70, fallSpeed: 0.5, spawnEveryTicks: 32 },
 ]
 
 export interface Entity {

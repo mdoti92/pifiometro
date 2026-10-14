@@ -23,6 +23,7 @@ const PENALTIES_ENGINE: GameEngine<PenaltiesState> = {
   step: stepPenalties,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 const MISSED_MESSAGES: Record<Exclude<Outcome, 'goal'>, string> = {
