@@ -663,3 +663,10 @@ button.standings-tab.active {
 .game-message.game-countdown {
   font-size: 3rem;
 }
+
+.game-rules {
+  max-width: 85%;
+  font-size: 0.75rem;
+  text-transform: none;
+  line-height: 1.3;
+}
