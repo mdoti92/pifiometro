@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { GamesPage } from './GamesPage'
 
 describe('GamesPage', () => {
-  it('lista la Viborita como único juego, con link a su pantalla', () => {
+  it('lista los juegos del catálogo en orden, con link a su pantalla', () => {
     render(
       <MemoryRouter>
         <GamesPage />
@@ -12,8 +12,9 @@ describe('GamesPage', () => {
     )
 
     const links = screen.getAllByRole('link')
-    expect(links).toHaveLength(1)
     expect(links[0]).toHaveTextContent('Viborita')
     expect(links[0]).toHaveAttribute('href', '/games/snake')
+    expect(links[1]).toHaveTextContent('Spring Ball')
+    expect(links[1]).toHaveAttribute('href', '/games/spring-ball')
   })
 })

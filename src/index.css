@@ -346,7 +346,15 @@ button.standings-tab.active {
   --lcd-glow: rgba(43, 51, 43, 0.25);
 }
 
-.snake-screen {
+.lcd-motorola-c115 {
+  --lcd-screen: #9fd3e6;
+  --lcd-frame: #8cc2d6;
+  --lcd-pixel: #0b2340;
+  --lcd-overlay: rgba(159, 211, 230, 0.85);
+  --lcd-glow: rgba(11, 35, 64, 0.25);
+}
+
+.game-screen {
   min-height: calc(100dvh - 9rem);
   display: flex;
   flex-direction: column;
@@ -357,10 +365,11 @@ button.standings-tab.active {
   overscroll-behavior: contain;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.snake-device {
+.game-device {
   width: min(100%, 28rem);
   padding: 0.75rem;
   background: var(--lcd-frame);
@@ -369,9 +378,10 @@ button.standings-tab.active {
   box-shadow: inset 0 0 1.5rem var(--lcd-glow);
 }
 
-.snake-hud {
+.game-hud {
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
   color: var(--lcd-pixel);
   font-family: 'Courier New', ui-monospace, monospace;
@@ -380,13 +390,24 @@ button.standings-tab.active {
   letter-spacing: 0.1em;
 }
 
-.snake-board {
+.game-board {
   position: relative;
+  background: var(--lcd-screen);
+  outline: 2px solid var(--lcd-pixel);
+}
+
+.pixel-canvas {
+  display: block;
+  width: 100%;
+  max-height: calc(100dvh - 16rem);
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.snake-board {
   display: grid;
   gap: 1px;
   padding: 2px;
-  background: var(--lcd-screen);
-  outline: 2px solid var(--lcd-pixel);
 }
 
 .snake-cell.is-snake {
@@ -398,7 +419,7 @@ button.standings-tab.active {
   transform: scale(0.6);
 }
 
-.snake-message {
+.game-message {
   position: absolute;
   inset: 0;
   display: flex;
@@ -415,7 +436,7 @@ button.standings-tab.active {
   text-align: center;
 }
 
-.snake-hint {
+.game-hint {
   color: var(--steel);
   font-size: 0.8rem;
   text-align: center;
