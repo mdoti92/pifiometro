@@ -24,10 +24,11 @@ const BREAKOUT_ENGINE: GameEngine<BreakoutState, PaddleInput> = {
   step: stepBreakout,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function BreakoutPage() {
-  const { state, status, press, act, touchHandlers } = useControlledGame(BREAKOUT_ENGINE, usePaddleControl())
+  const { state, status, countdown, press, act, touchHandlers } = useControlledGame(BREAKOUT_ENGINE, usePaddleControl())
   const { record } = useGameRecord(BREAKOUT_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -50,6 +51,7 @@ export function BreakoutPage() {
       game={BREAKOUT_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Vidas', prefix: '♥', value: String(state.lives) },

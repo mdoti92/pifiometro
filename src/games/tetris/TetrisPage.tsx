@@ -48,7 +48,7 @@ function NextPiece({ type }: { type: PieceType }) {
 }
 
 export function TetrisPage() {
-  const { state, status, press, act } = useGameLoop(TETRIS_ENGINE)
+  const { state, status, countdown, press, act } = useGameLoop(TETRIS_ENGINE)
   const { record } = useGameRecord(TETRIS_GAME, status === 'over', state.score)
 
   function play(action: (current: TetrisState) => TetrisState) {
@@ -90,6 +90,7 @@ export function TetrisPage() {
       game={TETRIS_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Líneas', prefix: 'L', value: String(state.lines) },

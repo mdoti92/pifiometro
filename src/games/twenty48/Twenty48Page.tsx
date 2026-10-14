@@ -23,7 +23,7 @@ function toneOf(value: number): number {
 }
 
 export function Twenty48Page() {
-  const { state, status, press, act } = useGameLoop(TWENTY48_ENGINE)
+  const { state, status, countdown, press, act } = useGameLoop(TWENTY48_ENGINE)
   const { record } = useGameRecord(TWENTY48_GAME, status === 'over', state.score)
   const showingWin = showsWinMessage(state)
 
@@ -53,6 +53,7 @@ export function Twenty48Page() {
       game={TWENTY48_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },

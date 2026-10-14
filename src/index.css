@@ -659,3 +659,23 @@ button.standings-tab.active {
 .abyss-button:active {
   background: #2c3650;
 }
+
+.game-message.game-countdown {
+  font-size: 3rem;
+}
+
+.game-rules {
+  max-width: 92%;
+  font-size: 0.7rem;
+  text-transform: none;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.game-rules p {
+  margin: 0.25rem 0;
+}
+
+.game-message {
+  overflow-y: auto;
+}

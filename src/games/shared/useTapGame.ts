@@ -14,7 +14,7 @@ interface TapGameOptions<S> {
 
 /** Juegos de un solo botón: toque en la pantalla, espacio o ↑. */
 export function useTapGame<S>(engine: GameEngine<S>, { action, actOnStart = false, keys = TAP_KEYS }: TapGameOptions<S>) {
-  const { state, status, press, act } = useGameLoop(engine)
+  const { state, status, countdown, press, act } = useGameLoop(engine)
 
   const tap = useCallback(() => {
     if (status === 'running') {
@@ -29,5 +29,5 @@ export function useTapGame<S>(engine: GameEngine<S>, { action, actOnStart = fals
     if (!repeat) tap()
   })
 
-  return { state, status, tap, touchHandlers: { onTouchStart: tap } }
+  return { state, status, countdown, tap, touchHandlers: { onTouchStart: tap } }
 }

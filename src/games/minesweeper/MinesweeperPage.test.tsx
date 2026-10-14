@@ -7,6 +7,7 @@ import { localRecordStorageKey } from '../shared/localRecord'
 import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { LONG_PRESS_MS, MinesweeperPage } from './MinesweeperPage'
 import { BOARD_SIZE, MINE_COUNT } from './minesweeper'
+import { finishCountdown } from '../../test/gameCountdown'
 
 vi.mock('../../auth/AuthContext', async () => {
   const actual = await vi.importActual<typeof import('../../auth/AuthContext')>('../../auth/AuthContext')
@@ -18,6 +19,13 @@ vi.mock('../ranking/gameScoresService', () => ({
   submitGameResult: vi.fn(),
   fetchGameScores: vi.fn(),
 }))
+
+function startGame() {
+  vi.useFakeTimers()
+  render(<MinesweeperPage />)
+  fireEvent.click(screen.getByTestId('game-screen'))
+  finishCountdown()
+}
 
 function cell(x: number, y: number) {
   return screen.getByRole('button', { name: `Celda ${x + 1}, ${y + 1}` })
@@ -51,8 +59,18 @@ describe('MinesweeperPage', () => {
     expect(formatGameValue(MINESWEEPER_GAME, 75)).toBe('1:15')
   })
 
-  it('destapar la primera celda la muestra y nunca es mina', () => {
+  it('el primer toque arranca la cuenta regresiva sin destapar nada', () => {
+    vi.useFakeTimers()
     render(<MinesweeperPage />)
+
+    fireEvent.click(cell(4, 4))
+
+    expect(cell(4, 4)).toHaveAttribute('data-revealed', 'false')
+    expect(screen.getByRole('status')).toHaveTextContent('3')
+  })
+
+  it('destapar la primera celda la muestra y nunca es mina', () => {
+    startGame()
 
     fireEvent.click(cell(4, 4))
 
@@ -61,7 +79,7 @@ describe('MinesweeperPage', () => {
   })
 
   it('click derecho pone bandera, descuenta minas y no abre el menú del navegador', () => {
-    render(<MinesweeperPage />)
+    startGame()
 
     const contextMenu = fireEvent.contextMenu(cell(0, 0))
 
@@ -71,8 +89,7 @@ describe('MinesweeperPage', () => {
   })
 
   it('mantener presionada una celda pone bandera y no la destapa', () => {
-    vi.useFakeTimers()
-    render(<MinesweeperPage />)
+    startGame()
 
     fireEvent.touchStart(cell(2, 2), { touches: [{ clientX: 0, clientY: 0 }] })
     act(() => {
@@ -86,8 +103,7 @@ describe('MinesweeperPage', () => {
   })
 
   it('el cronómetro avanza una vez arrancada la partida', () => {
-    vi.useFakeTimers()
-    render(<MinesweeperPage />)
+    startGame()
 
     fireEvent.click(cell(4, 4))
     act(() => {

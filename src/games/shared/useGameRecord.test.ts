@@ -17,7 +17,7 @@ vi.mock('../ranking/gameScoresService', () => ({
   fetchGameScores: vi.fn(),
 }))
 
-const GAME: GameDefinition = { key: 'demo', name: 'Demo', description: '', path: '/games/demo', metric: 'highest' }
+const GAME: GameDefinition = { key: 'demo', name: 'Demo', description: '', path: '/games/demo', metric: 'highest', goal: '', howToPlay: '' }
 const TIMED: GameDefinition = { ...GAME, key: 'timed', metric: 'lowest' }
 
 beforeEach(() => {

@@ -22,10 +22,11 @@ const SPRING_BALL_ENGINE: GameEngine<SpringBallState, Horizontal> = {
   step: stepSpringBall,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
 export function SpringBallPage() {
-  const { state, status, press, touchHandlers } = useHoldGame(SPRING_BALL_ENGINE)
+  const { state, status, countdown, press, touchHandlers } = useHoldGame(SPRING_BALL_ENGINE)
   const { record } = useGameRecord(SPRING_BALL_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -34,6 +35,7 @@ export function SpringBallPage() {
       game={SPRING_BALL_GAME}
       palette="c115"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },

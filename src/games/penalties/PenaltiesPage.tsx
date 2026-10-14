@@ -23,29 +23,34 @@ const PENALTIES_ENGINE: GameEngine<PenaltiesState> = {
   step: stepPenalties,
   isOver: (state) => state.isOver,
   intervalMs: () => TICK_MS,
+  animationFrame: true,
 }
 
-const MISSED_MESSAGES: Record<Exclude<Outcome, 'goal'>, string> = {
-  saved: '¡Atajado!',
-  out: '¡Afuera!',
+const RESULT_MESSAGES: Record<Outcome, string> = {
+  goal: '¡GOL!',
+  saved: '¡ATAJÓ!',
+  out: '¡AFUERA!',
 }
 
 const kick = (state: PenaltiesState) => shoot(state, Math.random)
 
 export function PenaltiesPage() {
-  const { state, status, tap, touchHandlers } = useTapGame(PENALTIES_ENGINE, { action: kick, keys: [' '] })
+  const { state, status, countdown, tap, touchHandlers } = useTapGame(PENALTIES_ENGINE, { action: kick, keys: [' '] })
   const { record } = useGameRecord(PENALTIES_GAME, status === 'over', state.goals)
   const rects = useMemo(() => toScreenRects(state), [state])
 
+  // El resultado se muestra recién cuando termina la animación del remate.
+  const resultShown = state.phase === 'result' && state.outcome !== null
   let message: string | null | undefined
-  if (status === 'running') message = state.outcome === 'goal' ? '¡GOL!' : null
-  else if (status === 'over' && state.outcome && state.outcome !== 'goal') message = MISSED_MESSAGES[state.outcome]
+  if (status === 'running') message = resultShown && state.outcome ? RESULT_MESSAGES[state.outcome] : null
+  else if (status === 'over' && state.outcome) message = RESULT_MESSAGES[state.outcome]
 
   return (
     <GameScreen
       game={PENALTIES_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Goles seguidos', prefix: 'GOLES', value: String(state.goals) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },
@@ -55,7 +60,7 @@ export function PenaltiesPage() {
       touchHandlers={touchHandlers}
       message={message}
       overDetail={<span>Game Over · {state.goals} goles seguidos</span>}
-      hint="Tocá la pantalla (o espacio) para patear cuando el indicador esté donde querés"
+      hint="Tocá la pantalla (o espacio) para patear. Muerte súbita: el primero que errás, perdés."
     >
       <PixelCanvas width={VIEW_WIDTH} height={VIEW_HEIGHT} rects={rects} label={PENALTIES_GAME.name} />
     </GameScreen>

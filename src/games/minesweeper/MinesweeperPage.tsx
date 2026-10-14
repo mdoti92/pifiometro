@@ -32,7 +32,7 @@ function cellContent(cell: MineCell): string {
 }
 
 export function MinesweeperPage() {
-  const { state, status, press, act } = useGameLoop(MINESWEEPER_ENGINE)
+  const { state, status, countdown, press, act } = useGameLoop(MINESWEEPER_ENGINE)
   const { record } = useGameRecord(MINESWEEPER_GAME, isFinished(state), state.seconds, {
     skipReport: state.phase !== 'won',
   })
@@ -91,6 +91,7 @@ export function MinesweeperPage() {
       game={MINESWEEPER_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Minas restantes', prefix: '⚑', value: String(minesLeft(state)) },
         { label: 'Tiempo', value: formatSeconds(state.seconds) },

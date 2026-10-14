@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../../auth/AuthContext'
 import * as service from '../ranking/gameScoresService'
 import { localRecordStorageKey } from '../shared/localRecord'
 import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { BOARD_COLUMNS, BOARD_ROWS } from './tetris'
 import { TetrisPage } from './TetrisPage'
+import { finishCountdown } from '../../test/gameCountdown'
 
 vi.mock('../../auth/AuthContext', async () => {
   const actual = await vi.importActual<typeof import('../../auth/AuthContext')>('../../auth/AuthContext')
@@ -38,6 +39,10 @@ beforeEach(() => {
   vi.mocked(service.fetchMyBest).mockResolvedValue(null)
 })
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('TetrisPage', () => {
   it('muestra el tablero de 10x20, puntaje, récord, líneas, nivel y próxima pieza', () => {
     localStorage.setItem(localRecordStorageKey('tetris'), '1200')
@@ -62,8 +67,10 @@ describe('TetrisPage', () => {
   })
 
   it('↓ hace hard drop: la pieza queda fija abajo', () => {
+    vi.useFakeTimers()
     render(<TetrisPage />)
     pressKey('ArrowLeft')
+    finishCountdown()
 
     pressKey('ArrowDown')
 

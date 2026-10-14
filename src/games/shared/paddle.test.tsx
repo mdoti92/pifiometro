@@ -18,23 +18,46 @@ describe('movePaddle', () => {
 })
 
 describe('bounceOffPaddle', () => {
-  it('en el centro rebota derecho y más rápido', () => {
-    const velocity = bounceOffPaddle({ ballCenterX: 14, paddleX: 10, paddleWidth: 8, speed: 1, upward: true })
+  const paddle = { paddleX: 10, paddleWidth: 8, speed: 1 }
+  const angleOf = ({ vx, vy }: { vx: number; vy: number }) => Math.atan2(vx, Math.abs(vy))
+  // Viene bajando en diagonal de izquierda a derecha, a 30° de la vertical.
+  const diagonal = { vx: Math.sin(Math.PI / 6), vy: Math.cos(Math.PI / 6) }
 
-    expect(velocity.vx).toBeCloseTo(0)
-    expect(velocity.vy).toBeCloseTo(-1)
+  it('en el centro refleja la dirección con que venía (mismo ángulo)', () => {
+    const out = bounceOffPaddle({ ...paddle, ballCenterX: 14, upward: true, incoming: diagonal })
+
+    expect(out.vy).toBeLessThan(0)
+    expect(angleOf(out)).toBeCloseTo(Math.PI / 6)
+    expect(Math.hypot(out.vx, out.vy)).toBeCloseTo(1)
   })
 
-  it('cuanto más cerca del borde, más abierto el ángulo', () => {
-    const nearEdge = bounceOffPaddle({ ballCenterX: 17.5, paddleX: 10, paddleWidth: 8, speed: 1, upward: true })
-    const nearCenter = bounceOffPaddle({ ballCenterX: 15, paddleX: 10, paddleWidth: 8, speed: 1, upward: true })
+  it('viniendo de izquierda a derecha, pegar en el lado izquierdo le resta inclinación', () => {
+    const leftEdge = bounceOffPaddle({ ...paddle, ballCenterX: 10.2, upward: true, incoming: diagonal })
+    const leftHalf = bounceOffPaddle({ ...paddle, ballCenterX: 12, upward: true, incoming: diagonal })
 
-    expect(nearEdge.vx).toBeGreaterThan(nearCenter.vx)
-    expect(Math.atan2(nearEdge.vx, -nearEdge.vy)).toBeLessThanOrEqual(MAX_BOUNCE_ANGLE + 1e-9)
+    expect(Math.abs(angleOf(leftEdge))).toBeLessThan(Math.PI / 12)
+    expect(angleOf(leftHalf)).toBeGreaterThan(0)
+    expect(angleOf(leftHalf)).toBeLessThan(Math.PI / 6)
+  })
+
+  it('pegar en el lado derecho le suma inclinación hacia la derecha, sin pasar el máximo', () => {
+    const rightEdge = bounceOffPaddle({ ...paddle, ballCenterX: 17.8, upward: true, incoming: diagonal })
+
+    expect(angleOf(rightEdge)).toBeGreaterThan(Math.PI / 6)
+    expect(angleOf(rightEdge)).toBeLessThanOrEqual(MAX_BOUNCE_ANGLE + 1e-9)
+  })
+
+  it('una pelota que viene vertical y pega en un borde sale inclinada hacia ese lado', () => {
+    const straight = { vx: 0, vy: 1 }
+
+    expect(bounceOffPaddle({ ...paddle, ballCenterX: 10.5, upward: true, incoming: straight }).vx).toBeLessThan(0)
+    expect(bounceOffPaddle({ ...paddle, ballCenterX: 17.5, upward: true, incoming: straight }).vx).toBeGreaterThan(0)
   })
 
   it('puede rebotar hacia abajo (paleta de arriba)', () => {
-    expect(bounceOffPaddle({ ballCenterX: 14, paddleX: 10, paddleWidth: 8, speed: 1, upward: false }).vy).toBeCloseTo(1)
+    const out = bounceOffPaddle({ ...paddle, ballCenterX: 14, upward: false, incoming: { vx: 0, vy: -1 } })
+
+    expect(out.vy).toBeCloseTo(1)
   })
 })
 

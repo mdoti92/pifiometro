@@ -14,7 +14,7 @@ interface GameControl<I> {
  * Un toque o cualquier flecha arranca, reanuda o reinicia la partida.
  */
 export function useControlledGame<S, I>(engine: GameEngine<S, I>, control: GameControl<I>) {
-  const { state, status, press, act } = useGameLoop(engine, { readInput: control.read })
+  const { state, status, countdown, press, act } = useGameLoop(engine, { readInput: control.read })
 
   useWindowKeys(ARROW_KEYS, () => {
     if (status !== 'running') press()
@@ -25,7 +25,7 @@ export function useControlledGame<S, I>(engine: GameEngine<S, I>, control: GameC
     control.touchHandlers.onTouchStart(event)
   }
 
-  return { state, status, press, act, touchHandlers: { ...control.touchHandlers, onTouchStart } }
+  return { state, status, countdown, press, act, touchHandlers: { ...control.touchHandlers, onTouchStart } }
 }
 
 /** Mantener la mitad izquierda/derecha de la pantalla o las flechas ← →. */

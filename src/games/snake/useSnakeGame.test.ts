@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetSavedGameSessions } from '../shared/useGameLoop'
+import { COUNTDOWN_SECONDS, resetSavedGameSessions } from '../shared/useGameLoop'
 import { createInitialState, type GameState } from './snakeGame'
 import { TICK_INTERVAL_MS, useSnakeGame } from './useSnakeGame'
 
@@ -10,6 +10,15 @@ function advanceTicks(count: number) {
   act(() => {
     vi.advanceTimersByTime(TICK_INTERVAL_MS * count)
   })
+}
+
+function startGame(press: () => void) {
+  act(() => press())
+  for (let second = 0; second < COUNTDOWN_SECONDS; second++) {
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+  }
 }
 
 function setVisibility(state: DocumentVisibilityState) {
@@ -44,24 +53,24 @@ describe('useSnakeGame', () => {
     const { result } = renderHook(() => useSnakeGame(alwaysFirst))
     const initialHead = result.current.game.snake[0]
 
-    act(() => result.current.press())
+    startGame(result.current.press)
     advanceTicks(2)
 
     expect(result.current.status).toBe('running')
     expect(result.current.game.snake[0]).toEqual({ x: initialHead.x + 2, y: initialHead.y })
   })
 
-  it('una dirección con el juego en espera también lo arranca', () => {
+  it('una dirección con el juego en espera arranca la cuenta regresiva', () => {
     const { result } = renderHook(() => useSnakeGame(alwaysFirst))
 
     act(() => result.current.steer('up'))
 
-    expect(result.current.status).toBe('running')
+    expect(result.current.status).toBe('countdown')
   })
 
   it('una dirección durante la partida cambia el rumbo en el próximo tick', () => {
     const { result } = renderHook(() => useSnakeGame(alwaysFirst))
-    act(() => result.current.press())
+    startGame(result.current.press)
     const head = result.current.game.snake[0]
 
     act(() => result.current.steer('down'))
@@ -72,7 +81,7 @@ describe('useSnakeGame', () => {
 
   it('se pausa al pasar a segundo plano y se reanuda con un toque', () => {
     const { result } = renderHook(() => useSnakeGame(alwaysFirst))
-    act(() => result.current.press())
+    startGame(result.current.press)
 
     setVisibility('hidden')
     const pausedHead = result.current.game.snake[0]
@@ -82,14 +91,14 @@ describe('useSnakeGame', () => {
     expect(result.current.game.snake[0]).toEqual(pausedHead)
 
     setVisibility('visible')
-    act(() => result.current.press())
+    startGame(result.current.press)
 
     expect(result.current.status).toBe('running')
   })
 
   it('al salir de la pantalla deja la partida en pausa y la recupera al volver', () => {
     const first = renderHook(() => useSnakeGame(alwaysFirst))
-    act(() => first.result.current.press())
+    startGame(first.result.current.press)
     advanceTicks(2)
     const headWhenLeaving = first.result.current.game.snake[0]
 
@@ -110,7 +119,7 @@ describe('useSnakeGame', () => {
     }
     const { result } = renderHook(() => useSnakeGame(alwaysFirst, aboutToCrash))
 
-    act(() => result.current.press())
+    startGame(result.current.press)
     advanceTicks(1)
 
     expect(result.current.status).toBe('over')
@@ -119,11 +128,11 @@ describe('useSnakeGame', () => {
   it('después del game over un toque arranca una partida nueva', () => {
     const finished: GameState = { ...createInitialState(alwaysFirst), isOver: true, score: 2 }
     const { result } = renderHook(() => useSnakeGame(alwaysFirst, finished))
-    act(() => result.current.press())
+    startGame(result.current.press)
     advanceTicks(1)
     expect(result.current.status).toBe('over')
 
-    act(() => result.current.press())
+    startGame(result.current.press)
 
     expect(result.current.status).toBe('running')
     expect(result.current.game.score).toBe(0)

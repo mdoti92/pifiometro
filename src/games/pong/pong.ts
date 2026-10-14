@@ -10,13 +10,13 @@ export const PADDLE_HEIGHT = 2
 export const PLAYER_Y = VIEW_HEIGHT - 4
 export const CPU_Y = 2
 export const BALL_SIZE = 2
-export const INITIAL_BALL_SPEED = 0.9
-export const SPEED_INCREMENT = 0.08
-export const MAX_BALL_SPEED = 2.4
-export const PLAYER_SPEED = 1.6
-export const CPU_MAX_SPEED = 0.55
+export const INITIAL_BALL_SPEED = 0.45
+export const SPEED_INCREMENT = 0.04
+export const MAX_BALL_SPEED = 1.2
+export const PLAYER_SPEED = 0.8
+export const CPU_MAX_SPEED = 0.275
 export const WINNING_POINTS = 5
-export const TICK_MS = 33
+export const TICK_MS = 1000 / 60
 
 const SERVE_ANGLE = Math.PI / 6
 const CENTER_LINE_DASH = 2
@@ -98,7 +98,7 @@ export function stepPong(state: PongState, input: PaddleInput, random: RandomSou
   if (hitsPlayer || hitsCpu) {
     speed = Math.min(speed + SPEED_INCREMENT, MAX_BALL_SPEED)
     const paddleX = hitsPlayer ? playerX : cpuX
-    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed, upward: hitsPlayer }))
+    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed, upward: hitsPlayer, incoming: { vx, vy } }))
     y = hitsPlayer ? PLAYER_Y - BALL_SIZE : CPU_Y + PADDLE_HEIGHT
   }
 
