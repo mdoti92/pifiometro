@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { loadHighScore, saveHighScoreIfBetter } from './highScore'
+import { SNAKE_GAME } from '../catalog'
+import { loadLocalRecord, saveLocalRecordIfBetter } from '../shared/localRecord'
 import {
   createInitialState,
   queueDirection,
@@ -32,7 +33,7 @@ function initialSession(random: RandomSource, initialGame?: GameState): Session 
 
 export function useSnakeGame(random: RandomSource = Math.random, initialGame?: GameState) {
   const [session, setSession] = useState<Session>(() => initialSession(random, initialGame))
-  const [storedHighScore, setStoredHighScore] = useState(loadHighScore)
+  const [storedHighScore, setStoredHighScore] = useState(() => loadLocalRecord(SNAKE_GAME.key) ?? 0)
   const sessionRef = useRef(session)
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export function useSnakeGame(random: RandomSource = Math.random, initialGame?: G
   }, [session.status, random])
 
   useEffect(() => {
-    if (session.status === 'over') saveHighScoreIfBetter(session.game.score)
+    if (session.status === 'over') saveLocalRecordIfBetter(SNAKE_GAME.key, SNAKE_GAME.metric, session.game.score)
   }, [session.status, session.game.score])
 
   useEffect(() => {

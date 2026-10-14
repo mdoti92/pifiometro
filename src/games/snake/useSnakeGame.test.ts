@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HIGH_SCORE_STORAGE_KEY } from './highScore'
+import { localRecordStorageKey } from '../shared/localRecord'
 import { createInitialState, type GameState } from './snakeGame'
 import { TICK_INTERVAL_MS, resetSavedSnakeGame, useSnakeGame } from './useSnakeGame'
 
@@ -116,7 +116,7 @@ describe('useSnakeGame', () => {
 
     expect(result.current.status).toBe('over')
     expect(result.current.highScore).toBe(4)
-    expect(localStorage.getItem(HIGH_SCORE_STORAGE_KEY)).toBe('4')
+    expect(localStorage.getItem(localRecordStorageKey('snake'))).toBe('4')
   })
 
   it('después del game over un toque arranca una partida nueva', () => {
