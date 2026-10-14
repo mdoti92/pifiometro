@@ -5,7 +5,7 @@ import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
 import { FixturePage } from './fixture/FixturePage'
 import { GamesPage } from './games/GamesPage'
-import { SnakeGamePage } from './games/snake/SnakeGamePage'
+import { GAME_ROUTES } from './games/routes'
 import { GroupsHome } from './groups/GroupsHome'
 import { GroupTournamentsPage } from './groups/GroupTournamentsPage'
 import { MembersPage } from './groups/MembersPage'
@@ -58,14 +58,9 @@ function App() {
           </Authenticated>
         }
       />
-      <Route
-        path="/games/snake"
-        element={
-          <Authenticated>
-            <SnakeGamePage />
-          </Authenticated>
-        }
-      />
+      {GAME_ROUTES.map(({ game, element }) => (
+        <Route key={game.key} path={game.path} element={<Authenticated>{element}</Authenticated>} />
+      ))}
       <Route
         path="/groups/:groupId/members"
         element={

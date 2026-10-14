@@ -4,9 +4,9 @@ import * as AuthContextModule from '../../auth/AuthContext'
 import * as service from '../ranking/gameScoresService'
 import { localRecordStorageKey } from '../shared/localRecord'
 import { BOARD_COLUMNS, BOARD_ROWS, INITIAL_SNAKE_LENGTH } from './snakeGame'
-import { MIN_SWIPE_DISTANCE_PX } from './snakeInput'
+import { MIN_SWIPE_DISTANCE_PX } from '../shared/input'
+import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { SnakeGamePage } from './SnakeGamePage'
-import { resetSavedSnakeGame } from './useSnakeGame'
 
 vi.mock('../../auth/AuthContext', async () => {
   const actual = await vi.importActual<typeof import('../../auth/AuthContext')>('../../auth/AuthContext')
@@ -24,7 +24,7 @@ const HIGH_SCORE_STORAGE_KEY = localRecordStorageKey('snake')
 beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
-  resetSavedSnakeGame()
+  resetSavedGameSessions()
   vi.mocked(AuthContextModule.useAuth).mockReturnValue({ session: null, user: { id: 'u1' } as never, loading: false })
   vi.mocked(service.fetchMyBest).mockResolvedValue(null)
   vi.mocked(service.fetchGameScores).mockResolvedValue([])
@@ -57,7 +57,7 @@ describe('SnakeGamePage', () => {
     render(<SnakeGamePage />)
     expect(screen.getByText(/tocá para jugar/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByTestId('snake-screen'))
+    fireEvent.click(screen.getByTestId('game-screen'))
 
     expect(screen.queryByText(/tocá para jugar/i)).not.toBeInTheDocument()
   })
@@ -77,7 +77,7 @@ describe('SnakeGamePage', () => {
   it('un swipe arranca el juego', () => {
     render(<SnakeGamePage />)
 
-    swipe(screen.getByTestId('snake-screen'), 0, -MIN_SWIPE_DISTANCE_PX * 2)
+    swipe(screen.getByTestId('game-screen'), 0, -MIN_SWIPE_DISTANCE_PX * 2)
 
     expect(screen.queryByText(/tocá para jugar/i)).not.toBeInTheDocument()
   })

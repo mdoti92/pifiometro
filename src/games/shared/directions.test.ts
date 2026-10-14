@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_SWIPE_DISTANCE_PX, directionFromKey, directionFromSwipe } from './snakeInput'
+import { MIN_SWIPE_DISTANCE_PX, directionFromKey, directionFromSwipe } from './input'
 
 describe('directionFromSwipe', () => {
   it.each([
