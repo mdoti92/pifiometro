@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HIGH_SCORE_STORAGE_KEY } from './highScore'
+import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { createInitialState, type GameState } from './snakeGame'
-import { TICK_INTERVAL_MS, resetSavedSnakeGame, useSnakeGame } from './useSnakeGame'
+import { TICK_INTERVAL_MS, useSnakeGame } from './useSnakeGame'
 
 const alwaysFirst = () => 0
 
@@ -21,8 +21,7 @@ function setVisibility(state: DocumentVisibilityState) {
 
 beforeEach(() => {
   vi.useFakeTimers()
-  localStorage.clear()
-  resetSavedSnakeGame()
+  resetSavedGameSessions()
   setVisibility('visible')
 })
 
@@ -101,7 +100,7 @@ describe('useSnakeGame', () => {
     expect(second.result.current.game.snake[0]).toEqual(headWhenLeaving)
   })
 
-  it('al chocar termina la partida y guarda el récord si lo superó', () => {
+  it('al chocar termina la partida', () => {
     const aboutToCrash: GameState = {
       ...createInitialState(alwaysFirst),
       snake: [{ x: 5, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 6 }],
@@ -115,8 +114,6 @@ describe('useSnakeGame', () => {
     advanceTicks(1)
 
     expect(result.current.status).toBe('over')
-    expect(result.current.highScore).toBe(4)
-    expect(localStorage.getItem(HIGH_SCORE_STORAGE_KEY)).toBe('4')
   })
 
   it('después del game over un toque arranca una partida nueva', () => {

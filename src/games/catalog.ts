@@ -1,0 +1,150 @@
+import type { GameMetric } from './ranking/rankingLogic'
+
+export interface GameDefinition {
+  key: string
+  name: string
+  description: string
+  path: string
+  metric: GameMetric
+  formatValue?: (value: number) => string
+}
+
+export const SNAKE_GAME: GameDefinition = {
+  key: 'snake',
+  name: 'Viborita',
+  description: 'La del Nokia 1100, de toda la vida',
+  path: '/games/snake',
+  metric: 'highest',
+}
+
+export const SPRING_BALL_GAME: GameDefinition = {
+  key: 'spring-ball',
+  name: 'Spring Ball',
+  description: 'La pelotita saltarina del Motorola C115',
+  path: '/games/spring-ball',
+  metric: 'highest',
+}
+
+export const SMALL_BEE_GAME: GameDefinition = {
+  key: 'small-bee',
+  name: 'Small Bee',
+  description: 'La abejita a los aguijonazos, también del C115',
+  path: '/games/small-bee',
+  metric: 'highest',
+}
+
+export const FLAPPY_GAME: GameDefinition = {
+  key: 'flappy',
+  name: 'Flappy Bird',
+  description: 'Pasá entre las tuberías sin chocar',
+  path: '/games/flappy',
+  metric: 'highest',
+}
+
+export const TETRIS_GAME: GameDefinition = {
+  key: 'tetris',
+  name: 'Tetris',
+  description: 'Encajá las piezas y borrá líneas',
+  path: '/games/tetris',
+  metric: 'highest',
+}
+
+export const PENALTIES_GAME: GameDefinition = {
+  key: 'penalties',
+  name: 'Penales',
+  description: 'Muerte súbita desde los once metros',
+  path: '/games/penales',
+  metric: 'highest',
+}
+
+const SECONDS_PER_MINUTE = 60
+
+export function formatSeconds(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE)
+  const seconds = totalSeconds % SECONDS_PER_MINUTE
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+const TENTHS_PER_SECOND = 10
+
+export function formatTenths(totalTenths: number): string {
+  return `${formatSeconds(Math.floor(totalTenths / TENTHS_PER_SECOND))}.${totalTenths % TENTHS_PER_SECOND}`
+}
+
+export const MINESWEEPER_GAME: GameDefinition = {
+  key: 'minesweeper',
+  name: 'Buscaminas',
+  description: 'Destapá todo sin pisar una mina',
+  path: '/games/buscaminas',
+  metric: 'lowest',
+  formatValue: formatSeconds,
+}
+
+export const TWENTY48_GAME: GameDefinition = {
+  key: '2048',
+  name: '2048',
+  description: 'Juntá fichas iguales hasta llegar a 2048',
+  path: '/games/2048',
+  metric: 'highest',
+}
+
+export const PONG_GAME: GameDefinition = {
+  key: 'pong',
+  name: 'Pong',
+  description: 'Paletas contra la CPU, partido a 5',
+  path: '/games/pong',
+  metric: 'cumulative',
+}
+
+export const DINO_GAME: GameDefinition = {
+  key: 'dino',
+  name: 'Dino',
+  description: 'Corré y saltá los cactus',
+  path: '/games/dino',
+  metric: 'highest',
+}
+
+export const BREAKOUT_GAME: GameDefinition = {
+  key: 'breakout',
+  name: 'Breakout',
+  description: 'Rompé todos los ladrillos con la pelotita',
+  path: '/games/breakout',
+  metric: 'highest',
+}
+
+export const VRALLY_GAME: GameDefinition = {
+  key: 'vrally',
+  name: 'V-Rally',
+  description: 'Rally contra reloj del Sony Ericsson T290',
+  path: '/games/v-rally',
+  metric: 'lowest',
+  formatValue: formatTenths,
+}
+
+export const DEEP_ABYSS_GAME: GameDefinition = {
+  key: 'deep-abyss',
+  name: 'Deep Abyss',
+  description: 'Bajá al fondo del abismo, del Sony Ericsson T290',
+  path: '/games/deep-abyss',
+  metric: 'highest',
+}
+
+export const GAMES: GameDefinition[] = [
+  SNAKE_GAME,
+  SPRING_BALL_GAME,
+  SMALL_BEE_GAME,
+  FLAPPY_GAME,
+  TETRIS_GAME,
+  PENALTIES_GAME,
+  MINESWEEPER_GAME,
+  TWENTY48_GAME,
+  PONG_GAME,
+  DINO_GAME,
+  BREAKOUT_GAME,
+  VRALLY_GAME,
+  DEEP_ABYSS_GAME,
+]
+
+export function formatGameValue(game: GameDefinition, value: number): string {
+  return game.formatValue ? game.formatValue(value) : String(value)
+}

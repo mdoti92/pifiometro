@@ -1,14 +1,19 @@
 :root {
   color-scheme: dark;
 
+  /* Paleta Tierra Media (por defecto). Las demás se aplican desde src/design/palettes.ts. */
   --bg: #12140f;
   --surface: #1e2318;
   --ink: #ede3ce;
   --hearth: #c97a2e;
-  --moss: #5b7a52;
+  --moss: #86ad79;
   --gold: #c9a63e;
-  --rust: #8c3b2e;
+  --rust: #e8686f;
   --steel: #4a5568;
+  --exacto: #c97a2e;
+  --resultado: #86ad79;
+  --pifiado: #e8686f;
+  --chip-ink: #12140f;
 
   --font-display: 'Fraunces', ui-serif, serif;
   --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
@@ -130,7 +135,7 @@ select {
   display: inline-block;
   padding: 0.3rem 0.9rem;
   border-radius: 999px;
-  color: var(--ink);
+  color: var(--chip-ink);
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
@@ -337,12 +342,33 @@ button.standings-tab.active {
   font-size: 0.85rem;
 }
 
-/* Viborita: réplica deliberada de la pantalla del Nokia 1100, ajena a la identidad del resto de la app. */
-.snake-screen {
-  --nokia-light: #9bbc0f;
-  --nokia-mid: #8bac0f;
-  --nokia-dark: #0f380f;
+/* Paletas retro de los juegos: réplicas deliberadas de pantallas de celulares viejos, ajenas a la identidad del resto de la app. */
+.lcd-nokia-unlit {
+  --lcd-screen: #b8c2a8;
+  --lcd-frame: #a7b197;
+  --lcd-pixel: #2b332b;
+  --lcd-overlay: rgba(184, 194, 168, 0.85);
+  --lcd-glow: rgba(43, 51, 43, 0.25);
+}
 
+.lcd-motorola-c115 {
+  --lcd-screen: #9fd3e6;
+  --lcd-frame: #8cc2d6;
+  --lcd-pixel: #0b2340;
+  --lcd-overlay: rgba(159, 211, 230, 0.85);
+  --lcd-glow: rgba(11, 35, 64, 0.25);
+}
+
+/* Sony Ericsson T290: pantalla a color; los juegos pintan sus propios colores sobre fondo negro. */
+.lcd-ericsson-t290 {
+  --lcd-screen: #000000;
+  --lcd-frame: #3a3f4a;
+  --lcd-pixel: #f4f4f4;
+  --lcd-overlay: rgba(0, 0, 0, 0.6);
+  --lcd-glow: rgba(255, 255, 255, 0.08);
+}
+
+.game-screen {
   min-height: calc(100dvh - 9rem);
   display: flex;
   flex-direction: column;
@@ -353,48 +379,60 @@ button.standings-tab.active {
   overscroll-behavior: contain;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.snake-device {
-  width: min(100%, 28rem);
+.game-device {
+  /* --board-aspect (ancho/alto) achica el dispositivo para que un tablero vertical entre en la pantalla. */
+  width: min(100%, 28rem, calc((100dvh - 16rem) * var(--board-aspect, 10)));
   padding: 0.75rem;
-  background: var(--nokia-mid);
+  background: var(--lcd-frame);
   border: 0.5rem solid #2b2f2a;
   border-radius: 0.75rem;
-  box-shadow: inset 0 0 1.5rem rgba(15, 56, 15, 0.35);
+  box-shadow: inset 0 0 1.5rem var(--lcd-glow);
 }
 
-.snake-hud {
+.game-hud {
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
-  color: var(--nokia-dark);
+  color: var(--lcd-pixel);
   font-family: 'Courier New', ui-monospace, monospace;
   font-weight: 700;
   font-size: 1.1rem;
   letter-spacing: 0.1em;
 }
 
-.snake-board {
+.game-board {
   position: relative;
+  background: var(--lcd-screen);
+  outline: 2px solid var(--lcd-pixel);
+}
+
+.pixel-canvas {
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+}
+
+.snake-board {
   display: grid;
   gap: 1px;
   padding: 2px;
-  background: var(--nokia-light);
-  outline: 2px solid var(--nokia-dark);
 }
 
 .snake-cell.is-snake {
-  background: var(--nokia-dark);
+  background: var(--lcd-pixel);
 }
 
 .snake-cell.is-food {
-  background: var(--nokia-dark);
+  background: var(--lcd-pixel);
   transform: scale(0.6);
 }
 
-.snake-message {
+.game-message {
   position: absolute;
   inset: 0;
   display: flex;
@@ -402,8 +440,8 @@ button.standings-tab.active {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  color: var(--nokia-dark);
-  background: rgba(155, 188, 15, 0.8);
+  color: var(--lcd-pixel);
+  background: var(--lcd-overlay);
   font-family: 'Courier New', ui-monospace, monospace;
   font-weight: 700;
   font-size: 1.1rem;
@@ -411,8 +449,213 @@ button.standings-tab.active {
   text-align: center;
 }
 
-.snake-hint {
+.game-hint {
   color: var(--steel);
   font-size: 0.8rem;
   text-align: center;
+}
+
+.game-ranking-button {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--steel);
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+}
+
+.ranking-panel {
+  position: fixed;
+  inset: 1rem 1rem calc(4.5rem + env(safe-area-inset-bottom));
+  z-index: 10;
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--hearth);
+  border-radius: 1rem;
+  touch-action: pan-y;
+}
+
+.ranking-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ranking-panel-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.ranking-table tr.is-current-user,
+.ranking-current-user {
+  color: var(--hearth);
+}
+
+.ranking-current-user {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--steel);
+}
+
+.tetris-board,
+.tetris-preview {
+  display: grid;
+  gap: 1px;
+  padding: 2px;
+}
+
+.tetris-board {
+  aspect-ratio: 1 / 2;
+}
+
+.tetris-cell {
+  aspect-ratio: 1;
+}
+
+.tetris-cell.is-filled {
+  background: var(--lcd-pixel);
+}
+
+.tetris-aside {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--lcd-pixel);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.tetris-preview {
+  width: 3rem;
+}
+
+.minesweeper-board {
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+}
+
+.minesweeper-cell {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--lcd-pixel);
+  color: var(--lcd-screen);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  touch-action: none;
+}
+
+.minesweeper-cell.is-revealed {
+  background: transparent;
+  color: var(--lcd-pixel);
+  outline: 1px solid var(--lcd-glow);
+}
+
+.twenty48-board {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+}
+
+.twenty48-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px solid var(--lcd-glow);
+  color: var(--lcd-pixel);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: clamp(0.8rem, 5vw, 1.4rem);
+}
+
+/* Las fichas se distinguen por numero; el tono solo oscurece a medida que crecen. */
+.twenty48-cell.tone-1 {
+  background: rgba(43, 51, 43, 0.12);
+}
+
+.twenty48-cell.tone-2 {
+  background: rgba(43, 51, 43, 0.3);
+}
+
+.twenty48-cell.tone-3 {
+  background: rgba(43, 51, 43, 0.6);
+  color: var(--lcd-screen);
+}
+
+.twenty48-cell.tone-4 {
+  background: var(--lcd-pixel);
+  color: var(--lcd-screen);
+}
+
+.palette-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.palette-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.palette-option[aria-pressed='true'] {
+  border-color: var(--hearth);
+  box-shadow: 0 0 0 1px var(--hearth);
+}
+
+.palette-swatches {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.palette-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--steel);
+}
+
+.abyss-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  touch-action: none;
+}
+
+.abyss-controls-move {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.abyss-button {
+  min-width: 3.5rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: #1c2230;
+  color: #f4f4f4;
+  border: 2px solid #5a6478;
+  font-size: 1.2rem;
+  font-weight: 700;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.abyss-button:active {
+  background: #2c3650;
 }

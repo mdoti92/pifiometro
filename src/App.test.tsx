@@ -36,6 +36,11 @@ vi.mock('./standings/standingsService', async () => {
   return { ...actual, getGroupTournamentStandings: vi.fn() }
 })
 
+vi.mock('./profile/paletteService', () => ({
+  fetchMyPalette: vi.fn().mockResolvedValue(null),
+  saveMyPalette: vi.fn(),
+}))
+
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedListMyGroups = vi.mocked(groupsService.listMyGroups)
 const mockedListGroupTournaments = vi.mocked(groupTournamentsService.listGroupTournaments)
@@ -83,7 +88,7 @@ describe('App', () => {
 
     renderAppAt('/games/snake')
 
-    expect(await screen.findByTestId('snake-screen')).toBeInTheDocument()
+    expect(await screen.findByTestId('game-screen')).toBeInTheDocument()
   })
 
   it('redirige a login cuando se visita la raiz sin sesion activa', () => {

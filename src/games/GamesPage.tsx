@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-
-const GAMES = [{ path: '/games/snake', name: 'Viborita', description: 'La del Nokia 1100, de toda la vida' }]
+import { GAMES } from './catalog'
 
 export function GamesPage() {
   return (

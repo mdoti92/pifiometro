@@ -1,9 +1,9 @@
 export type PredictionResultStatus = 'exacto' | 'resultado' | 'pifiado' | 'por_definir' | 'no_pronosticado'
 
 const STATUS_COLOR: Record<PredictionResultStatus, string> = {
-  exacto: 'var(--hearth)',
-  resultado: 'var(--moss)',
-  pifiado: 'var(--rust)',
+  exacto: 'var(--exacto)',
+  resultado: 'var(--resultado)',
+  pifiado: 'var(--pifiado)',
   por_definir: 'var(--steel)',
   no_pronosticado: 'var(--steel)',
 }

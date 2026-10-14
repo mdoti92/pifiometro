@@ -1,54 +1,32 @@
-import { useEffect, useRef, type TouchEvent } from 'react'
+import { SNAKE_GAME } from '../catalog'
+import { GameScreen } from '../shared/GameScreen'
+import { ARROW_KEYS, directionFromKey, useSwipeHandlers, useWindowKeys } from '../shared/input'
+import { useGameRecord } from '../shared/useGameRecord'
 import { BOARD_COLUMNS, BOARD_ROWS, type Cell } from './snakeGame'
-import { directionFromKey, directionFromSwipe } from './snakeInput'
-import { useSnakeGame, type SnakeStatus } from './useSnakeGame'
+import { useSnakeGame } from './useSnakeGame'
 
-const STATUS_MESSAGES: Record<SnakeStatus, string | null> = {
-  idle: 'Tocá para jugar',
-  running: null,
-  paused: 'Pausa — tocá para seguir',
-  over: 'Game Over',
-}
+const SCORE_DIGITS = 4
 
 function cellKey({ x, y }: Cell): string {
   return `${x},${y}`
 }
 
+function padScore(value: number): string {
+  return String(value).padStart(SCORE_DIGITS, '0')
+}
+
 export function SnakeGamePage() {
-  const { game, status, highScore, press, steer } = useSnakeGame()
-  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const { game, status, press, steer } = useSnakeGame()
+  const { record } = useGameRecord(SNAKE_GAME, status === 'over', game.score)
+  const touchHandlers = useSwipeHandlers({ onSwipe: steer, onTap: press })
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const direction = directionFromKey(event.key)
-      if (!direction) return
-      event.preventDefault()
-      steer(direction)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [steer])
-
-  function handleTouchStart(event: TouchEvent) {
-    const touch = event.touches[0]
-    touchStart.current = { x: touch.clientX, y: touch.clientY }
-  }
-
-  function handleTouchEnd(event: TouchEvent) {
-    const start = touchStart.current
-    touchStart.current = null
-    if (!start) return
-
-    const touch = event.changedTouches[0]
-    const direction = directionFromSwipe(touch.clientX - start.x, touch.clientY - start.y)
+  useWindowKeys(ARROW_KEYS, (key) => {
+    const direction = directionFromKey(key)
     if (direction) steer(direction)
-    else press()
-  }
+  })
 
   const snakeCells = new Set(game.snake.map(cellKey))
   const foodKey = cellKey(game.food)
-  const message = STATUS_MESSAGES[status]
 
   const cells = []
   for (let y = 0; y < BOARD_ROWS; y++) {
@@ -60,34 +38,25 @@ export function SnakeGamePage() {
   }
 
   return (
-    <div
-      className="snake-screen"
-      data-testid="snake-screen"
-      onClick={press}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+    <GameScreen
+      game={SNAKE_GAME}
+      palette="nokia"
+      status={status}
+      hud={[
+        { label: 'Puntaje', value: padScore(game.score) },
+        { label: 'Récord', prefix: 'HI', value: padScore(record ?? 0) },
+      ]}
+      onPress={press}
+      touchHandlers={touchHandlers}
+      overDetail={<span>Puntaje {game.score}</span>}
+      hint="Deslizá en cualquier parte de la pantalla (o usá las flechas)"
     >
-      <div className="snake-device">
-        <div className="snake-hud">
-          <span aria-label="Puntaje">{String(game.score).padStart(4, '0')}</span>
-          <span>
-            HI <span aria-label="Récord">{String(highScore).padStart(4, '0')}</span>
-          </span>
-        </div>
-        <div
-          className="snake-board"
-          style={{ gridTemplateColumns: `repeat(${BOARD_COLUMNS}, 1fr)`, aspectRatio: `${BOARD_COLUMNS} / ${BOARD_ROWS}` }}
-        >
-          {cells}
-          {message && (
-            <div className="snake-message" role="status">
-              <span>{message}</span>
-              {status === 'over' && <span>Puntaje {game.score}</span>}
-            </div>
-          )}
-        </div>
+      <div
+        className="snake-board"
+        style={{ gridTemplateColumns: `repeat(${BOARD_COLUMNS}, 1fr)`, aspectRatio: `${BOARD_COLUMNS} / ${BOARD_ROWS}` }}
+      >
+        {cells}
       </div>
-      <p className="snake-hint">Deslizá en cualquier parte de la pantalla (o usá las flechas)</p>
-    </div>
+    </GameScreen>
   )
 }

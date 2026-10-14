@@ -1,14 +1,33 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { HIGH_SCORE_STORAGE_KEY } from './highScore'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as AuthContextModule from '../../auth/AuthContext'
+import * as service from '../ranking/gameScoresService'
+import { localRecordStorageKey } from '../shared/localRecord'
 import { BOARD_COLUMNS, BOARD_ROWS, INITIAL_SNAKE_LENGTH } from './snakeGame'
-import { MIN_SWIPE_DISTANCE_PX } from './snakeInput'
+import { MIN_SWIPE_DISTANCE_PX } from '../shared/input'
+import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { SnakeGamePage } from './SnakeGamePage'
-import { resetSavedSnakeGame } from './useSnakeGame'
+
+vi.mock('../../auth/AuthContext', async () => {
+  const actual = await vi.importActual<typeof import('../../auth/AuthContext')>('../../auth/AuthContext')
+  return { ...actual, useAuth: vi.fn() }
+})
+
+vi.mock('../ranking/gameScoresService', () => ({
+  fetchMyBest: vi.fn(),
+  submitGameResult: vi.fn(),
+  fetchGameScores: vi.fn(),
+}))
+
+const HIGH_SCORE_STORAGE_KEY = localRecordStorageKey('snake')
 
 beforeEach(() => {
+  vi.clearAllMocks()
   localStorage.clear()
-  resetSavedSnakeGame()
+  resetSavedGameSessions()
+  vi.mocked(AuthContextModule.useAuth).mockReturnValue({ session: null, user: { id: 'u1' } as never, loading: false })
+  vi.mocked(service.fetchMyBest).mockResolvedValue(null)
+  vi.mocked(service.fetchGameScores).mockResolvedValue([])
 })
 
 function swipe(target: HTMLElement, deltaX: number, deltaY: number) {
@@ -38,7 +57,7 @@ describe('SnakeGamePage', () => {
     render(<SnakeGamePage />)
     expect(screen.getByText(/tocá para jugar/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByTestId('snake-screen'))
+    fireEvent.click(screen.getByTestId('game-screen'))
 
     expect(screen.queryByText(/tocá para jugar/i)).not.toBeInTheDocument()
   })
@@ -58,7 +77,7 @@ describe('SnakeGamePage', () => {
   it('un swipe arranca el juego', () => {
     render(<SnakeGamePage />)
 
-    swipe(screen.getByTestId('snake-screen'), 0, -MIN_SWIPE_DISTANCE_PX * 2)
+    swipe(screen.getByTestId('game-screen'), 0, -MIN_SWIPE_DISTANCE_PX * 2)
 
     expect(screen.queryByText(/tocá para jugar/i)).not.toBeInTheDocument()
   })
@@ -71,5 +90,23 @@ describe('SnakeGamePage', () => {
     window.dispatchEvent(event)
 
     expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('muestra como récord el mejor entre el local y el del ranking', async () => {
+    localStorage.setItem(HIGH_SCORE_STORAGE_KEY, '4')
+    vi.mocked(service.fetchMyBest).mockResolvedValue(11)
+
+    render(<SnakeGamePage />)
+
+    await waitFor(() => expect(screen.getByLabelText('Récord')).toHaveTextContent('11'))
+  })
+
+  it('el botón Ranking abre el ranking sin arrancar el juego', async () => {
+    render(<SnakeGamePage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ranking' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Ranking de Viborita' })).toBeInTheDocument()
+    expect(screen.getByText(/tocá para jugar/i)).toBeInTheDocument()
   })
 })

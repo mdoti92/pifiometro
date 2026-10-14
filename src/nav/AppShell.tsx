@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { listGroupTournaments, pickSoleActiveTournament } from '../groups/groupTournamentsService'
 import { listMyGroups, type MyGroup } from '../groups/groupsService'
+import { usePaletteSync } from '../profile/usePaletteSync'
 import { getCurrentStage } from '../tournaments/tournamentsService'
 import { BottomNav } from './BottomNav'
 import { GroupSelector } from './GroupSelector'
@@ -14,6 +15,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { activeGroupId, setActiveGroupId } = useActiveGroup(groups)
   const [soleActiveTournamentId, setSoleActiveTournamentId] = useState<string | null>(null)
   const [currentStageId, setCurrentStageId] = useState<string | null>(null)
+  usePaletteSync(user?.id ?? null)
 
   useEffect(() => {
     if (!user) return
