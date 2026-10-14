@@ -74,6 +74,14 @@ export const MINESWEEPER_GAME: GameDefinition = {
   formatValue: formatSeconds,
 }
 
+export const TWENTY48_GAME: GameDefinition = {
+  key: '2048',
+  name: '2048',
+  description: 'Juntá fichas iguales hasta llegar a 2048',
+  path: '/games/2048',
+  metric: 'highest',
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -82,6 +90,7 @@ export const GAMES: GameDefinition[] = [
   TETRIS_GAME,
   PENALTIES_GAME,
   MINESWEEPER_GAME,
+  TWENTY48_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {
