@@ -42,6 +42,8 @@ interface GameScreenProps {
   boardStyle?: CSSProperties
   /** Proporción ancho/alto del tablero, para que entre entero en pantallas bajas. */
   boardAspect?: number
+  /** Información extra entre el HUD y el tablero (ej. la próxima pieza). */
+  aside?: ReactNode
   children: ReactNode
 }
 
@@ -64,6 +66,7 @@ export function GameScreen({
   hint,
   boardStyle,
   boardAspect,
+  aside,
   children,
 }: GameScreenProps) {
   const lastTouchEnd = useRef(0)
@@ -98,6 +101,7 @@ export function GameScreen({
             </span>
           ))}
         </div>
+        {aside}
         <div className="game-board" style={boardStyle}>
           {children}
           {shownMessage && (

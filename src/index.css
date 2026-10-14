@@ -486,3 +486,36 @@ button.standings-tab.active {
   padding-top: 0.75rem;
   border-top: 1px dashed var(--steel);
 }
+
+.tetris-board,
+.tetris-preview {
+  display: grid;
+  gap: 1px;
+  padding: 2px;
+}
+
+.tetris-board {
+  aspect-ratio: 1 / 2;
+}
+
+.tetris-cell {
+  aspect-ratio: 1;
+}
+
+.tetris-cell.is-filled {
+  background: var(--lcd-pixel);
+}
+
+.tetris-aside {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--lcd-pixel);
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.tetris-preview {
+  width: 3rem;
+}
