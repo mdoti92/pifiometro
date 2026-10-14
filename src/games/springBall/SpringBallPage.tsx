@@ -38,6 +38,7 @@ export function SpringBallPage() {
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },
       ]}
+      boardAspect={VIEW_WIDTH / VIEW_HEIGHT}
       onPress={press}
       touchHandlers={touchHandlers}
       overDetail={<span>Puntaje {state.score}</span>}

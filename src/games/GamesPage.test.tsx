@@ -17,5 +17,6 @@ describe('GamesPage', () => {
     expect(links[1]).toHaveTextContent('Spring Ball')
     expect(links[1]).toHaveAttribute('href', '/games/spring-ball')
     expect(links[2]).toHaveTextContent('Small Bee')
+    expect(links[3]).toHaveTextContent('Flappy Bird')
   })
 })
