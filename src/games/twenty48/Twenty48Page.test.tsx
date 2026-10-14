@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as AuthContextModule from '../../auth/AuthContext'
 import * as service from '../ranking/gameScoresService'
 import { MIN_SWIPE_DISTANCE_PX } from '../shared/input'
 import { localRecordStorageKey } from '../shared/localRecord'
 import { resetSavedGameSessions } from '../shared/useGameLoop'
 import { Twenty48Page } from './Twenty48Page'
+import { finishCountdown } from '../../test/gameCountdown'
 import { GRID_SIZE } from './twenty48'
 
 vi.mock('../../auth/AuthContext', async () => {
@@ -31,6 +32,17 @@ beforeEach(() => {
   vi.mocked(service.fetchMyBest).mockResolvedValue(null)
 })
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+function startGame() {
+  vi.useFakeTimers()
+  render(<Twenty48Page />)
+  fireEvent.click(screen.getByTestId('game-screen'))
+  finishCountdown()
+}
+
 describe('Twenty48Page', () => {
   it('muestra la grilla de 4x4 con 2 fichas, puntaje y récord propio', () => {
     localStorage.setItem(localRecordStorageKey('2048'), '512')
@@ -45,7 +57,7 @@ describe('Twenty48Page', () => {
   })
 
   it('las flechas deslizan las fichas sin scrollear la página', () => {
-    render(<Twenty48Page />)
+    startGame()
     const before = tileValues().join('|')
 
     const moves = ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].map((key) => {
@@ -61,7 +73,7 @@ describe('Twenty48Page', () => {
   })
 
   it('un swipe desliza las fichas', () => {
-    render(<Twenty48Page />)
+    startGame()
     const area = screen.getByTestId('game-screen')
     const before = tileValues().join('|')
 

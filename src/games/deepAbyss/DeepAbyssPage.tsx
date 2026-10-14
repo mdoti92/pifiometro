@@ -59,7 +59,7 @@ export function DeepAbyssPage() {
   // Los controles arrancan el juego y el loop lee los controles: se cruzan a través de un ref.
   const startRef = useRef(() => {})
   const controls = useAbyssControls(useCallback(() => startRef.current(), []))
-  const { state, status, press, act } = useGameLoop(DEEP_ABYSS_ENGINE, { readInput: controls.read })
+  const { state, status, countdown, press, act } = useGameLoop(DEEP_ABYSS_ENGINE, { readInput: controls.read })
   const waitingNextLevel = state.phase === 'levelComplete'
   // Un toque arranca, reanuda o reinicia; entre niveles, pasa al siguiente.
   const startIfNeeded = useCallback(() => {
@@ -84,6 +84,7 @@ export function DeepAbyssPage() {
       game={DEEP_ABYSS_GAME}
       palette="t290"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Gemas', prefix: '◆', value: String(state.gems) },
         { label: 'Cofres', prefix: '▣', value: String(state.chests) },

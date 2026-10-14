@@ -16,7 +16,7 @@ const FLAPPY_ENGINE: GameEngine<FlappyState> = {
 }
 
 export function FlappyPage() {
-  const { state, status, tap, touchHandlers } = useTapGame(FLAPPY_ENGINE, { action: flap, actOnStart: true })
+  const { state, status, countdown, tap, touchHandlers } = useTapGame(FLAPPY_ENGINE, { action: flap, actOnStart: true })
   const { record } = useGameRecord(FLAPPY_GAME, status === 'over', state.score)
   const rects = useMemo(() => toScreenRects(state), [state])
 
@@ -25,6 +25,7 @@ export function FlappyPage() {
       game={FLAPPY_GAME}
       palette="nokia"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Puntaje', value: String(state.score) },
         { label: 'Récord', prefix: 'HI', value: String(record ?? 0) },

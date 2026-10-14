@@ -21,7 +21,7 @@ const VRALLY_ENGINE: GameEngine<VRallyState, Horizontal> = {
 }
 
 export function VRallyPage() {
-  const { state, status, press, touchHandlers } = useHoldGame(VRALLY_ENGINE)
+  const { state, status, countdown, press, touchHandlers } = useHoldGame(VRALLY_ENGINE)
   const tenths = timeInTenths(state.elapsedMs)
   const { record } = useGameRecord(VRALLY_GAME, status === 'over', tenths)
   const rects = useMemo(() => [...renderVRally(state), ...renderHud(state)], [state])
@@ -38,6 +38,7 @@ export function VRallyPage() {
       game={VRALLY_GAME}
       palette="t290"
       status={status}
+      countdown={countdown}
       hud={[
         { label: 'Tiempo', value: formatTenths(tenths) },
         { label: 'Mejor tiempo', prefix: 'MEJOR', value: record === null ? '-:--.-' : formatTenths(record) },

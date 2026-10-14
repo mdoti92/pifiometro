@@ -14,7 +14,7 @@ const SNAKE_ENGINE: GameEngine<GameState> = {
 }
 
 export function useSnakeGame(random: RandomSource = Math.random, initialGame?: GameState) {
-  const { state, status, press, act } = useGameLoop(SNAKE_ENGINE, { random, initialState: initialGame })
+  const { state, status, countdown, press, act } = useGameLoop(SNAKE_ENGINE, { random, initialState: initialGame })
 
   const steer = useCallback(
     (direction: Direction) => {
@@ -24,5 +24,5 @@ export function useSnakeGame(random: RandomSource = Math.random, initialGame?: G
     [status, press, act],
   )
 
-  return { game: state, status, press, steer }
+  return { game: state, status, countdown, press, steer }
 }
