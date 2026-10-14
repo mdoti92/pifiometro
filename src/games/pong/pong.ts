@@ -98,7 +98,7 @@ export function stepPong(state: PongState, input: PaddleInput, random: RandomSou
   if (hitsPlayer || hitsCpu) {
     speed = Math.min(speed + SPEED_INCREMENT, MAX_BALL_SPEED)
     const paddleX = hitsPlayer ? playerX : cpuX
-    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed, upward: hitsPlayer }))
+    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed, upward: hitsPlayer, incoming: { vx, vy } }))
     y = hitsPlayer ? PLAYER_Y - BALL_SIZE : CPU_Y + PADDLE_HEIGHT
   }
 

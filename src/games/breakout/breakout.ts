@@ -112,7 +112,7 @@ export function stepBreakout(state: BreakoutState, input: PaddleInput, _random: 
   const hitsPaddle =
     vy > 0 && y + BALL_SIZE >= PADDLE_Y && y < PADDLE_Y + PADDLE_HEIGHT && x + BALL_SIZE > paddleX && x < paddleX + PADDLE_WIDTH
   if (hitsPaddle) {
-    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed: state.speed, upward: true }))
+    ;({ vx, vy } = bounceOffPaddle({ ballCenterX: x + BALL_SIZE / 2, paddleX, paddleWidth: PADDLE_WIDTH, speed: state.speed, upward: true, incoming: { vx, vy } }))
     y = PADDLE_Y - BALL_SIZE
   }
 

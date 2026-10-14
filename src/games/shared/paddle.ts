@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef, type TouchEvent } from 'react'
 import { useHorizontalHold, type Horizontal } from './input'
 
-/** Ángulo máximo de rebote respecto de la vertical, al pegar en el borde de la paleta. */
+/** Ángulo máximo de salida respecto de la vertical, para que la pelota nunca salga horizontal. */
 export const MAX_BOUNCE_ANGLE = Math.PI / 3
+/** Cuánto desvía el borde de la paleta el ángulo con que venía la pelota. */
+export const EDGE_DEFLECTION = Math.PI / 6
 
 export interface PaddleInput {
   /** Posición del dedo como fracción del ancho del campo (0 a 1), o null si no se está arrastrando. */
@@ -31,12 +33,15 @@ interface BounceParams {
   paddleWidth: number
   speed: number
   upward: boolean
+  /** Velocidad con que llegaba la pelota: el rebote la refleja y la zona de impacto la desvía. */
+  incoming: { vx: number; vy: number }
 }
 
-export function bounceOffPaddle({ ballCenterX, paddleX, paddleWidth, speed, upward }: BounceParams) {
+export function bounceOffPaddle({ ballCenterX, paddleX, paddleWidth, speed, upward, incoming }: BounceParams) {
   const halfWidth = paddleWidth / 2
   const offset = clamp((ballCenterX - (paddleX + halfWidth)) / halfWidth, -1, 1)
-  const angle = offset * MAX_BOUNCE_ANGLE
+  const incomingAngle = Math.atan2(incoming.vx, Math.abs(incoming.vy))
+  const angle = clamp(incomingAngle + offset * EDGE_DEFLECTION, -MAX_BOUNCE_ANGLE, MAX_BOUNCE_ANGLE)
   return { vx: speed * Math.sin(angle), vy: (upward ? -1 : 1) * speed * Math.cos(angle) }
 }
 
