@@ -65,6 +65,12 @@ export function formatSeconds(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
+const TENTHS_PER_SECOND = 10
+
+export function formatTenths(totalTenths: number): string {
+  return `${formatSeconds(Math.floor(totalTenths / TENTHS_PER_SECOND))}.${totalTenths % TENTHS_PER_SECOND}`
+}
+
 export const MINESWEEPER_GAME: GameDefinition = {
   key: 'minesweeper',
   name: 'Buscaminas',
@@ -106,6 +112,15 @@ export const BREAKOUT_GAME: GameDefinition = {
   metric: 'highest',
 }
 
+export const VRALLY_GAME: GameDefinition = {
+  key: 'vrally',
+  name: 'V-Rally',
+  description: 'Rally contra reloj del Sony Ericsson T290',
+  path: '/games/v-rally',
+  metric: 'lowest',
+  formatValue: formatTenths,
+}
+
 export const GAMES: GameDefinition[] = [
   SNAKE_GAME,
   SPRING_BALL_GAME,
@@ -118,6 +133,7 @@ export const GAMES: GameDefinition[] = [
   PONG_GAME,
   DINO_GAME,
   BREAKOUT_GAME,
+  VRALLY_GAME,
 ]
 
 export function formatGameValue(game: GameDefinition, value: number): string {

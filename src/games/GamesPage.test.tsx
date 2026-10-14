@@ -25,5 +25,6 @@ describe('GamesPage', () => {
     expect(links[8]).toHaveTextContent('Pong')
     expect(links[9]).toHaveTextContent('Dino')
     expect(links[10]).toHaveTextContent('Breakout')
+    expect(links[11]).toHaveTextContent('V-Rally')
   })
 })

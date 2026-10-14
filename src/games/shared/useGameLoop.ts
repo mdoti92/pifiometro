@@ -11,7 +11,16 @@ export interface GameEngine<S, I = undefined> {
   step: (state: S, input: I, random: RandomSource) => S
   isOver: (state: S) => boolean
   intervalMs: (state: S) => number
+  /**
+   * Avanza con requestAnimationFrame dando pasos fijos de intervalMs (física independiente del
+   * framerate), para juegos que necesitan animación fluida.
+   */
+  animationFrame?: boolean
 }
+
+// Si una pestaña vuelve de estar congelada no se recupera de golpe todo el tiempo perdido.
+const MAX_FRAME_GAP_MS = 250
+const MAX_STEPS_PER_FRAME = 8
 
 interface GameLoopOptions<S, I> {
   random?: RandomSource
@@ -77,21 +86,42 @@ export function useGameLoop<S, I = undefined>(engine: GameEngine<S, I>, options:
 
   const interval = engine.intervalMs(session.state)
 
+  const advance = useCallback((steps: number) => {
+    setSession((current) => {
+      if (current.status !== 'running') return current
+      const currentEngine = engineRef.current
+      let state = current.state
+      for (let step = 0; step < steps && !currentEngine.isOver(state); step++) {
+        state = currentEngine.step(state, readInputRef.current?.() as I, randomRef.current)
+      }
+      return { state, status: currentEngine.isOver(state) ? 'over' : 'running' }
+    })
+  }, [])
+
+  const usesAnimationFrame = Boolean(engine.animationFrame)
+
   useEffect(() => {
     if (session.status !== 'running') return
 
-    const timer = setInterval(() => {
-      setSession((current) => {
-        if (current.status !== 'running') return current
-        const currentEngine = engineRef.current
-        const input = readInputRef.current?.() as I
-        const state = currentEngine.step(current.state, input, randomRef.current)
-        return { state, status: currentEngine.isOver(state) ? 'over' : 'running' }
-      })
-    }, interval)
+    if (!usesAnimationFrame) {
+      const timer = setInterval(() => advance(1), interval)
+      return () => clearInterval(timer)
+    }
 
-    return () => clearInterval(timer)
-  }, [session.status, interval])
+    let frame = 0
+    let last = performance.now()
+    let accumulated = 0
+    const onFrame = (now: number) => {
+      accumulated += Math.min(now - last, MAX_FRAME_GAP_MS)
+      last = now
+      const steps = Math.min(Math.floor(accumulated / interval), MAX_STEPS_PER_FRAME)
+      accumulated -= steps * interval
+      if (steps > 0) advance(steps)
+      frame = requestAnimationFrame(onFrame)
+    }
+    frame = requestAnimationFrame(onFrame)
+    return () => cancelAnimationFrame(frame)
+  }, [session.status, interval, usesAnimationFrame, advance])
 
   useEffect(() => {
     function pauseWhenHidden() {

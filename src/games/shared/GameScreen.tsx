@@ -3,11 +3,12 @@ import type { GameDefinition } from '../catalog'
 import { RankingLauncher } from '../ranking/RankingLauncher'
 import type { GameStatus } from './useGameLoop'
 
-export type GamePalette = 'nokia' | 'c115'
+export type GamePalette = 'nokia' | 'c115' | 't290'
 
 const PALETTE_CLASSES: Record<GamePalette, string> = {
   nokia: 'lcd-nokia-unlit',
   c115: 'lcd-motorola-c115',
+  t290: 'lcd-ericsson-t290',
 }
 
 // Un toque dispara touchend y después un click sintético: se ignora ese click para no actuar dos veces.

@@ -11,6 +11,7 @@ import {
   SPRING_BALL_GAME,
   TETRIS_GAME,
   TWENTY48_GAME,
+  VRALLY_GAME,
   type GameDefinition,
 } from './catalog'
 import { BreakoutPage } from './breakout/BreakoutPage'
@@ -24,6 +25,7 @@ import { SnakeGamePage } from './snake/SnakeGamePage'
 import { SpringBallPage } from './springBall/SpringBallPage'
 import { TetrisPage } from './tetris/TetrisPage'
 import { Twenty48Page } from './twenty48/Twenty48Page'
+import { VRallyPage } from './vrally/VRallyPage'
 
 export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: SNAKE_GAME, element: <SnakeGamePage /> },
@@ -37,4 +39,5 @@ export const GAME_ROUTES: { game: GameDefinition; element: ReactElement }[] = [
   { game: PONG_GAME, element: <PongPage /> },
   { game: DINO_GAME, element: <DinoPage /> },
   { game: BREAKOUT_GAME, element: <BreakoutPage /> },
+  { game: VRALLY_GAME, element: <VRallyPage /> },
 ]
