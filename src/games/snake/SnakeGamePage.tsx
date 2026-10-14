@@ -61,7 +61,7 @@ export function SnakeGamePage() {
 
   return (
     <div
-      className="snake-screen"
+      className="snake-screen lcd-nokia-unlit"
       data-testid="snake-screen"
       onClick={press}
       onTouchStart={handleTouchStart}
