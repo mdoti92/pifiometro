@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { getPredictionStatusColor } from './predictionStatusColor'
 
 describe('getPredictionStatusColor', () => {
-  it('mapea exacto al color hearth', () => {
-    expect(getPredictionStatusColor('exacto')).toBe('var(--hearth)')
+  it('mapea exacto a su token de estado', () => {
+    expect(getPredictionStatusColor('exacto')).toBe('var(--exacto)')
   })
 
-  it('mapea resultado al color moss', () => {
-    expect(getPredictionStatusColor('resultado')).toBe('var(--moss)')
+  it('mapea resultado a su token de estado', () => {
+    expect(getPredictionStatusColor('resultado')).toBe('var(--resultado)')
   })
 
-  it('mapea pifiado al color rust', () => {
-    expect(getPredictionStatusColor('pifiado')).toBe('var(--rust)')
+  it('mapea pifiado a su token de estado', () => {
+    expect(getPredictionStatusColor('pifiado')).toBe('var(--pifiado)')
   })
 
   it('mapea por_definir al color steel', () => {

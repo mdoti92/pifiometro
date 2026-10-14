@@ -1,14 +1,19 @@
 :root {
   color-scheme: dark;
 
+  /* Paleta Tierra Media (por defecto). Las demás se aplican desde src/design/palettes.ts. */
   --bg: #12140f;
   --surface: #1e2318;
   --ink: #ede3ce;
   --hearth: #c97a2e;
-  --moss: #5b7a52;
+  --moss: #86ad79;
   --gold: #c9a63e;
-  --rust: #8c3b2e;
+  --rust: #e8686f;
   --steel: #4a5568;
+  --exacto: #c97a2e;
+  --resultado: #86ad79;
+  --pifiado: #e8686f;
+  --chip-ink: #12140f;
 
   --font-display: 'Fraunces', ui-serif, serif;
   --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
@@ -130,7 +135,7 @@ select {
   display: inline-block;
   padding: 0.3rem 0.9rem;
   border-radius: 999px;
-  color: var(--ink);
+  color: var(--chip-ink);
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
@@ -580,4 +585,35 @@ button.standings-tab.active {
 .twenty48-cell.tone-4 {
   background: var(--lcd-pixel);
   color: var(--lcd-screen);
+}
+
+.palette-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.palette-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.palette-option[aria-pressed='true'] {
+  border-color: var(--hearth);
+  box-shadow: 0 0 0 1px var(--hearth);
+}
+
+.palette-swatches {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.palette-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--steel);
 }

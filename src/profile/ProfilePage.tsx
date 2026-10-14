@@ -6,6 +6,7 @@ import { isGroupAdmin } from '../groups/groupMembersService'
 import { listMyGroups, type MyGroup } from '../groups/groupsService'
 import { useActiveGroup } from '../nav/useActiveGroup'
 import { isSuperadmin } from '../tournaments/tournamentsService'
+import { PaletteSelector } from './PaletteSelector'
 
 export function ProfilePage() {
   const { user } = useAuth()
@@ -41,6 +42,8 @@ export function ProfilePage() {
           </li>
         )}
       </ul>
+
+      <PaletteSelector />
 
       {superadmin && (
         <section>
