@@ -55,7 +55,8 @@ export interface Player {
   riding: number | null
 }
 
-export type AbyssPhase = 'playing' | 'complete' | 'over'
+/** levelComplete: llegó a la salida de un nivel intermedio y espera para pasar al siguiente. */
+export type AbyssPhase = 'playing' | 'levelComplete' | 'won' | 'over'
 
 export interface DeepAbyssState {
   levels: ParsedLevel[]
@@ -288,10 +289,25 @@ export function stepDeepAbyss(state: DeepAbyssState, input: AbyssInput, _random:
   const gathered = collect(state, level, player)
   const exit = { x: level.exit.x, y: level.exit.y, w: TILE_SIZE, h: TILE_SIZE }
   if (overlaps(box, exit)) {
-    return { ...state, ...gathered, player, bubbles, score: gathered.score + LEVEL_COMPLETE_BONUS, phase: 'complete', isOver: true }
+    const lastLevel = state.levelIndex === state.levels.length - 1
+    return {
+      ...state,
+      ...gathered,
+      player,
+      bubbles,
+      score: gathered.score + LEVEL_COMPLETE_BONUS,
+      phase: lastLevel ? 'won' : 'levelComplete',
+      isOver: lastLevel,
+    }
   }
 
   return { ...state, ...gathered, player, bubbles }
+}
+
+/** Pasa al nivel siguiente conservando puntaje, gemas, cofres y vidas. */
+export function advanceLevel(state: DeepAbyssState): DeepAbyssState {
+  if (state.phase !== 'levelComplete') return state
+  return { ...state, ...startLevel(state.levels, state.levelIndex + 1), phase: 'playing' }
 }
 
 export function cameraFor(target: Point, level: { width: number; height: number }): Point {
