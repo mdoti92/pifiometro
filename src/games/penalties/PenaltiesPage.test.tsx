@@ -63,4 +63,11 @@ describe('PenaltiesPage', () => {
 
     expect(screen.getByRole('button', { name: 'Ranking' })).toBeInTheDocument()
   })
+
+  it('en la pantalla de inicio explica las reglas', () => {
+    render(<PenaltiesPage />)
+
+    expect(screen.getByRole('status')).toHaveTextContent(/tocá cuando la mira esté donde querés patear/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/si el arquero adivina el lado, ataja/i)
+  })
 })

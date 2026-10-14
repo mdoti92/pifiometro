@@ -26,10 +26,13 @@ const PENALTIES_ENGINE: GameEngine<PenaltiesState> = {
   animationFrame: true,
 }
 
-const MISSED_MESSAGES: Record<Exclude<Outcome, 'goal'>, string> = {
-  saved: '¡Atajado!',
-  out: '¡Afuera!',
+const RESULT_MESSAGES: Record<Outcome, string> = {
+  goal: '¡GOL!',
+  saved: '¡ATAJÓ!',
+  out: '¡AFUERA!',
 }
+
+const RULES = 'Tocá cuando la mira esté donde querés patear. Si el arquero adivina el lado, ataja.'
 
 const kick = (state: PenaltiesState) => shoot(state, Math.random)
 
@@ -38,9 +41,11 @@ export function PenaltiesPage() {
   const { record } = useGameRecord(PENALTIES_GAME, status === 'over', state.goals)
   const rects = useMemo(() => toScreenRects(state), [state])
 
+  // El resultado se muestra recién cuando termina la animación del remate.
+  const resultShown = state.phase === 'result' && state.outcome !== null
   let message: string | null | undefined
-  if (status === 'running') message = state.outcome === 'goal' ? '¡GOL!' : null
-  else if (status === 'over' && state.outcome && state.outcome !== 'goal') message = MISSED_MESSAGES[state.outcome]
+  if (status === 'running') message = resultShown && state.outcome ? RESULT_MESSAGES[state.outcome] : null
+  else if (status === 'over' && state.outcome) message = RESULT_MESSAGES[state.outcome]
 
   return (
     <GameScreen
@@ -57,7 +62,8 @@ export function PenaltiesPage() {
       touchHandlers={touchHandlers}
       message={message}
       overDetail={<span>Game Over · {state.goals} goles seguidos</span>}
-      hint="Tocá la pantalla (o espacio) para patear cuando el indicador esté donde querés"
+      detail={status === 'idle' ? <span className="game-rules">{RULES}</span> : undefined}
+      hint="Tocá la pantalla (o espacio) para patear. Muerte súbita: el primero que errás, perdés."
     >
       <PixelCanvas width={VIEW_WIDTH} height={VIEW_HEIGHT} rects={rects} label={PENALTIES_GAME.name} />
     </GameScreen>
