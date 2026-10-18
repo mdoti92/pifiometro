@@ -28,13 +28,14 @@ vi.mock('./predictionsService', async () => {
 vi.mock('../standings/standingsService', async () => {
   const actual =
     await vi.importActual<typeof import('../standings/standingsService')>('../standings/standingsService')
-  return { ...actual, getGroupStageStandings: vi.fn() }
+  return { ...actual, getGroupStageStandings: vi.fn(), getStageMatchdayLeaders: vi.fn() }
 })
 
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
 const mockedListMatchPredictionStatuses = vi.mocked(myPredictionsService.listMatchPredictionStatuses)
 const mockedSavePrediction = vi.mocked(predictionsService.savePrediction)
 const mockedGetGroupStageStandings = vi.mocked(standingsService.getGroupStageStandings)
+const mockedGetStageMatchdayLeaders = vi.mocked(standingsService.getStageMatchdayLeaders)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -46,6 +47,7 @@ beforeEach(() => {
   mockedGetGroupStageStandings.mockResolvedValue([
     { userId: 'user-1', displayName: 'Doti', totalPoints: 6, rank: 1 },
   ])
+  mockedGetStageMatchdayLeaders.mockResolvedValue(new Map())
   window.HTMLElement.prototype.scrollIntoView = vi.fn()
 })
 
@@ -195,6 +197,29 @@ describe('MyPredictionsPage', () => {
 
     const heading = await screen.findByRole('heading', { name: /Fecha 33/ })
     expect(heading).toHaveTextContent('4 pts')
+  })
+
+  it('muestra al lado de la fecha quien hizo el mejor puntaje del grupo en esa fecha', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchday: 33, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0, points: 1 }),
+    ])
+    mockedGetStageMatchdayLeaders.mockResolvedValue(new Map([[33, { names: ['Aldo'], points: 7 }]]))
+    renderPage()
+
+    const heading = await screen.findByRole('heading', { name: /Fecha 33/ })
+    await waitFor(() => expect(heading).toHaveTextContent('Mejor: Aldo (7 pts)'))
+    expect(mockedGetStageMatchdayLeaders).toHaveBeenCalledWith('group-1', 'stage-1')
+  })
+
+  it('si hay empate en el mejor puntaje de la fecha, muestra a todos', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchday: 33, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0, points: 3 }),
+    ])
+    mockedGetStageMatchdayLeaders.mockResolvedValue(new Map([[33, { names: ['Doti', 'Aldo'], points: 3 }]]))
+    renderPage()
+
+    const heading = await screen.findByRole('heading', { name: /Fecha 33/ })
+    await waitFor(() => expect(heading).toHaveTextContent('Mejor: Doti, Aldo (3 pts)'))
   })
 
   it('no muestra puntos en una fecha sin partidos finalizados', async () => {

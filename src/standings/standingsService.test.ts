@@ -5,6 +5,7 @@ import {
   getGroupStageStandings,
   getGroupTournamentStandings,
   getMatchdaySummaries,
+  getStageMatchdayLeaders,
 } from './standingsService'
 
 vi.mock('../lib/supabase', () => ({
@@ -229,5 +230,54 @@ describe('getMatchdaySummaries', () => {
     expect(summaries).toEqual([
       { userId: 'user-1', displayName: 'Doti', bestMatchday: null, matchdaysWon: 0 },
     ])
+  })
+})
+
+describe('getStageMatchdayLeaders', () => {
+  const members = [
+    { userId: 'user-1', displayName: 'Doti', role: 'admin' as const, joinedAt: '2026-01-01' },
+    { userId: 'user-2', displayName: 'Aldo', role: 'member' as const, joinedAt: '2026-01-01' },
+    { userId: 'user-3', displayName: 'Rafa', role: 'member' as const, joinedAt: '2026-01-01' },
+  ]
+
+  it('devuelve por cada fecha de la etapa el usuario con mas puntos', async () => {
+    mockedListMembers.mockResolvedValue(members)
+    const { eq1, eq2 } = mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 3, matches: { matchday: 33 } },
+      { user_id: 'user-1', points: 1, matches: { matchday: 33 } },
+      { user_id: 'user-2', points: 3, matches: { matchday: 33 } },
+      { user_id: 'user-2', points: 3, matches: { matchday: 34 } },
+    ])
+
+    const leaders = await getStageMatchdayLeaders('group-1', 'stage-1')
+
+    expect(eq1).toHaveBeenCalledWith('group_id', 'group-1')
+    expect(eq2).toHaveBeenCalledWith('matches.stage_id', 'stage-1')
+    expect(leaders.get(33)).toEqual({ names: ['Doti'], points: 4 })
+    expect(leaders.get(34)).toEqual({ names: ['Aldo'], points: 3 })
+  })
+
+  it('incluye a todos los empatados en el primer puesto', async () => {
+    mockedListMembers.mockResolvedValue(members)
+    mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 3, matches: { matchday: 1 } },
+      { user_id: 'user-3', points: 3, matches: { matchday: 1 } },
+    ])
+
+    const leaders = await getStageMatchdayLeaders('group-1', 'stage-1')
+
+    expect(leaders.get(1)).toEqual({ names: ['Doti', 'Rafa'], points: 3 })
+  })
+
+  it('no informa lider en una fecha donde nadie sumo puntos', async () => {
+    mockedListMembers.mockResolvedValue(members)
+    mockMatchdayPredictionsQuery([
+      { user_id: 'user-1', points: 0, matches: { matchday: 1 } },
+      { user_id: 'user-2', points: null, matches: { matchday: 1 } },
+    ])
+
+    const leaders = await getStageMatchdayLeaders('group-1', 'stage-1')
+
+    expect(leaders.has(1)).toBe(false)
   })
 })

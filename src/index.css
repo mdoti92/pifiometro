@@ -696,6 +696,7 @@ button.standings-tab.active {
 
 .matchday-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 0.6rem;
 }
@@ -705,4 +706,11 @@ button.standings-tab.active {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--exacto);
+}
+
+.matchday-leader {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.8;
 }
