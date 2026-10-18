@@ -17,6 +17,9 @@ function pending(matchId: string, kickoffAt: string): MatchPredictionStatus {
     status: 'pendiente',
     homeGoals: null,
     awayGoals: null,
+    actualHomeGoals: null,
+    actualAwayGoals: null,
+    outcome: null,
   }
 }
 

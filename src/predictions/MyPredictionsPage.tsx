@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { getPredictionStatusColor } from '../design/predictionStatusColor'
 import { findLastFinishedMatchday } from '../fixture/findLastFinishedMatchday'
 import { groupMatchesByMatchday } from '../fixture/groupMatchesByMatchday'
 import { MatchCard } from '../matches/MatchCard'
@@ -10,9 +11,25 @@ import { savePrediction } from './predictionsService'
 import { RankChip } from './RankChip'
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
-  cargado: (m) => `Cargado: ${m.homeGoals}-${m.awayGoals}`,
+  cargado: (m) => `${m.homeGoals}-${m.awayGoals}`,
   pendiente: () => 'Pendiente',
-  no_pronosticado: () => 'No pronosticado',
+  no_pronosticado: () => 'Sin cargar',
+}
+
+function ReadOnlyPrediction({ match }: { match: MatchPredictionStatus }) {
+  const color = match.outcome ? getPredictionStatusColor(match.outcome) : undefined
+  const hasActualResult = match.actualHomeGoals !== null && match.actualAwayGoals !== null
+
+  return (
+    <div className="prediction-readonly">
+      <span style={color ? { color } : undefined}>{STATUS_LABEL[match.status](match)}</span>
+      {hasActualResult && (
+        <span className="prediction-actual-result">
+          Resultado: {match.actualHomeGoals}-{match.actualAwayGoals}
+        </span>
+      )}
+    </div>
+  )
 }
 
 function matchdaySectionId(matchday: number | null): string {
@@ -154,7 +171,7 @@ function PredictionMatchCard({
       />
     </div>
   ) : (
-    STATUS_LABEL[match.status](match)
+    <ReadOnlyPrediction match={match} />
   )
 
   const footer = error ? <p role="alert">{error}</p> : undefined

@@ -226,6 +226,20 @@ button.prediction-hero-countdown-card {
   text-align: center;
 }
 
+.prediction-readonly {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.prediction-actual-result {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 .prediction-inline-edit {
   display: flex;
   align-items: center;
