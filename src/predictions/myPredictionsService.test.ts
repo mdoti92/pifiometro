@@ -79,8 +79,64 @@ describe('listMatchPredictionStatuses', () => {
         status: 'cargado',
         homeGoals: 2,
         awayGoals: 1,
+        actualHomeGoals: null,
+        actualAwayGoals: null,
+        outcome: null,
       },
     ])
+  })
+
+  it('incluye el resultado real y si el pronostico fue exacto, resultado o pifiado en un partido finalizado', async () => {
+    const matches = [
+      {
+        id: 'match-1',
+        kickoff_at: '2000-01-01T20:00:00Z',
+        matchday: 3,
+        status: 'finished',
+        home_goals: 2,
+        away_goals: 0,
+        home: { name: 'Nacional', alias: null, slug: 'nacional' },
+        away: { name: 'Peñarol', alias: null, slug: 'penarol' },
+      },
+    ]
+    const predictions = [{ match_id: 'match-1', home_goals: 1, away_goals: 0, status: 'resultado' }]
+    const matchesQuery = mockMatchesQuery(matches)
+    const predictionsQuery = mockPredictionsQuery(predictions)
+    mockedFrom
+      .mockReturnValueOnce({ select: matchesQuery.select } as never)
+      .mockReturnValueOnce({ select: predictionsQuery.select } as never)
+
+    const [result] = await listMatchPredictionStatuses('stage-1', 'group-1', 'user-1')
+
+    expect(result.actualHomeGoals).toBe(2)
+    expect(result.actualAwayGoals).toBe(0)
+    expect(result.outcome).toBe('resultado')
+  })
+
+  it('no informa resultado real ni acierto mientras el partido no termino', async () => {
+    const matches = [
+      {
+        id: 'match-1',
+        kickoff_at: '2999-01-01T20:00:00Z',
+        matchday: 3,
+        status: 'scheduled',
+        home_goals: null,
+        away_goals: null,
+        home: { name: 'Nacional', alias: null, slug: 'nacional' },
+        away: { name: 'Peñarol', alias: null, slug: 'penarol' },
+      },
+    ]
+    const predictions = [{ match_id: 'match-1', home_goals: 1, away_goals: 0, status: 'por_definir' }]
+    const matchesQuery = mockMatchesQuery(matches)
+    const predictionsQuery = mockPredictionsQuery(predictions)
+    mockedFrom
+      .mockReturnValueOnce({ select: matchesQuery.select } as never)
+      .mockReturnValueOnce({ select: predictionsQuery.select } as never)
+
+    const [result] = await listMatchPredictionStatuses('stage-1', 'group-1', 'user-1')
+
+    expect(result.actualHomeGoals).toBeNull()
+    expect(result.outcome).toBeNull()
   })
 
   it('usa el alias del equipo cuando esta cargado', async () => {
@@ -138,6 +194,9 @@ describe('listMatchPredictionStatuses', () => {
         status: 'pendiente',
         homeGoals: null,
         awayGoals: null,
+        actualHomeGoals: null,
+        actualAwayGoals: null,
+        outcome: null,
       },
     ])
   })
@@ -196,6 +255,9 @@ describe('listMatchPredictionStatuses', () => {
         status: 'no_pronosticado',
         homeGoals: null,
         awayGoals: null,
+        actualHomeGoals: null,
+        actualAwayGoals: null,
+        outcome: null,
       },
     ])
   })

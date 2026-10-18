@@ -72,6 +72,9 @@ function match(overrides: Partial<myPredictionsService.MatchPredictionStatus>) {
     status: 'pendiente' as const,
     homeGoals: null,
     awayGoals: null,
+    actualHomeGoals: null,
+    actualAwayGoals: null,
+    outcome: null,
     ...overrides,
   }
 }
@@ -175,8 +178,56 @@ describe('MyPredictionsPage', () => {
     ])
     renderPage()
 
-    expect(await screen.findByText('Cargado: 2-1')).toBeInTheDocument()
+    expect(await screen.findByText('2-1')).toBeInTheDocument()
+    expect(screen.queryByText(/Cargado/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+  })
+
+  it('muestra "Sin cargar" en un partido finalizado que no pronostique', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'no_pronosticado' }),
+    ])
+    renderPage()
+
+    expect(await screen.findByText('Sin cargar')).toBeInTheDocument()
+  })
+
+  it('debajo del pronostico muestra el resultado real del partido finalizado', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({
+        matchStatus: 'finished',
+        status: 'cargado',
+        homeGoals: 2,
+        awayGoals: 1,
+        actualHomeGoals: 3,
+        actualAwayGoals: 0,
+        outcome: 'resultado',
+      }),
+    ])
+    renderPage()
+
+    expect(await screen.findByText('Resultado: 3-0')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['exacto', 'var(--exacto)'],
+    ['resultado', 'var(--resultado)'],
+    ['pifiado', 'var(--pifiado)'],
+  ] as const)('colorea el pronostico segun el acierto (%s)', async (outcome, color) => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({
+        matchStatus: 'finished',
+        status: 'cargado',
+        homeGoals: 2,
+        awayGoals: 1,
+        actualHomeGoals: 2,
+        actualAwayGoals: 1,
+        outcome,
+      }),
+    ])
+    renderPage()
+
+    expect((await screen.findByText('2-1')).style.color).toBe(color)
   })
 
   it('guarda el pronostico automaticamente al completar los dos inputs, sin boton de confirmar', async () => {
