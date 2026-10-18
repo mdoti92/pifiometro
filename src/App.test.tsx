@@ -36,6 +36,11 @@ vi.mock('./standings/standingsService', async () => {
   return { ...actual, getGroupTournamentStandings: vi.fn() }
 })
 
+// El acceso por whitelist se prueba en AccessGate.test; acá el usuario siempre está habilitado.
+vi.mock('./auth/accessService', async () => {
+  const actual = await vi.importActual<typeof import('./auth/accessService')>('./auth/accessService')
+  return { ...actual, isAllowed: vi.fn().mockResolvedValue(true) }
+})
 vi.mock('./profile/paletteService', () => ({
   fetchMyPalette: vi.fn().mockResolvedValue(null),
   saveMyPalette: vi.fn(),
