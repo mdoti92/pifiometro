@@ -20,6 +20,7 @@ export interface MatchPredictionStatus {
   actualHomeGoals: number | null
   actualAwayGoals: number | null
   outcome: PredictionOutcome | null
+  points: number | null
 }
 
 interface MatchTeamRow {
@@ -65,7 +66,7 @@ export async function listMatchPredictionStatuses(
 
   const { data: predictions, error: predictionsError } = await supabase
     .from('predictions')
-    .select('match_id, home_goals, away_goals, status')
+    .select('match_id, home_goals, away_goals, status, points')
     .eq('group_id', groupId)
     .eq('user_id', userId)
     .in('match_id', matchIds)
@@ -102,6 +103,7 @@ export async function listMatchPredictionStatuses(
         actualHomeGoals,
         actualAwayGoals,
         outcome: finished ? toOutcome(prediction.status) : null,
+        points: finished ? (prediction.points ?? null) : null,
       }
     }
 
@@ -120,6 +122,7 @@ export async function listMatchPredictionStatuses(
       actualHomeGoals,
       actualAwayGoals,
       outcome: null,
+      points: null,
     }
   })
 }
