@@ -37,6 +37,11 @@ vi.mock('../groups/groupMembersService', async () => {
   return { ...actual, isGroupAdmin: vi.fn() }
 })
 
+vi.mock('./displayNameService', () => ({
+  fetchMyDisplayName: vi.fn().mockResolvedValue('Doti'),
+  saveMyDisplayName: vi.fn(),
+}))
+
 const mockedListMyGroups = vi.mocked(groupsService.listMyGroups)
 const mockedIsGroupAdmin = vi.mocked(groupMembersService.isGroupAdmin)
 const mockedUseAuth = vi.mocked(AuthContextModule.useAuth)
@@ -70,6 +75,13 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByText('martin@example.com')).toBeInTheDocument()
     expect(screen.queryByText('Administración')).not.toBeInTheDocument()
+  })
+
+  it('permite editar el nombre o alias que se muestra en lugar del mail', async () => {
+    mockedIsSuperadmin.mockResolvedValue(false)
+    renderProfilePage()
+
+    expect(await screen.findByLabelText('Nombre o alias')).toHaveValue('Doti')
   })
 
   it('muestra la seccion de administracion para un superadmin', async () => {
