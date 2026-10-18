@@ -128,6 +128,58 @@ export async function getMatchdaySummaries(
   })
 }
 
+export interface MatchdayLeader {
+  names: string[]
+  points: number
+}
+
+interface PredictionMatchdayPointsRow {
+  user_id: string
+  points: number | null
+  matches: { matchday: number | null } | null
+}
+
+export async function getStageMatchdayLeaders(
+  groupId: string,
+  stageId: string,
+): Promise<Map<number, MatchdayLeader>> {
+  const members = await listMembers(groupId)
+
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('user_id, points, matches!inner(matchday)')
+    .eq('group_id', groupId)
+    .eq('matches.stage_id', stageId)
+    .not('matches.matchday', 'is', null)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const pointsByMatchdayAndUser = new Map<number, Map<string, number>>()
+  for (const row of data as unknown as PredictionMatchdayPointsRow[]) {
+    const matchday = row.matches?.matchday
+    if (matchday == null) continue
+
+    const usersPoints = pointsByMatchdayAndUser.get(matchday) ?? new Map<string, number>()
+    usersPoints.set(row.user_id, (usersPoints.get(row.user_id) ?? 0) + (row.points ?? 0))
+    pointsByMatchdayAndUser.set(matchday, usersPoints)
+  }
+
+  const leaders = new Map<number, MatchdayLeader>()
+  for (const [matchday, usersPoints] of pointsByMatchdayAndUser) {
+    const maxPoints = Math.max(...usersPoints.values())
+    if (maxPoints <= 0) continue
+
+    const names = members
+      .filter((member) => usersPoints.get(member.userId) === maxPoints)
+      .map((member) => member.displayName ?? 'Sin nombre')
+    leaders.set(matchday, { names, points: maxPoints })
+  }
+
+  return leaders
+}
+
 async function buildStandings(
   groupId: string,
   predictionRows: PredictionPointsRow[],

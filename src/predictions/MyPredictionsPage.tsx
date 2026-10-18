@@ -5,6 +5,7 @@ import { getPredictionStatusColor } from '../design/predictionStatusColor'
 import { findLastFinishedMatchday } from '../fixture/findLastFinishedMatchday'
 import { groupMatchesByMatchday } from '../fixture/groupMatchesByMatchday'
 import { MatchCard } from '../matches/MatchCard'
+import { getStageMatchdayLeaders, type MatchdayLeader } from '../standings/standingsService'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
 import { savePrediction } from './predictionsService'
@@ -40,23 +41,39 @@ function isMatchFinished(match: MatchPredictionStatus): boolean {
   return match.matchStatus === 'finished'
 }
 
+function formatPoints(points: number): string {
+  return `${points} ${points === 1 ? 'pt' : 'pts'}`
+}
+
 function formatMatchdayPoints(matches: MatchPredictionStatus[]): string | null {
   if (!matches.some(isMatchFinished)) return null
 
-  const points = matches.reduce((total, match) => total + (match.points ?? 0), 0)
-  return `${points} ${points === 1 ? 'pt' : 'pts'}`
+  return formatPoints(matches.reduce((total, match) => total + (match.points ?? 0), 0))
+}
+
+function formatMatchdayLeader(leader: MatchdayLeader | undefined): string | null {
+  if (!leader) return null
+
+  return `Mejor: ${leader.names.join(', ')} (${formatPoints(leader.points)})`
 }
 
 export function MyPredictionsPage() {
   const { groupId, stageId } = useParams<{ groupId: string; stageId: string }>()
   const { user } = useAuth()
   const [statuses, setStatuses] = useState<MatchPredictionStatus[]>([])
+  const [matchdayLeaders, setMatchdayLeaders] = useState<Map<number, MatchdayLeader>>(new Map())
 
   useEffect(() => {
     if (!groupId || !stageId || !user) return
 
     listMatchPredictionStatuses(stageId, groupId, user.id).then(setStatuses)
   }, [groupId, stageId, user])
+
+  useEffect(() => {
+    if (!groupId || !stageId) return
+
+    getStageMatchdayLeaders(groupId, stageId).then(setMatchdayLeaders)
+  }, [groupId, stageId])
 
   const matchdayGroups = groupMatchesByMatchday(statuses)
   const lastFinishedMatchday = findLastFinishedMatchday(matchdayGroups, isMatchFinished)
@@ -93,12 +110,15 @@ export function MyPredictionsPage() {
 
       {matchdayGroups.map((group) => {
         const matchdayPoints = formatMatchdayPoints(group.matches)
+        const matchdayLeader =
+          group.matchday !== null ? formatMatchdayLeader(matchdayLeaders.get(group.matchday)) : null
 
         return (
           <section key={group.matchday ?? 'sin-fecha'} id={matchdaySectionId(group.matchday)}>
             <h2 className="font-display matchday-heading">
               {group.matchday !== null ? `Fecha ${group.matchday}` : 'Sin fecha asignada'}
               {matchdayPoints && <span className="matchday-points">{matchdayPoints}</span>}
+              {matchdayLeader && <span className="matchday-leader">{matchdayLeader}</span>}
             </h2>
             <ul className="matchday-grid">
               {group.matches.map((match) => (
