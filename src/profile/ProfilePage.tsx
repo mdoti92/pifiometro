@@ -6,6 +6,7 @@ import { isGroupAdmin } from '../groups/groupMembersService'
 import { listMyGroups, type MyGroup } from '../groups/groupsService'
 import { useActiveGroup } from '../nav/useActiveGroup'
 import { isSuperadmin } from '../tournaments/tournamentsService'
+import { DisplayNameForm } from './DisplayNameForm'
 import { PaletteSelector } from './PaletteSelector'
 
 export function ProfilePage() {
@@ -31,6 +32,8 @@ export function ProfilePage() {
       <h1>Perfil</h1>
 
       {user && <p>{user.email}</p>}
+
+      {user && <DisplayNameForm userId={user.id} />}
 
       <ul>
         <li>
