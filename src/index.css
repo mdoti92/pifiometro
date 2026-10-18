@@ -693,3 +693,16 @@ button.standings-tab.active {
 .game-message {
   overflow-y: auto;
 }
+
+.matchday-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.matchday-points {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--exacto);
+}

@@ -19,6 +19,7 @@ function pendingMatch(overrides: Partial<MatchPredictionStatus> = {}): MatchPred
     actualHomeGoals: null,
     actualAwayGoals: null,
     outcome: null,
+    points: null,
     ...overrides,
   }
 }

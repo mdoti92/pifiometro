@@ -20,6 +20,7 @@ function pending(matchId: string, kickoffAt: string): MatchPredictionStatus {
     actualHomeGoals: null,
     actualAwayGoals: null,
     outcome: null,
+    points: null,
   }
 }
 

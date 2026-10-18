@@ -75,6 +75,7 @@ function match(overrides: Partial<myPredictionsService.MatchPredictionStatus>) {
     actualHomeGoals: null,
     actualAwayGoals: null,
     outcome: null,
+    points: null,
     ...overrides,
   }
 }
@@ -181,6 +182,39 @@ describe('MyPredictionsPage', () => {
     expect(await screen.findByText('2-1')).toBeInTheDocument()
     expect(screen.queryByText(/Cargado/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+  })
+
+  it('muestra al lado del titulo de la fecha los puntos que hice en esa fecha', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchId: 'match-1', matchday: 33, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 1, points: 3 }),
+      match({ matchId: 'match-2', matchday: 33, matchStatus: 'finished', status: 'cargado', homeGoals: 2, awayGoals: 0, points: 1 }),
+      match({ matchId: 'match-3', matchday: 33, matchStatus: 'finished', status: 'no_pronosticado' }),
+      match({ matchId: 'match-4', matchday: 33, matchStatus: 'scheduled', status: 'pendiente' }),
+    ])
+    renderPage()
+
+    const heading = await screen.findByRole('heading', { name: /Fecha 33/ })
+    expect(heading).toHaveTextContent('4 pts')
+  })
+
+  it('no muestra puntos en una fecha sin partidos finalizados', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchday: 34, matchStatus: 'scheduled', status: 'pendiente' }),
+    ])
+    renderPage()
+
+    const heading = await screen.findByRole('heading', { name: /Fecha 34/ })
+    expect(heading).not.toHaveTextContent('pts')
+  })
+
+  it('usa singular cuando hice 1 punto en la fecha', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchday: 5, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0, points: 1 }),
+    ])
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: /Fecha 5/ })).toHaveTextContent('1 pt')
+    expect(screen.getByRole('heading', { name: /Fecha 5/ })).not.toHaveTextContent('1 pts')
   })
 
   it('muestra "Sin cargar" en un partido finalizado que no pronostique', async () => {
