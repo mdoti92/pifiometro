@@ -714,3 +714,20 @@ button.standings-tab.active {
   font-weight: 400;
   opacity: 0.8;
 }
+
+.display-name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.display-name-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.display-name-row input {
+  flex: 1;
+  min-width: 0;
+}
