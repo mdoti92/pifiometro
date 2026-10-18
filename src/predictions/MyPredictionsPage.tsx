@@ -40,6 +40,13 @@ function isMatchFinished(match: MatchPredictionStatus): boolean {
   return match.matchStatus === 'finished'
 }
 
+function formatMatchdayPoints(matches: MatchPredictionStatus[]): string | null {
+  if (!matches.some(isMatchFinished)) return null
+
+  const points = matches.reduce((total, match) => total + (match.points ?? 0), 0)
+  return `${points} ${points === 1 ? 'pt' : 'pts'}`
+}
+
 export function MyPredictionsPage() {
   const { groupId, stageId } = useParams<{ groupId: string; stageId: string }>()
   const { user } = useAuth()
@@ -84,24 +91,29 @@ export function MyPredictionsPage() {
         </button>
       )}
 
-      {matchdayGroups.map((group) => (
-        <section key={group.matchday ?? 'sin-fecha'} id={matchdaySectionId(group.matchday)}>
-          <h2 className="font-display">
-            {group.matchday !== null ? `Fecha ${group.matchday}` : 'Sin fecha asignada'}
-          </h2>
-          <ul className="matchday-grid">
-            {group.matches.map((match) => (
-              <PredictionMatchCard
-                key={match.matchId}
-                match={match}
-                groupId={groupId ?? ''}
-                userId={user?.id ?? ''}
-                onSaved={handleSaved}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {matchdayGroups.map((group) => {
+        const matchdayPoints = formatMatchdayPoints(group.matches)
+
+        return (
+          <section key={group.matchday ?? 'sin-fecha'} id={matchdaySectionId(group.matchday)}>
+            <h2 className="font-display matchday-heading">
+              {group.matchday !== null ? `Fecha ${group.matchday}` : 'Sin fecha asignada'}
+              {matchdayPoints && <span className="matchday-points">{matchdayPoints}</span>}
+            </h2>
+            <ul className="matchday-grid">
+              {group.matches.map((match) => (
+                <PredictionMatchCard
+                  key={match.matchId}
+                  match={match}
+                  groupId={groupId ?? ''}
+                  userId={user?.id ?? ''}
+                  onSaved={handleSaved}
+                />
+              ))}
+            </ul>
+          </section>
+        )
+      })}
     </div>
   )
 }

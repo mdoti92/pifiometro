@@ -82,6 +82,7 @@ describe('listMatchPredictionStatuses', () => {
         actualHomeGoals: null,
         actualAwayGoals: null,
         outcome: null,
+        points: null,
       },
     ])
   })
@@ -99,7 +100,7 @@ describe('listMatchPredictionStatuses', () => {
         away: { name: 'Peñarol', alias: null, slug: 'penarol' },
       },
     ]
-    const predictions = [{ match_id: 'match-1', home_goals: 1, away_goals: 0, status: 'resultado' }]
+    const predictions = [{ match_id: 'match-1', home_goals: 1, away_goals: 0, status: 'resultado', points: 1 }]
     const matchesQuery = mockMatchesQuery(matches)
     const predictionsQuery = mockPredictionsQuery(predictions)
     mockedFrom
@@ -111,6 +112,7 @@ describe('listMatchPredictionStatuses', () => {
     expect(result.actualHomeGoals).toBe(2)
     expect(result.actualAwayGoals).toBe(0)
     expect(result.outcome).toBe('resultado')
+    expect(result.points).toBe(1)
   })
 
   it('no informa resultado real ni acierto mientras el partido no termino', async () => {
@@ -137,6 +139,7 @@ describe('listMatchPredictionStatuses', () => {
 
     expect(result.actualHomeGoals).toBeNull()
     expect(result.outcome).toBeNull()
+    expect(result.points).toBeNull()
   })
 
   it('usa el alias del equipo cuando esta cargado', async () => {
@@ -197,6 +200,7 @@ describe('listMatchPredictionStatuses', () => {
         actualHomeGoals: null,
         actualAwayGoals: null,
         outcome: null,
+        points: null,
       },
     ])
   })
@@ -258,6 +262,7 @@ describe('listMatchPredictionStatuses', () => {
         actualHomeGoals: null,
         actualAwayGoals: null,
         outcome: null,
+        points: null,
       },
     ])
   })
