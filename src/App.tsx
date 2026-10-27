@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { AccessGate } from './auth/AccessGate'
 import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
 import { RequireAuth } from './auth/RequireAuth'
@@ -24,7 +25,9 @@ import { TournamentAdminPage } from './tournaments/TournamentAdminPage'
 function Authenticated({ children }: { children: ReactNode }) {
   return (
     <RequireAuth>
-      <AppShell>{children}</AppShell>
+      <AccessGate>
+        <AppShell>{children}</AppShell>
+      </AccessGate>
     </RequireAuth>
   )
 }
