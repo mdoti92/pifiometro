@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getPredictionStatusColor } from '../design/predictionStatusColor'
-import { findLastFinishedMatchday } from '../fixture/findLastFinishedMatchday'
+import { findCurrentMatchday } from '../fixture/findCurrentMatchday'
 import { groupMatchesByMatchday } from '../fixture/groupMatchesByMatchday'
+import { matchdaySectionId, scrollToMatchday, useScrollToMatchdayOnLoad } from '../fixture/useScrollToMatchday'
 import { MatchCard } from '../matches/MatchCard'
 import { getStageMatchdayLeaders, type MatchdayLeader } from '../standings/standingsService'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
@@ -33,8 +34,9 @@ function ReadOnlyPrediction({ match }: { match: MatchPredictionStatus }) {
   )
 }
 
-function matchdaySectionId(matchday: number | null): string {
-  return `fecha-${matchday ?? 'sin-fecha'}`
+// Un postergado no traba la fecha: se reprograma más adelante.
+function isMatchPending(match: MatchPredictionStatus): boolean {
+  return match.matchStatus === 'scheduled'
 }
 
 function isMatchFinished(match: MatchPredictionStatus): boolean {
@@ -76,11 +78,11 @@ export function MyPredictionsPage() {
   }, [groupId, stageId])
 
   const matchdayGroups = groupMatchesByMatchday(statuses)
-  const lastFinishedMatchday = findLastFinishedMatchday(matchdayGroups, isMatchFinished)
+  const currentMatchday = findCurrentMatchday(matchdayGroups, isMatchPending)
+  useScrollToMatchdayOnLoad(currentMatchday, stageId)
 
-  function scrollToLastFinishedMatchday() {
-    if (lastFinishedMatchday === null) return
-    document.getElementById(matchdaySectionId(lastFinishedMatchday))?.scrollIntoView({ behavior: 'smooth' })
+  function goToCurrentMatchday() {
+    if (currentMatchday !== null) scrollToMatchday(currentMatchday)
   }
 
   function handleSaved(matchId: string, homeGoals: number, awayGoals: number) {
@@ -102,9 +104,9 @@ export function MyPredictionsPage() {
 
       <PredictionHero statuses={statuses} />
 
-      {lastFinishedMatchday !== null && (
-        <button type="button" onClick={scrollToLastFinishedMatchday}>
-          Ver desde última fecha cargada
+      {currentMatchday !== null && (
+        <button type="button" onClick={goToCurrentMatchday}>
+          Ir a la fecha actual
         </button>
       )}
 
