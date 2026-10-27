@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { listGroupTournaments, type GroupTournament } from '../groups/groupTournamentsService'
 import { MatchCard } from '../matches/MatchCard'
-import { findLastFinishedMatchday } from './findLastFinishedMatchday'
+import { findCurrentMatchday } from './findCurrentMatchday'
 import { formatFixtureResult } from './formatFixtureResult'
 import { listTournamentFixture, type FixtureMatch } from './fixtureService'
 import { groupMatchesByMatchday } from './groupMatchesByMatchday'
+import { matchdaySectionId, scrollToMatchday, useScrollToMatchdayOnLoad } from './useScrollToMatchday'
 
-function matchdaySectionId(matchday: number | null): string {
-  return `fecha-${matchday ?? 'sin-fecha'}`
-}
-
-function isMatchFinished(match: FixtureMatch): boolean {
-  return match.status === 'finished'
+// Un postergado no traba la fecha: se reprograma más adelante.
+function isMatchPending(match: FixtureMatch): boolean {
+  return match.status === 'scheduled'
 }
 
 export function FixturePage() {
@@ -38,11 +36,11 @@ export function FixturePage() {
   }, [selectedTournamentId])
 
   const matchdayGroups = selectedTournamentId ? groupMatchesByMatchday(fixture) : []
-  const lastFinishedMatchday = findLastFinishedMatchday(matchdayGroups, isMatchFinished)
+  const currentMatchday = findCurrentMatchday(matchdayGroups, isMatchPending)
+  useScrollToMatchdayOnLoad(currentMatchday, selectedTournamentId ?? undefined)
 
-  function scrollToLastFinishedMatchday() {
-    if (lastFinishedMatchday === null) return
-    document.getElementById(matchdaySectionId(lastFinishedMatchday))?.scrollIntoView({ behavior: 'smooth' })
+  function goToCurrentMatchday() {
+    if (currentMatchday !== null) scrollToMatchday(currentMatchday)
   }
 
   return (
@@ -68,9 +66,9 @@ export function FixturePage() {
 
       {activeTournaments.length === 0 && <p>Tu grupo no sigue ningún torneo activo todavía</p>}
 
-      {lastFinishedMatchday !== null && (
-        <button type="button" onClick={scrollToLastFinishedMatchday}>
-          Ver desde última fecha cargada
+      {currentMatchday !== null && (
+        <button type="button" onClick={goToCurrentMatchday}>
+          Ir a la fecha actual
         </button>
       )}
 

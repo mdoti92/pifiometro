@@ -171,7 +171,26 @@ describe('FixturePage', () => {
     expect(mockedListTournamentFixture).not.toHaveBeenCalled()
   })
 
-  it('muestra el boton para ir a la ultima fecha con partidos finalizados', async () => {
+  it('al cargar, se para en la fecha que se esta jugando', async () => {
+    const scrolled: string[] = []
+    window.HTMLElement.prototype.scrollIntoView = vi.fn(function (this: HTMLElement) {
+      scrolled.push(this.id)
+    })
+    mockedListGroupTournaments.mockResolvedValue([
+      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
+    ])
+    mockedListTournamentFixture.mockResolvedValue([
+      fixtureMatch({ id: 'match-1', matchday: 1, status: 'finished', homeGoals: 1, awayGoals: 0 }),
+      fixtureMatch({ id: 'match-2', matchday: 2, status: 'finished', homeGoals: 2, awayGoals: 2 }),
+      fixtureMatch({ id: 'match-3', matchday: 2, status: 'scheduled' }),
+      fixtureMatch({ id: 'match-4', matchday: 3, status: 'scheduled' }),
+    ])
+    renderPage()
+
+    await waitFor(() => expect(scrolled).toEqual(['fecha-2']))
+  })
+
+  it('muestra el boton para volver a la fecha actual', async () => {
     mockedListGroupTournaments.mockResolvedValue([
       { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
     ])
@@ -182,20 +201,10 @@ describe('FixturePage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    const button = await screen.findByRole('button', { name: 'Ver desde última fecha cargada' })
+    const button = await screen.findByRole('button', { name: 'Ir a la fecha actual' })
+    vi.mocked(window.HTMLElement.prototype.scrollIntoView).mockClear()
     await user.click(button)
 
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
-  })
-
-  it('no muestra el boton de ultima fecha cuando ningun partido esta finalizado', async () => {
-    mockedListGroupTournaments.mockResolvedValue([
-      { tournamentId: 'tournament-1', name: 'Liga AUF 2026', season: '2026', active: true },
-    ])
-    mockedListTournamentFixture.mockResolvedValue([fixtureMatch({ status: 'scheduled' })])
-    renderPage()
-
-    await screen.findByText('Fecha 1')
-    expect(screen.queryByRole('button', { name: 'Ver desde última fecha cargada' })).not.toBeInTheDocument()
   })
 })

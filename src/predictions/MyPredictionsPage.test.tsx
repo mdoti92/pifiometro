@@ -142,14 +142,44 @@ describe('MyPredictionsPage', () => {
     expect(screen.getByLabelText('Goles local de Nacional')).toBeInTheDocument()
   })
 
-  it('muestra el boton para ir a la ultima fecha con partidos finalizados', async () => {
+  it('al cargar, se para en la fecha con partidos sin jugar aunque ya tenga pronosticos cargados', async () => {
+    const scrolled: string[] = []
+    window.HTMLElement.prototype.scrollIntoView = vi.fn(function (this: HTMLElement) {
+      scrolled.push(this.id)
+    })
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchId: 'match-1', matchday: 1, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0 }),
+      match({ matchId: 'match-2', matchday: 2, matchStatus: 'scheduled', status: 'cargado', homeGoals: 2, awayGoals: 0 }),
+      match({ matchId: 'match-3', matchday: 3, matchStatus: 'scheduled', status: 'pendiente' }),
+    ])
+    renderPage()
+
+    await waitFor(() => expect(scrolled).toEqual(['fecha-2']))
+  })
+
+  it('cuando se jugaron todos los partidos de una fecha, se para en la siguiente', async () => {
+    const scrolled: string[] = []
+    window.HTMLElement.prototype.scrollIntoView = vi.fn(function (this: HTMLElement) {
+      scrolled.push(this.id)
+    })
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchId: 'match-1', matchday: 1, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0 }),
+      match({ matchId: 'match-2', matchday: 2, matchStatus: 'scheduled', status: 'cargado', homeGoals: 2, awayGoals: 0 }),
+    ])
+    renderPage()
+
+    await waitFor(() => expect(scrolled).toEqual(['fecha-2']))
+  })
+
+  it('muestra el boton para volver a la fecha actual', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchId: 'match-1', matchday: 1, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0 }),
       match({ matchId: 'match-2', matchday: 2, matchStatus: 'scheduled', status: 'pendiente' }),
     ])
     renderPage()
 
-    const button = await screen.findByRole('button', { name: 'Ver desde última fecha cargada' })
+    const button = await screen.findByRole('button', { name: 'Ir a la fecha actual' })
+    vi.mocked(window.HTMLElement.prototype.scrollIntoView).mockClear()
     const user = userEvent.setup()
     await user.click(button)
 
