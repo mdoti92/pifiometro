@@ -9,12 +9,14 @@ import { MatchCard } from '../matches/MatchCard'
 import { getStageMatchdayLeaders, type MatchdayLeader } from '../standings/standingsService'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
-import { savePrediction } from './predictionsService'
+import { hasKickedOff, savePrediction } from './predictionsService'
 import { RankChip } from './RankChip'
+import { useLiveNow } from './useLiveNow'
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
   cargado: (m) => `${m.homeGoals}-${m.awayGoals}`,
-  pendiente: () => 'Pendiente',
+  // Solo se ve de solo lectura cuando ya arrancó: si no se cargó, quedó sin cargar.
+  pendiente: () => 'Sin cargar',
   no_pronosticado: () => 'Sin cargar',
 }
 
@@ -154,8 +156,10 @@ function PredictionMatchCard({
   const [homeGoals, setHomeGoals] = useState(match.homeGoals !== null ? String(match.homeGoals) : '')
   const [awayGoals, setAwayGoals] = useState(match.awayGoals !== null ? String(match.awayGoals) : '')
   const [error, setError] = useState<string | null>(null)
+  const now = useLiveNow(1000)
 
-  const canEdit = match.matchStatus !== 'finished'
+  // Se cierra al arrancar el partido (en vivo, sin recargar). La RLS aplica la misma regla.
+  const canEdit = match.matchStatus !== 'finished' && !hasKickedOff(match.kickoffAt, now)
 
   async function saveIfComplete(nextHomeGoals: string, nextAwayGoals: string) {
     if (nextHomeGoals === '' || nextAwayGoals === '') return

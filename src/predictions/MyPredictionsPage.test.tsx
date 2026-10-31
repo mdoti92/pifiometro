@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -214,6 +214,44 @@ describe('MyPredictionsPage', () => {
     expect(await screen.findByText('2-1')).toBeInTheDocument()
     expect(screen.queryByText(/Cargado/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+  })
+
+  it('no muestra inputs editables para un partido que ya arranco aunque todavia no tenga resultado', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({
+        matchStatus: 'scheduled',
+        status: 'cargado',
+        homeGoals: 1,
+        awayGoals: 0,
+        kickoffAt: '2000-01-01T20:00:00Z',
+      }),
+    ])
+    renderPage()
+
+    expect(await screen.findByText('1-0')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+  })
+
+  it('cierra el pronostico en vivo cuando llega la hora del partido, sin recargar la pantalla', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date('2026-11-01T12:59:58Z'))
+    try {
+      mockedListMatchPredictionStatuses.mockResolvedValue([
+        match({ matchStatus: 'scheduled', status: 'pendiente', kickoffAt: '2026-11-01T13:00:00Z' }),
+      ])
+      renderPage()
+
+      expect(await screen.findByLabelText('Goles local de Nacional')).toBeInTheDocument()
+
+      await act(async () => {
+        vi.advanceTimersByTime(3000)
+      })
+
+      expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+      expect(screen.getByText('Sin cargar')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('muestra al lado del titulo de la fecha los puntos que hice en esa fecha', async () => {
