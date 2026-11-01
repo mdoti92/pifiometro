@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getPredictionStatusColor } from '../design/predictionStatusColor'
@@ -6,11 +6,13 @@ import { findCurrentMatchday } from '../fixture/findCurrentMatchday'
 import { groupMatchesByMatchday } from '../fixture/groupMatchesByMatchday'
 import { matchdaySectionId, scrollToMatchday, useScrollToMatchdayOnLoad } from '../fixture/useScrollToMatchday'
 import { MatchCard } from '../matches/MatchCard'
+import { GandalfLaugh } from './GandalfLaugh'
 import { getStageMatchdayLeaders, type MatchdayLeader } from '../standings/standingsService'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
-import { savePrediction } from './predictionsService'
+import { hasKickedOff, savePrediction } from './predictionsService'
 import { RankChip } from './RankChip'
+import { useLiveNow } from './useLiveNow'
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
   cargado: (m) => `${m.homeGoals}-${m.awayGoals}`,
@@ -154,8 +156,20 @@ function PredictionMatchCard({
   const [homeGoals, setHomeGoals] = useState(match.homeGoals !== null ? String(match.homeGoals) : '')
   const [awayGoals, setAwayGoals] = useState(match.awayGoals !== null ? String(match.awayGoals) : '')
   const [error, setError] = useState<string | null>(null)
+  const [showGandalf, setShowGandalf] = useState(false)
+  const now = useLiveNow(1000)
 
-  const canEdit = match.matchStatus !== 'finished'
+  const isFinished = match.matchStatus === 'finished'
+  // Entre el kickoff y el resultado se ve editable, pero es una trampa: tocarlo saca a Gandalf.
+  // Se cierra en vivo, sin recargar. La RLS aplica la misma regla en la base.
+  const isLocked = hasKickedOff(match.kickoffAt, now)
+  const closeGandalf = useCallback(() => setShowGandalf(false), [])
+
+  function laughAtTheLateOne() {
+    setHomeGoals(match.homeGoals !== null ? String(match.homeGoals) : '')
+    setAwayGoals(match.awayGoals !== null ? String(match.awayGoals) : '')
+    setShowGandalf(true)
+  }
 
   async function saveIfComplete(nextHomeGoals: string, nextAwayGoals: string) {
     if (nextHomeGoals === '' || nextAwayGoals === '') return
@@ -172,29 +186,42 @@ function PredictionMatchCard({
       })
       onSaved(match.matchId, Number(nextHomeGoals), Number(nextAwayGoals))
     } catch (err) {
+      // Arrancó mientras tipeaba: la RLS lo rechazó, Gandalf lo explica mejor que el error crudo.
+      if (hasKickedOff(match.kickoffAt)) {
+        laughAtTheLateOne()
+        return
+      }
       setError(err instanceof Error ? err.message : 'No se pudo guardar el pronóstico')
     }
   }
 
   function handleHomeGoalsChange(event: { target: { value: string } }) {
+    if (isLocked) return laughAtTheLateOne()
     const value = event.target.value
     setHomeGoals(value)
     void saveIfComplete(value, awayGoals)
   }
 
   function handleAwayGoalsChange(event: { target: { value: string } }) {
+    if (isLocked) return laughAtTheLateOne()
     const value = event.target.value
     setAwayGoals(value)
     void saveIfComplete(homeGoals, value)
   }
 
-  const center = canEdit ? (
+  // readOnly evita que en el celular se abra el teclado; el click es el que dispara a Gandalf.
+  const trapProps = isLocked ? { readOnly: true, onClick: laughAtTheLateOne } : {}
+
+  const center = isFinished ? (
+    <ReadOnlyPrediction match={match} />
+  ) : (
     <div className="prediction-inline-edit">
       <input
         aria-label={`Goles local de ${match.homeTeam}`}
         type="number"
         value={homeGoals}
         onChange={handleHomeGoalsChange}
+        {...trapProps}
       />
       <span>-</span>
       <input
@@ -202,13 +229,18 @@ function PredictionMatchCard({
         type="number"
         value={awayGoals}
         onChange={handleAwayGoalsChange}
+        {...trapProps}
       />
     </div>
-  ) : (
-    <ReadOnlyPrediction match={match} />
   )
 
-  const footer = error ? <p role="alert">{error}</p> : undefined
+  const footer =
+    error || showGandalf ? (
+      <>
+        {error && <p role="alert">{error}</p>}
+        {showGandalf && <GandalfLaugh onClose={closeGandalf} />}
+      </>
+    ) : undefined
 
   return (
     <MatchCard

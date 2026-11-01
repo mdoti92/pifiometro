@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -214,6 +214,98 @@ describe('MyPredictionsPage', () => {
     expect(await screen.findByText('2-1')).toBeInTheDocument()
     expect(screen.queryByText(/Cargado/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+  })
+
+  it('un partido que ya arranco sin resultado se sigue viendo editable, con el pronostico cargado', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'cargado', homeGoals: 1, awayGoals: 0, kickoffAt: '2000-01-01T20:00:00Z' }),
+    ])
+    renderPage()
+
+    expect(await screen.findByLabelText('Goles local de Nacional')).toHaveValue(1)
+    expect(screen.getByLabelText('Goles visitante de Peñarol')).toHaveValue(0)
+  })
+
+  it('al querer editar un partido que ya arranco, aparece Gandalf riendose y no se guarda nada', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'cargado', homeGoals: 1, awayGoals: 0, kickoffAt: '2000-01-01T20:00:00Z' }),
+    ])
+    const user = userEvent.setup()
+    renderPage()
+
+    const homeInput = await screen.findByLabelText('Goles local de Nacional')
+    expect(screen.queryByRole('dialog', { name: '¡No puedes pasar!' })).not.toBeInTheDocument()
+
+    await user.click(homeInput)
+    expect(screen.getByRole('dialog', { name: '¡No puedes pasar!' })).toBeInTheDocument()
+
+    await user.type(homeInput, '5')
+    expect(homeInput).toHaveValue(1)
+    expect(mockedSavePrediction).not.toHaveBeenCalled()
+  })
+
+  it('al llegar la hora del partido, deja de guardar y pasa a Gandalf en vivo, sin recargar la pantalla', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date('2026-11-01T12:59:58Z'))
+    try {
+      mockedListMatchPredictionStatuses.mockResolvedValue([
+        match({ matchStatus: 'scheduled', status: 'pendiente', kickoffAt: '2026-11-01T13:00:00Z' }),
+      ])
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderPage()
+
+      const homeInput = await screen.findByLabelText('Goles local de Nacional')
+
+      await act(async () => {
+        vi.advanceTimersByTime(3000)
+      })
+
+      await user.type(homeInput, '2')
+      await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+
+      expect(screen.getByRole('dialog', { name: '¡No puedes pasar!' })).toBeInTheDocument()
+      expect(homeInput).toHaveValue(null)
+      expect(mockedSavePrediction).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('un partido finalizado no muestra a Gandalf: ya no esta en juego', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0, kickoffAt: '2000-01-01T20:00:00Z' }),
+    ])
+    renderPage()
+
+    const user = userEvent.setup()
+    await user.click(await screen.findByText('1-0'))
+
+    expect(screen.queryByLabelText('Goles local de Nacional')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '¡No puedes pasar!' })).not.toBeInTheDocument()
+  })
+
+  it('si el guardado se rechaza porque el partido arranco mientras tipeaba, aparece Gandalf en vez del error crudo', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'pendiente', kickoffAt: '2999-01-01T20:00:00Z' }),
+    ])
+    mockedSavePrediction.mockImplementation(async () => {
+      vi.setSystemTime(new Date('2999-01-01T20:00:01Z'))
+      throw new Error('new row violates row-level security policy')
+    })
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ['Date'] })
+    try {
+      const user = userEvent.setup()
+      renderPage()
+
+      await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
+      await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+
+      expect(await screen.findByRole('dialog', { name: '¡No puedes pasar!' })).toBeInTheDocument()
+      expect(screen.queryByText('new row violates row-level security policy')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('Goles local de Nacional')).toHaveValue(null)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('muestra al lado del titulo de la fecha los puntos que hice en esa fecha', async () => {
