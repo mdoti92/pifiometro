@@ -254,6 +254,55 @@ describe('MyPredictionsPage', () => {
     }
   })
 
+  it('al tocar un partido que ya arranco, aparece Gandalf riendose', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'cargado', homeGoals: 1, awayGoals: 0, kickoffAt: '2000-01-01T20:00:00Z' }),
+    ])
+    const user = userEvent.setup()
+    renderPage()
+
+    expect(screen.queryByRole('dialog', { name: '¡No puedes pasar!' })).not.toBeInTheDocument()
+
+    await user.click(await screen.findByRole('button', { name: 'Pronóstico cerrado de Nacional vs Peñarol' }))
+
+    expect(screen.getByRole('dialog', { name: '¡No puedes pasar!' })).toBeInTheDocument()
+  })
+
+  it('un partido finalizado no muestra a Gandalf: ya no esta en juego', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 0, kickoffAt: '2000-01-01T20:00:00Z' }),
+    ])
+    renderPage()
+
+    expect(await screen.findByText('1-0')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Pronóstico cerrado de Nacional vs Peñarol' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('si el guardado se rechaza porque el partido arranco mientras tipeaba, aparece Gandalf en vez del error crudo', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'pendiente', kickoffAt: '2999-01-01T20:00:00Z' }),
+    ])
+    mockedSavePrediction.mockImplementation(async () => {
+      vi.setSystemTime(new Date('2999-01-01T20:00:01Z'))
+      throw new Error('new row violates row-level security policy')
+    })
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ['Date'] })
+    try {
+      const user = userEvent.setup()
+      renderPage()
+
+      await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
+      await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+
+      expect(await screen.findByRole('dialog', { name: '¡No puedes pasar!' })).toBeInTheDocument()
+      expect(screen.queryByText('new row violates row-level security policy')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('muestra al lado del titulo de la fecha los puntos que hice en esa fecha', async () => {
     mockedListMatchPredictionStatuses.mockResolvedValue([
       match({ matchId: 'match-1', matchday: 33, matchStatus: 'finished', status: 'cargado', homeGoals: 1, awayGoals: 1, points: 3 }),
