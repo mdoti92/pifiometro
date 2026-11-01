@@ -153,4 +153,10 @@ describe('hasKickedOff', () => {
   it('devuelve false cuando la hora de kickoff todavia no llego', () => {
     expect(hasKickedOff('2026-03-01T20:00:01Z')).toBe(false)
   })
+
+  it('compara contra el instante que se le pasa, si se le pasa uno', () => {
+    const now = new Date('2026-03-01T21:00:00Z')
+    expect(hasKickedOff('2026-03-01T20:30:00Z', now)).toBe(true)
+    expect(hasKickedOff('2026-03-01T21:30:00Z', now)).toBe(false)
+  })
 })

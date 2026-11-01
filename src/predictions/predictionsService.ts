@@ -105,6 +105,6 @@ export async function getMatch(matchId: string): Promise<MatchInfo> {
   }
 }
 
-export function hasKickedOff(kickoffAt: string): boolean {
-  return new Date(kickoffAt).getTime() <= Date.now()
+export function hasKickedOff(kickoffAt: string, now: Date = new Date()): boolean {
+  return new Date(kickoffAt).getTime() <= now.getTime()
 }

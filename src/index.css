@@ -731,3 +731,29 @@ button.standings-tab.active {
   flex: 1;
   min-width: 0;
 }
+
+.gandalf-laugh {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.6);
+}
+
+.gandalf-laugh-card {
+  max-width: 22rem;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--hearth);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.gandalf-laugh-card img {
+  width: 100%;
+  border-radius: 0.75rem;
+}
