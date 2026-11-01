@@ -16,8 +16,7 @@ import { useLiveNow } from './useLiveNow'
 
 const STATUS_LABEL: Record<MatchPredictionStatus['status'], (m: MatchPredictionStatus) => string> = {
   cargado: (m) => `${m.homeGoals}-${m.awayGoals}`,
-  // Solo se ve de solo lectura cuando ya arrancó: si no se cargó, quedó sin cargar.
-  pendiente: () => 'Sin cargar',
+  pendiente: () => 'Pendiente',
   no_pronosticado: () => 'Sin cargar',
 }
 
@@ -161,9 +160,16 @@ function PredictionMatchCard({
   const now = useLiveNow(1000)
 
   const isFinished = match.matchStatus === 'finished'
-  // Se cierra al arrancar el partido (en vivo, sin recargar). La RLS aplica la misma regla.
-  const canEdit = !isFinished && !hasKickedOff(match.kickoffAt, now)
+  // Entre el kickoff y el resultado se ve editable, pero es una trampa: tocarlo saca a Gandalf.
+  // Se cierra en vivo, sin recargar. La RLS aplica la misma regla en la base.
+  const isLocked = hasKickedOff(match.kickoffAt, now)
   const closeGandalf = useCallback(() => setShowGandalf(false), [])
+
+  function laughAtTheLateOne() {
+    setHomeGoals(match.homeGoals !== null ? String(match.homeGoals) : '')
+    setAwayGoals(match.awayGoals !== null ? String(match.awayGoals) : '')
+    setShowGandalf(true)
+  }
 
   async function saveIfComplete(nextHomeGoals: string, nextAwayGoals: string) {
     if (nextHomeGoals === '' || nextAwayGoals === '') return
@@ -182,7 +188,7 @@ function PredictionMatchCard({
     } catch (err) {
       // Arrancó mientras tipeaba: la RLS lo rechazó, Gandalf lo explica mejor que el error crudo.
       if (hasKickedOff(match.kickoffAt)) {
-        setShowGandalf(true)
+        laughAtTheLateOne()
         return
       }
       setError(err instanceof Error ? err.message : 'No se pudo guardar el pronóstico')
@@ -190,24 +196,32 @@ function PredictionMatchCard({
   }
 
   function handleHomeGoalsChange(event: { target: { value: string } }) {
+    if (isLocked) return laughAtTheLateOne()
     const value = event.target.value
     setHomeGoals(value)
     void saveIfComplete(value, awayGoals)
   }
 
   function handleAwayGoalsChange(event: { target: { value: string } }) {
+    if (isLocked) return laughAtTheLateOne()
     const value = event.target.value
     setAwayGoals(value)
     void saveIfComplete(homeGoals, value)
   }
 
-  const center = canEdit ? (
+  // readOnly evita que en el celular se abra el teclado; el click es el que dispara a Gandalf.
+  const trapProps = isLocked ? { readOnly: true, onClick: laughAtTheLateOne } : {}
+
+  const center = isFinished ? (
+    <ReadOnlyPrediction match={match} />
+  ) : (
     <div className="prediction-inline-edit">
       <input
         aria-label={`Goles local de ${match.homeTeam}`}
         type="number"
         value={homeGoals}
         onChange={handleHomeGoalsChange}
+        {...trapProps}
       />
       <span>-</span>
       <input
@@ -215,19 +229,9 @@ function PredictionMatchCard({
         type="number"
         value={awayGoals}
         onChange={handleAwayGoalsChange}
+        {...trapProps}
       />
     </div>
-  ) : isFinished ? (
-    <ReadOnlyPrediction match={match} />
-  ) : (
-    <button
-      type="button"
-      className="prediction-locked"
-      aria-label={`Pronóstico cerrado de ${match.homeTeam} vs ${match.awayTeam}`}
-      onClick={() => setShowGandalf(true)}
-    >
-      <ReadOnlyPrediction match={match} />
-    </button>
   )
 
   const footer =

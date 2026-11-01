@@ -732,15 +732,6 @@ button.standings-tab.active {
   min-width: 0;
 }
 
-.prediction-locked {
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
 .gandalf-laugh {
   position: fixed;
   inset: 0;
