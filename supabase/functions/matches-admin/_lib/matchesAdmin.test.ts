@@ -47,6 +47,14 @@ describe('createMatch', () => {
     expect(client.insertMatch).toHaveBeenCalledWith({ ...input, source: 'manual' })
     expect(result).toEqual(insertedMatch)
   })
+
+  it('respeta si el horario se carga como tentativo o confirmado', async () => {
+    const client = createFakeClient({ insertMatch: vi.fn().mockResolvedValue({ id: 'match-1' }) })
+
+    await createMatch(client, 'superadmin-1', { ...input, kickoffConfirmed: false })
+
+    expect(client.insertMatch).toHaveBeenCalledWith({ ...input, kickoffConfirmed: false, source: 'manual' })
+  })
 })
 
 describe('editMatch', () => {

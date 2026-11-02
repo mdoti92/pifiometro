@@ -13,6 +13,7 @@ export interface MatchInfo {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  kickoffConfirmed: boolean
 }
 
 interface MatchInfoTeamRow {
@@ -84,7 +85,7 @@ export async function savePrediction(input: SavePredictionInput): Promise<void> 
 export async function getMatch(matchId: string): Promise<MatchInfo> {
   const { data, error } = await supabase
     .from('matches')
-    .select('id, kickoff_at, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)')
+    .select('id, kickoff_at, kickoff_confirmed, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)')
     .eq('id', matchId)
     .single()
 
@@ -102,9 +103,19 @@ export async function getMatch(matchId: string): Promise<MatchInfo> {
     homeTeamSlug: home?.slug ?? '',
     awayTeamSlug: away?.slug ?? '',
     kickoffAt: data.kickoff_at,
+    kickoffConfirmed: data.kickoff_confirmed,
   }
 }
 
 export function hasKickedOff(kickoffAt: string, now: Date = new Date()): boolean {
   return new Date(kickoffAt).getTime() <= now.getTime()
+}
+
+// Un horario tentativo (de relleno) no cierra nada: el pronostico sigue abierto hasta que se
+// confirme el horario real. Misma regla que la RLS de pifiometro.predictions.
+export function isPredictionClosed(
+  match: { kickoffAt: string; kickoffConfirmed: boolean },
+  now: Date = new Date(),
+): boolean {
+  return match.kickoffConfirmed && hasKickedOff(match.kickoffAt, now)
 }

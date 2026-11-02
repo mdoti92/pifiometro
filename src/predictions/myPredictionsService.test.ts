@@ -51,6 +51,7 @@ describe('listMatchPredictionStatuses', () => {
       {
         id: 'match-1',
         kickoff_at: '2999-01-01T20:00:00Z',
+        kickoff_confirmed: false,
         matchday: 3,
         status: 'scheduled',
         home: { name: 'Nacional', alias: null, slug: 'nacional' },
@@ -74,6 +75,7 @@ describe('listMatchPredictionStatuses', () => {
         homeTeamSlug: 'nacional',
         awayTeamSlug: 'penarol',
         kickoffAt: '2999-01-01T20:00:00Z',
+        kickoffConfirmed: false,
         matchday: 3,
         matchStatus: 'scheduled',
         status: 'cargado',

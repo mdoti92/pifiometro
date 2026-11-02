@@ -10,6 +10,7 @@ export interface FixtureMatch {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  kickoffConfirmed: boolean
   matchday: number | null
   status: FixtureMatchStatus
   homeGoals: number | null
@@ -29,6 +30,7 @@ interface FixtureTeamRow {
 interface FixtureMatchRow {
   id: string
   kickoff_at: string
+  kickoff_confirmed: boolean
   matchday: number | null
   status: FixtureMatchStatus
   home_goals: number | null
@@ -45,7 +47,7 @@ export async function listTournamentFixture(tournamentId: string): Promise<Fixtu
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, kickoff_at, matchday, status, home_goals, away_goals, is_elimination, went_to_penalties, home_goals_penalties, away_goals_penalties, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
+      'id, kickoff_at, kickoff_confirmed, matchday, status, home_goals, away_goals, is_elimination, went_to_penalties, home_goals_penalties, away_goals_penalties, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
     )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
@@ -61,6 +63,7 @@ export async function listTournamentFixture(tournamentId: string): Promise<Fixtu
     homeTeamSlug: row.home?.slug ?? '',
     awayTeamSlug: row.away?.slug ?? '',
     kickoffAt: row.kickoff_at,
+    kickoffConfirmed: row.kickoff_confirmed,
     matchday: row.matchday,
     status: row.status,
     homeGoals: row.home_goals,

@@ -10,6 +10,7 @@ function match(id: string, matchday: number | null, kickoffAt: string): FixtureM
     homeTeamSlug: 'local',
     awayTeamSlug: 'visitante',
     kickoffAt,
+    kickoffConfirmed: true,
     matchday,
     status: 'scheduled',
     homeGoals: null,

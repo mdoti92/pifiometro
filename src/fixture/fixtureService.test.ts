@@ -21,6 +21,7 @@ describe('listTournamentFixture', () => {
         {
           id: 'match-1',
           kickoff_at: '2026-03-01T20:00:00Z',
+          kickoff_confirmed: true,
           matchday: 1,
           status: 'finished',
           home_goals: 2,
@@ -51,6 +52,7 @@ describe('listTournamentFixture', () => {
         homeTeamSlug: 'nacional',
         awayTeamSlug: 'penarol',
         kickoffAt: '2026-03-01T20:00:00Z',
+        kickoffConfirmed: true,
         matchday: 1,
         status: 'finished',
         homeGoals: 2,

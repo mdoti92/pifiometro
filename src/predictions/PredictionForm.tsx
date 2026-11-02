@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { getMatch, getPrediction, hasKickedOff, savePrediction } from './predictionsService'
+import { getMatch, getPrediction, isPredictionClosed, savePrediction } from './predictionsService'
 
 const MATCH_STARTED_MESSAGE = 'El partido ya arrancó, no se puede cargar ni editar el pronóstico'
 
@@ -17,7 +17,7 @@ export function PredictionForm() {
   useEffect(() => {
     if (!groupId || !matchId || !user) return
 
-    getMatch(matchId).then((match) => setLocked(hasKickedOff(match.kickoffAt)))
+    getMatch(matchId).then((match) => setLocked(isPredictionClosed(match)))
 
     getPrediction(matchId, groupId, user.id).then((prediction) => {
       if (prediction) {

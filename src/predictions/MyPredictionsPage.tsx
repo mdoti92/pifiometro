@@ -10,7 +10,7 @@ import { GandalfLaugh } from './GandalfLaugh'
 import { getStageMatchdayLeaders, type MatchdayLeader } from '../standings/standingsService'
 import { listMatchPredictionStatuses, type MatchPredictionStatus } from './myPredictionsService'
 import { PredictionHero } from './PredictionHero'
-import { hasKickedOff, savePrediction } from './predictionsService'
+import { isPredictionClosed, savePrediction } from './predictionsService'
 import { RankChip } from './RankChip'
 import { useLiveNow } from './useLiveNow'
 
@@ -162,7 +162,7 @@ function PredictionMatchCard({
   const isFinished = match.matchStatus === 'finished'
   // Entre el kickoff y el resultado se ve editable, pero es una trampa: tocarlo saca a Gandalf.
   // Se cierra en vivo, sin recargar. La RLS aplica la misma regla en la base.
-  const isLocked = hasKickedOff(match.kickoffAt, now)
+  const isLocked = isPredictionClosed(match, now)
   const closeGandalf = useCallback(() => setShowGandalf(false), [])
 
   function laughAtTheLateOne() {
@@ -187,7 +187,7 @@ function PredictionMatchCard({
       onSaved(match.matchId, Number(nextHomeGoals), Number(nextAwayGoals))
     } catch (err) {
       // Arrancó mientras tipeaba: la RLS lo rechazó, Gandalf lo explica mejor que el error crudo.
-      if (hasKickedOff(match.kickoffAt)) {
+      if (isPredictionClosed(match)) {
         laughAtTheLateOne()
         return
       }

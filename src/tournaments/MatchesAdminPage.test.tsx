@@ -47,6 +47,7 @@ function baseMatch(overrides: Partial<matchesAdminService.Match> = {}): matchesA
     homeTeamSlug: 'nacional',
     awayTeamSlug: 'penarol',
     kickoffAt: '2026-03-01T20:00',
+    kickoffConfirmed: true,
     isElimination: false,
     source: 'manual',
     ...overrides,
@@ -100,6 +101,7 @@ describe('MatchesAdminPage', () => {
       homeTeamId: 'team-nacional',
       awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-01T20:00',
+      kickoffConfirmed: true,
       isElimination: false,
     })
     expect(
@@ -142,6 +144,7 @@ describe('MatchesAdminPage', () => {
       homeTeamId: 'team-nacional',
       awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-01T20:00',
+      kickoffConfirmed: true,
       isElimination: false,
       matchday: 3,
     })
@@ -182,9 +185,46 @@ describe('MatchesAdminPage', () => {
       homeTeamId: 'team-nacional',
       awayTeamId: 'team-penarol',
       kickoffAt: '2026-03-02T21:00',
+      kickoffConfirmed: true,
       isElimination: false,
     })
     await waitFor(() => expect(screen.getAllByText(/manual/).length).toBeGreaterThan(0))
+  })
+
+  it('permite cargar un partido con horario tentativo (todavia sin confirmar)', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedCreateMatch.mockResolvedValue(baseMatch({ kickoffConfirmed: false }))
+    const user = userEvent.setup()
+    renderPage()
+
+    const confirmed = await screen.findByLabelText('Horario confirmado')
+    expect(confirmed).toBeChecked()
+
+    await user.selectOptions(screen.getByLabelText('Local'), 'team-nacional')
+    await user.selectOptions(screen.getByLabelText('Visitante'), 'team-penarol')
+    await user.type(screen.getByLabelText('Fecha y hora'), '2026-03-01T20:00')
+    await user.click(confirmed)
+    await user.click(screen.getByRole('button', { name: 'Cargar partido' }))
+
+    expect(mockedCreateMatch).toHaveBeenCalledWith(expect.objectContaining({ kickoffConfirmed: false }))
+    expect(await screen.findByText(/horario a confirmar/)).toBeInTheDocument()
+  })
+
+  it('al editar un partido con horario tentativo, permite confirmarlo', async () => {
+    mockedIsSuperadmin.mockResolvedValue(true)
+    mockedListMatches.mockResolvedValue([baseMatch({ kickoffConfirmed: false })])
+    mockedEditMatch.mockResolvedValue(baseMatch({ kickoffConfirmed: true }))
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Editar partido Nacional vs Peñarol' }))
+    const confirmed = screen.getByLabelText('Horario confirmado (editar)')
+    expect(confirmed).not.toBeChecked()
+
+    await user.click(confirmed)
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(mockedEditMatch).toHaveBeenCalledWith('match-1', expect.objectContaining({ kickoffConfirmed: true }))
   })
 
   it('muestra un error cuando falla la edicion', async () => {

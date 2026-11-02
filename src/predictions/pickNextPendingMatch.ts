@@ -5,7 +5,10 @@ export function pickNextPendingMatch(
   now: Date,
 ): MatchPredictionStatus | null {
   const candidates = statuses.filter(
-    (status) => status.status === 'pendiente' && new Date(status.kickoffAt).getTime() > now.getTime(),
+    (status) =>
+      status.status === 'pendiente' &&
+      status.kickoffConfirmed &&
+      new Date(status.kickoffAt).getTime() > now.getTime(),
   )
 
   if (candidates.length === 0) return null
