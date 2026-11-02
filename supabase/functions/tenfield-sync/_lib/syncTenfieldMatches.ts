@@ -3,6 +3,7 @@ import { resolveTeamSlug } from './teamNameMapping.ts'
 
 export interface MatchUpdate {
   kickoffAt: string
+  kickoffConfirmed?: true
   homeGoals?: number
   awayGoals?: number
   status?: 'finished'
@@ -20,14 +21,20 @@ export interface SyncResult {
   skippedNotFound: number
 }
 
-function toMatchUpdate(match: TenfieldMatch): MatchUpdate {
+function toMatchUpdate(match: TenfieldMatch, now: Date): MatchUpdate {
   if (match.status === 'finished' && match.homeGoals !== null && match.awayGoals !== null) {
     return {
       kickoffAt: match.kickoffAt,
+      kickoffConfirmed: true,
       homeGoals: match.homeGoals,
       awayGoals: match.awayGoals,
       status: 'finished',
     }
+  }
+  // Un horario futuro publicado por tenfield es real. Uno ya pasado sin resultado puede ser un
+  // partido en juego o un relleno vencido: no se distingue, asi que no se toca la confirmacion.
+  if (new Date(match.kickoffAt).getTime() > now.getTime()) {
+    return { kickoffAt: match.kickoffAt, kickoffConfirmed: true }
   }
   return { kickoffAt: match.kickoffAt }
 }
@@ -36,6 +43,7 @@ export async function syncTenfieldMatches(
   client: SyncMatchesClient,
   stageId: string,
   matches: TenfieldMatch[],
+  now: Date = new Date(),
 ): Promise<SyncResult> {
   const result: SyncResult = { updated: 0, skippedUnmappedTeam: [], skippedNotFound: 0 }
 
@@ -65,7 +73,7 @@ export async function syncTenfieldMatches(
       continue
     }
 
-    await client.updateMatch(existingMatch.id, toMatchUpdate(match))
+    await client.updateMatch(existingMatch.id, toMatchUpdate(match, now))
     result.updated += 1
   }
 

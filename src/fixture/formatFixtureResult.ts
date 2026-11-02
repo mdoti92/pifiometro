@@ -24,7 +24,7 @@ export function formatFixtureResult(match: FixtureMatch): string {
   }
 
   if (match.status !== 'finished') {
-    return formatKickoff(match.kickoffAt)
+    return match.kickoffConfirmed ? formatKickoff(match.kickoffAt) : 'Horario a confirmar'
   }
 
   const regulationResult = `${match.homeGoals}-${match.awayGoals}`

@@ -24,6 +24,7 @@ export function MatchesAdminPage() {
   const [homeTeamId, setHomeTeamId] = useState('')
   const [awayTeamId, setAwayTeamId] = useState('')
   const [kickoffAt, setKickoffAt] = useState('')
+  const [kickoffConfirmed, setKickoffConfirmed] = useState(true)
   const [isElimination, setIsElimination] = useState(false)
   const [matchday, setMatchday] = useState('')
 
@@ -31,6 +32,7 @@ export function MatchesAdminPage() {
   const [editHomeTeamId, setEditHomeTeamId] = useState('')
   const [editAwayTeamId, setEditAwayTeamId] = useState('')
   const [editKickoffAt, setEditKickoffAt] = useState('')
+  const [editKickoffConfirmed, setEditKickoffConfirmed] = useState(true)
   const [editIsElimination, setEditIsElimination] = useState(false)
 
   useEffect(() => {
@@ -71,11 +73,13 @@ export function MatchesAdminPage() {
         homeTeamId,
         awayTeamId,
         kickoffAt,
+        kickoffConfirmed,
         isElimination,
         ...(matchday ? { matchday: Number(matchday) } : {}),
       })
       setMatches((current) => [...current, match])
       setKickoffAt('')
+      setKickoffConfirmed(true)
       setIsElimination(false)
       setMatchday('')
     } catch (err) {
@@ -88,6 +92,7 @@ export function MatchesAdminPage() {
     setEditHomeTeamId(match.homeTeamId)
     setEditAwayTeamId(match.awayTeamId)
     setEditKickoffAt(match.kickoffAt)
+    setEditKickoffConfirmed(match.kickoffConfirmed)
     setEditIsElimination(match.isElimination)
   }
 
@@ -107,6 +112,7 @@ export function MatchesAdminPage() {
         homeTeamId: editHomeTeamId,
         awayTeamId: editAwayTeamId,
         kickoffAt: editKickoffAt,
+        kickoffConfirmed: editKickoffConfirmed,
         isElimination: editIsElimination,
       })
       setMatches((current) => current.map((match) => (match.id === updated.id ? updated : match)))
@@ -171,6 +177,14 @@ export function MatchesAdminPage() {
           onChange={(event) => setKickoffAt(event.target.value)}
         />
 
+        <label htmlFor="match-kickoff-confirmed">Horario confirmado</label>
+        <input
+          id="match-kickoff-confirmed"
+          type="checkbox"
+          checked={kickoffConfirmed}
+          onChange={(event) => setKickoffConfirmed(event.target.checked)}
+        />
+
         <label htmlFor="match-matchday">Número de fecha</label>
         <input
           id="match-matchday"
@@ -196,6 +210,7 @@ export function MatchesAdminPage() {
         {matches.map((match) => (
           <li key={match.id}>
             {match.homeTeam} vs {match.awayTeam} — {match.source}
+            {!match.kickoffConfirmed && ' (horario a confirmar)'}
             {match.status === 'finished' && (
               <span>
                 {' '}
@@ -251,6 +266,14 @@ export function MatchesAdminPage() {
             type="datetime-local"
             value={editKickoffAt}
             onChange={(event) => setEditKickoffAt(event.target.value)}
+          />
+
+          <label htmlFor="edit-kickoff-confirmed">Horario confirmado (editar)</label>
+          <input
+            id="edit-kickoff-confirmed"
+            type="checkbox"
+            checked={editKickoffConfirmed}
+            onChange={(event) => setEditKickoffConfirmed(event.target.checked)}
           />
 
           <label htmlFor="edit-elimination">Partido de eliminación (editar)</label>

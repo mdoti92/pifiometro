@@ -13,6 +13,8 @@ export interface Match {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  // false = horario tentativo (relleno): no cierra los pronosticos.
+  kickoffConfirmed: boolean
   isElimination: boolean
   source: 'api' | 'manual'
   matchday?: number | null
@@ -30,6 +32,7 @@ export interface NewMatchInput {
   homeTeamId: string
   awayTeamId: string
   kickoffAt: string
+  kickoffConfirmed?: boolean
   isElimination: boolean
   matchday?: number | null
 }
@@ -39,6 +42,7 @@ export interface EditMatchInput {
   homeTeamId?: string
   awayTeamId?: string
   kickoffAt?: string
+  kickoffConfirmed?: boolean
   isElimination?: boolean
   matchday?: number | null
   homeGoals?: number
@@ -90,7 +94,7 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
   const { data, error } = await supabase
     .from('matches')
     .select(
-      'id, tournament_id, stage_id, home_team_id, away_team_id, kickoff_at, is_elimination, source, matchday, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
+      'id, tournament_id, stage_id, home_team_id, away_team_id, kickoff_at, kickoff_confirmed, is_elimination, source, matchday, home_goals, away_goals, status, went_to_penalties, home_goals_penalties, away_goals_penalties, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
     )
     .eq('tournament_id', tournamentId)
     .order('kickoff_at', { ascending: true })
@@ -115,6 +119,7 @@ export async function listMatches(tournamentId: string): Promise<Match[]> {
     homeTeamSlug: row.home?.slug ?? '',
     awayTeamSlug: row.away?.slug ?? '',
     kickoffAt: row.kickoff_at as string,
+    kickoffConfirmed: row.kickoff_confirmed as boolean,
     isElimination: row.is_elimination as boolean,
     source: row.source as 'api' | 'manual',
     matchday: row.matchday as number | null,

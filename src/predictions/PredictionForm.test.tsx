@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -29,6 +29,7 @@ const FUTURE_MATCH = {
   homeTeamSlug: 'nacional',
   awayTeamSlug: 'penarol',
   kickoffAt: '2999-01-01T20:00:00Z',
+  kickoffConfirmed: true,
 }
 
 const PAST_MATCH = {
@@ -38,6 +39,7 @@ const PAST_MATCH = {
   homeTeamSlug: 'nacional',
   awayTeamSlug: 'penarol',
   kickoffAt: '2000-01-01T20:00:00Z',
+  kickoffConfirmed: true,
 }
 
 beforeEach(() => {
@@ -152,5 +154,17 @@ describe('PredictionForm', () => {
     renderPage()
 
     expect(await screen.findByLabelText('Goles local')).not.toBeDisabled()
+  })
+
+  it('no deshabilita el form cuando el horario del partido es tentativo, aunque ya haya pasado', async () => {
+    mockedGetMatch.mockResolvedValue({ ...PAST_MATCH, kickoffConfirmed: false })
+    mockedGetPrediction.mockResolvedValue(null)
+    renderPage()
+
+    await waitFor(() => expect(mockedGetMatch).toHaveBeenCalled())
+    expect(await screen.findByLabelText('Goles local')).not.toBeDisabled()
+    expect(
+      screen.queryByText('El partido ya arrancó, no se puede cargar ni editar el pronóstico'),
+    ).not.toBeInTheDocument()
   })
 })
