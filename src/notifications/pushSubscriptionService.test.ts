@@ -15,8 +15,13 @@ const subscribe = vi.fn()
 const originalNotification = globalThis.Notification
 const originalServiceWorker = navigator.serviceWorker
 
+// Clave de prueba en base64url: decodifica a los bytes [1, 2, 3]. El test no depende de que la
+// maquina tenga VITE_VAPID_PUBLIC_KEY definida.
+const TEST_VAPID_PUBLIC_KEY = 'AQID'
+
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('VITE_VAPID_PUBLIC_KEY', TEST_VAPID_PUBLIC_KEY)
 
   vi.stubGlobal('Notification', { requestPermission })
   Object.defineProperty(navigator, 'serviceWorker', {
@@ -28,6 +33,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
   Object.defineProperty(navigator, 'serviceWorker', {
     configurable: true,
@@ -61,6 +67,10 @@ describe('subscribeToPush', () => {
     const result = await subscribeToPush('user-1')
 
     expect(result).toBe(true)
+    expect(subscribe).toHaveBeenCalledWith({
+      userVisibleOnly: true,
+      applicationServerKey: new Uint8Array([1, 2, 3]),
+    })
     expect(mockedFrom).toHaveBeenCalledWith('push_subscriptions')
     expect(upsert).toHaveBeenCalledWith(
       {
@@ -85,5 +95,14 @@ describe('subscribeToPush', () => {
     mockedFrom.mockReturnValue({ upsert } as never)
 
     await expect(subscribeToPush('user-1')).rejects.toThrow('permission denied')
+  })
+
+  it('falla con un mensaje claro, sin suscribirse, cuando falta la clave publica VAPID', async () => {
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', '')
+    requestPermission.mockResolvedValue('granted')
+
+    await expect(subscribeToPush('user-1')).rejects.toThrow('Falta VITE_VAPID_PUBLIC_KEY')
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(mockedFrom).not.toHaveBeenCalled()
   })
 })
