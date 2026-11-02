@@ -11,6 +11,7 @@ function pendingMatch(overrides: Partial<MatchPredictionStatus> = {}): MatchPred
     homeTeamSlug: 'danubio',
     awayTeamSlug: 'wanderers',
     kickoffAt: '2999-01-01T20:00:00Z',
+    kickoffConfirmed: true,
     matchday: 1,
     matchStatus: 'scheduled',
     status: 'pendiente',

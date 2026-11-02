@@ -4,6 +4,7 @@ import {
   getMatch,
   getPrediction,
   hasKickedOff,
+  isPredictionClosed,
   InvalidGoalsError,
   savePrediction,
 } from './predictionsService'
@@ -158,5 +159,21 @@ describe('hasKickedOff', () => {
     const now = new Date('2026-03-01T21:00:00Z')
     expect(hasKickedOff('2026-03-01T20:30:00Z', now)).toBe(true)
     expect(hasKickedOff('2026-03-01T21:30:00Z', now)).toBe(false)
+  })
+})
+
+describe('isPredictionClosed', () => {
+  const now = new Date('2026-11-02T12:00:00Z')
+
+  it('cierra un partido con horario confirmado que ya arranco', () => {
+    expect(isPredictionClosed({ kickoffAt: '2026-11-02T11:00:00Z', kickoffConfirmed: true }, now)).toBe(true)
+  })
+
+  it('no cierra un partido con horario confirmado que todavia no arranco', () => {
+    expect(isPredictionClosed({ kickoffAt: '2026-11-02T13:00:00Z', kickoffConfirmed: true }, now)).toBe(false)
+  })
+
+  it('no cierra un partido con horario tentativo aunque ese horario ya haya pasado', () => {
+    expect(isPredictionClosed({ kickoffAt: '2026-10-10T15:00:00Z', kickoffConfirmed: false }, now)).toBe(false)
   })
 })

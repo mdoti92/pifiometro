@@ -12,6 +12,7 @@ export interface MatchPredictionStatus {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  kickoffConfirmed: boolean
   matchday: number | null
   matchStatus: MatchStatusValue
   status: MatchPredictionStatusValue
@@ -32,6 +33,7 @@ interface MatchTeamRow {
 interface MatchRow {
   id: string
   kickoff_at: string
+  kickoff_confirmed: boolean
   matchday: number | null
   status: MatchStatusValue
   home_goals?: number | null
@@ -48,7 +50,7 @@ export async function listMatchPredictionStatuses(
   const { data: matches, error: matchesError } = await supabase
     .from('matches')
     .select(
-      'id, kickoff_at, matchday, status, home_goals, away_goals, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
+      'id, kickoff_at, kickoff_confirmed, matchday, status, home_goals, away_goals, home:teams!home_team_id(name, alias, slug), away:teams!away_team_id(name, alias, slug)',
     )
     .eq('stage_id', stageId)
     .order('kickoff_at', { ascending: true })
@@ -95,6 +97,7 @@ export async function listMatchPredictionStatuses(
         homeTeamSlug,
         awayTeamSlug,
         kickoffAt: match.kickoff_at,
+        kickoffConfirmed: match.kickoff_confirmed,
         matchday: match.matchday,
         matchStatus: match.status,
         status: 'cargado' as const,
@@ -114,6 +117,7 @@ export async function listMatchPredictionStatuses(
       homeTeamSlug,
       awayTeamSlug,
       kickoffAt: match.kickoff_at,
+      kickoffConfirmed: match.kickoff_confirmed,
       matchday: match.matchday,
       matchStatus: match.status,
       status: finished ? ('no_pronosticado' as const) : ('pendiente' as const),

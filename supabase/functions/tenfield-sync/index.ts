@@ -73,6 +73,7 @@ Deno.serve(async (_req: Request) => {
       },
       async updateMatch(matchId, data) {
         const row: Record<string, unknown> = { kickoff_at: data.kickoffAt }
+        if (data.kickoffConfirmed) row.kickoff_confirmed = true
         if ('homeGoals' in data) row.home_goals = data.homeGoals
         if ('awayGoals' in data) row.away_goals = data.awayGoals
         if ('status' in data) row.status = data.status

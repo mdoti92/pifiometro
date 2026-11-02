@@ -69,6 +69,7 @@ function match(overrides: Partial<myPredictionsService.MatchPredictionStatus>) {
     homeTeamSlug: 'nacional',
     awayTeamSlug: 'penarol',
     kickoffAt: '2999-01-01T20:00:00Z',
+    kickoffConfirmed: true,
     matchday: 1,
     matchStatus: 'scheduled' as const,
     status: 'pendiente' as const,
@@ -269,6 +270,21 @@ describe('MyPredictionsPage', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('un partido con horario tentativo ya pasado se puede seguir pronosticando, sin Gandalf', async () => {
+    mockedListMatchPredictionStatuses.mockResolvedValue([
+      match({ matchStatus: 'scheduled', status: 'pendiente', kickoffAt: '2026-10-10T15:00:00Z', kickoffConfirmed: false }),
+    ])
+    mockedSavePrediction.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(await screen.findByLabelText('Goles local de Nacional'), '2')
+    await user.type(screen.getByLabelText('Goles visitante de Peñarol'), '1')
+
+    await waitFor(() => expect(mockedSavePrediction).toHaveBeenCalled())
+    expect(screen.queryByRole('dialog', { name: '¡No puedes pasar!' })).not.toBeInTheDocument()
   })
 
   it('un partido finalizado no muestra a Gandalf: ya no esta en juego', async () => {

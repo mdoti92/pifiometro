@@ -29,6 +29,7 @@ function fixtureMatch(overrides: Partial<fixtureService.FixtureMatch>): fixtureS
     homeTeamSlug: 'nacional',
     awayTeamSlug: 'penarol',
     kickoffAt: '2026-03-01T20:00:00Z',
+    kickoffConfirmed: true,
     matchday: 1,
     status: 'scheduled',
     homeGoals: null,

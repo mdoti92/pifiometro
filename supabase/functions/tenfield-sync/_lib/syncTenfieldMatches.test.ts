@@ -3,6 +3,7 @@ import type { TenfieldMatch } from './parseFechasWidget'
 import { type SyncMatchesClient, syncTenfieldMatches } from './syncTenfieldMatches'
 
 const STAGE_ID = 'stage-clausura'
+const NOW = new Date('2026-11-02T12:00:00Z')
 
 function tenfieldMatch(overrides: Partial<TenfieldMatch> = {}): TenfieldMatch {
   return {
@@ -30,14 +31,15 @@ beforeEach(() => {
 })
 
 describe('syncTenfieldMatches', () => {
-  it('un partido ya jugado actualiza kickoff, goles y status finished', async () => {
+  it('un partido ya jugado actualiza kickoff (confirmado), goles y status finished', async () => {
     const client = createFakeClient()
 
-    const result = await syncTenfieldMatches(client, STAGE_ID, [tenfieldMatch()])
+    const result = await syncTenfieldMatches(client, STAGE_ID, [tenfieldMatch()], NOW)
 
     expect(client.findMatch).toHaveBeenCalledWith(STAGE_ID, 'team-liverpool', 'team-progreso')
     expect(client.updateMatch).toHaveBeenCalledWith('match-1', {
       kickoffAt: '2026-10-03T14:00:00',
+      kickoffConfirmed: true,
       homeGoals: 3,
       awayGoals: 2,
       status: 'finished',
@@ -45,11 +47,30 @@ describe('syncTenfieldMatches', () => {
     expect(result).toEqual({ updated: 1, skippedUnmappedTeam: [], skippedNotFound: 0 })
   })
 
-  it('un partido sin jugar solo actualiza kickoff, sin tocar goles ni status', async () => {
+  it('un partido sin jugar con horario futuro actualiza el kickoff y lo marca confirmado, sin tocar goles ni status', async () => {
+    const client = createFakeClient()
+    const match = tenfieldMatch({
+      homeGoals: null,
+      awayGoals: null,
+      status: 'scheduled',
+      kickoffAt: '2026-11-08T19:00:00.000Z',
+    })
+
+    await syncTenfieldMatches(client, STAGE_ID, [match], NOW)
+
+    expect(client.updateMatch).toHaveBeenCalledWith('match-1', {
+      kickoffAt: '2026-11-08T19:00:00.000Z',
+      kickoffConfirmed: true,
+    })
+  })
+
+  it('un partido sin jugar con horario ya pasado actualiza el kickoff sin tocar si esta confirmado', async () => {
+    // Puede ser un partido en juego (ya confirmado) o un horario de relleno vencido (tentativo):
+    // desde tenfield no se distingue, asi que se respeta lo que ya tenia.
     const client = createFakeClient()
     const match = tenfieldMatch({ homeGoals: null, awayGoals: null, status: 'scheduled' })
 
-    await syncTenfieldMatches(client, STAGE_ID, [match])
+    await syncTenfieldMatches(client, STAGE_ID, [match], NOW)
 
     expect(client.updateMatch).toHaveBeenCalledWith('match-1', {
       kickoffAt: '2026-10-03T14:00:00',
@@ -103,12 +124,14 @@ describe('syncTenfieldMatches', () => {
     expect(firstRun).toEqual(secondRun)
     expect(client.updateMatch).toHaveBeenNthCalledWith(1, 'match-1', {
       kickoffAt: '2026-10-03T14:00:00',
+      kickoffConfirmed: true,
       homeGoals: 3,
       awayGoals: 2,
       status: 'finished',
     })
     expect(client.updateMatch).toHaveBeenNthCalledWith(2, 'match-1', {
       kickoffAt: '2026-10-03T14:00:00',
+      kickoffConfirmed: true,
       homeGoals: 3,
       awayGoals: 2,
       status: 'finished',

@@ -10,6 +10,7 @@ function baseMatch(overrides: Partial<FixtureMatch>): FixtureMatch {
     homeTeamSlug: 'nacional',
     awayTeamSlug: 'penarol',
     kickoffAt: '2026-03-01T20:00:00Z',
+    kickoffConfirmed: true,
     matchday: 1,
     status: 'scheduled',
     homeGoals: null,
@@ -23,6 +24,10 @@ function baseMatch(overrides: Partial<FixtureMatch>): FixtureMatch {
 }
 
 describe('formatFixtureResult', () => {
+  it('un partido con horario tentativo muestra que el horario esta a confirmar, no la fecha de relleno', () => {
+    expect(formatFixtureResult(baseMatch({ status: 'scheduled', kickoffConfirmed: false }))).toBe('Horario a confirmar')
+  })
+
   it('muestra la fecha y hora del kickoff en hora local de Uruguay (UTC-3), no en UTC', () => {
     const match = baseMatch({ status: 'scheduled', kickoffAt: '2026-03-01T20:00:00Z' })
 

@@ -33,6 +33,7 @@ function toRow(input: Record<string, any>) {
   if ('homeTeamId' in input) row.home_team_id = input.homeTeamId
   if ('awayTeamId' in input) row.away_team_id = input.awayTeamId
   if ('kickoffAt' in input) row.kickoff_at = input.kickoffAt
+  if ('kickoffConfirmed' in input) row.kickoff_confirmed = input.kickoffConfirmed
   if ('isElimination' in input) row.is_elimination = input.isElimination
   if ('matchday' in input) row.matchday = input.matchday
   if ('source' in input) row.source = input.source
@@ -64,6 +65,7 @@ function fromRow(row: any) {
     homeTeamSlug: row.home?.slug ?? '',
     awayTeamSlug: row.away?.slug ?? '',
     kickoffAt: row.kickoff_at,
+    kickoffConfirmed: row.kickoff_confirmed,
     isElimination: row.is_elimination,
     matchday: row.matchday,
     source: row.source,

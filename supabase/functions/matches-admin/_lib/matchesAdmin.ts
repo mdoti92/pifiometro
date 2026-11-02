@@ -9,6 +9,8 @@ export interface Match {
   homeTeamSlug: string
   awayTeamSlug: string
   kickoffAt: string
+  // false = horario tentativo (relleno): no cierra los pronosticos.
+  kickoffConfirmed: boolean
   isElimination: boolean
   source: 'api' | 'manual'
   matchday?: number | null
@@ -26,6 +28,7 @@ export interface NewMatchInput {
   homeTeamId: string
   awayTeamId: string
   kickoffAt: string
+  kickoffConfirmed?: boolean
   isElimination: boolean
   matchday?: number | null
 }
@@ -35,6 +38,7 @@ export interface EditMatchInput {
   homeTeamId?: string
   awayTeamId?: string
   kickoffAt?: string
+  kickoffConfirmed?: boolean
   isElimination?: boolean
   matchday?: number | null
   homeGoals?: number

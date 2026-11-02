@@ -12,6 +12,7 @@ function pending(matchId: string, kickoffAt: string): MatchPredictionStatus {
     homeTeamSlug: 'local',
     awayTeamSlug: 'visitante',
     kickoffAt,
+    kickoffConfirmed: true,
     matchday: 1,
     matchStatus: 'scheduled',
     status: 'pendiente',
@@ -55,5 +56,12 @@ describe('pickNextPendingMatch', () => {
     ]
 
     expect(pickNextPendingMatch(statuses, NOW)?.matchId).toBe('match-2')
+  })
+
+  it('ignora los partidos con horario tentativo: no hay cuenta regresiva a un horario de relleno', () => {
+    const tentative = { ...pending('match-tentativo', '2026-03-01T21:00:00Z'), kickoffConfirmed: false }
+    const confirmed = pending('match-confirmado', '2026-03-02T20:00:00Z')
+
+    expect(pickNextPendingMatch([tentative, confirmed], NOW)?.matchId).toBe('match-confirmado')
   })
 })
