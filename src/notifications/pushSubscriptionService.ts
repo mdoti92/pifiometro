@@ -20,10 +20,15 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
     return false
   }
 
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+  if (!vapidPublicKey) {
+    throw new Error('Falta VITE_VAPID_PUBLIC_KEY: no se pueden activar las notificaciones push')
+  }
+
   const registration = await navigator.serviceWorker.ready
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY),
+    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
   })
 
   const json = subscription.toJSON()
